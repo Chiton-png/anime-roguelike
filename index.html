@@ -281,6 +281,58 @@
     .menuButton.cosmeticSelected{
       box-shadow:0 0 12px rgba(255,255,255,0.5);
     }
+
+    /* Layout with right-hand stats panel */
+    #pageRow{
+      margin-top:6px;
+      display:flex;
+      align-items:flex-start;
+      gap:16px;
+      max-width:1220px;
+    }
+    #leftColumn{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+    }
+    #statsPanel{
+      min-width:210px;
+      max-width:230px;
+      padding:8px 10px;
+      border-radius:8px;
+      background:rgba(10,10,20,0.95);
+      border:1px solid #333;
+      box-shadow:0 0 18px rgba(0,0,0,0.8);
+      font-size:11px;
+    }
+    #statsPanel h3{
+      font-size:13px;
+      margin-bottom:4px;
+      text-align:left;
+      letter-spacing:0.04em;
+      text-transform:uppercase;
+      opacity:0.85;
+    }
+    #statsContent{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      max-height:480px;
+      overflow-y:auto;
+      padding-right:2px;
+    }
+    .statRow{
+      display:flex;
+      justify-content:space-between;
+      gap:6px;
+    }
+    .statRow span:first-child{
+      opacity:0.7;
+    }
+    .statRow span:last-child{
+      font-weight:600;
+    }
   </style>
 </head>
 <body>
@@ -292,6 +344,13 @@
     <div id="mainMenuInner">
       <h2>Anime Rogue Run</h2>
       <p>Pick your playstyle and archetype. Build busted Demon Slayer / One Piece / JJK / MHA / Cyberpunk / Solo Leveling combos.</p>
+
+      <p style="margin-top:4px;font-weight:600">Mode</p>
+      <div class="menuButtons">
+        <button class="menuButton modeButton" data-mode="chill">Chill</button>
+        <button class="menuButton modeButton" data-mode="normal">Normal</button>
+        <button class="menuButton modeButton" data-mode="cursed">Cursed</button>
+      </div>
 
       <p style="margin-top:4px;font-weight:600">Combat Style</p>
       <div class="menuButtons">
@@ -357,39 +416,49 @@
     </div>
   </div>
 
-  <div id="container">
-    <canvas id="game" width="960" height="540"></canvas>
-    <div id="overlayMessage"></div>
+  <div id="pageRow">
+    <div id="leftColumn">
+      <div id="container">
+        <canvas id="game" width="960" height="540"></canvas>
+        <div id="overlayMessage"></div>
 
-    <div id="upgradePanel">
-      <div id="upgradePanelInner">
-        <h2>Choose a Power-Up</h2>
-        <p>
-          Every wave you get a power with a drawback. Max <b>5 normal</b> powers and <b>2 boss</b> powers (unless you break the limit).
-          Boss waves can offer <b>Legendary</b> powers and <b>Curses</b> with extreme tradeoffs.
-        </p>
-        <div id="upgrades"></div>
-        <button id="skipButton">Skip – no power this wave</button>
+        <div id="upgradePanel">
+          <div id="upgradePanelInner">
+            <h2>Choose a Power-Up</h2>
+            <p>
+              Every wave you get a power with a drawback. Max <b>5 normal</b> powers and <b>2 boss</b> powers (unless you break the limit).
+              Boss waves can offer <b>Legendary</b> powers and <b>Curses</b> with extreme tradeoffs.
+            </p>
+            <div id="upgrades"></div>
+            <button id="skipButton">Skip – no power this wave</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="hud">
+        <div id="hudWave"></div>
+        <div id="hudHP"></div>
+        <div id="hudStats"></div>
+        <div id="hudUlt"></div>
+        <div id="hudStyle"></div>
+        <div id="hudKills"></div>
+      </div>
+
+      <div id="abilitiesBar">
+        <div class="abilitiesGroup">
+          <span class="abilitiesTitle">Normal Powers (cap 5, unless Broken Limit):</span>
+          <div id="normalAbilitiesList" class="abilitiesList"></div>
+        </div>
+        <div class="abilitiesGroup">
+          <span class="abilitiesTitle">Boss Powers (cap 2):</span>
+          <div id="bossAbilitiesList" class="abilitiesList"></div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div id="hud">
-    <div id="hudWave"></div>
-    <div id="hudHP"></div>
-    <div id="hudStats"></div>
-    <div id="hudUlt"></div>
-    <div id="hudStyle"></div>
-  </div>
-
-  <div id="abilitiesBar">
-    <div class="abilitiesGroup">
-      <span class="abilitiesTitle">Normal Powers (cap 5, unless Broken Limit):</span>
-      <div id="normalAbilitiesList" class="abilitiesList"></div>
-    </div>
-    <div class="abilitiesGroup">
-      <span class="abilitiesTitle">Boss Powers (cap 2):</span>
-      <div id="bossAbilitiesList" class="abilitiesList"></div>
+    <div id="statsPanel">
+      <h3>Build Stats</h3>
+      <div id="statsContent"></div>
     </div>
   </div>
 
@@ -405,9 +474,11 @@
     const hudStats=document.getElementById("hudStats");
     const hudUlt=document.getElementById("hudUlt");
     const hudStyle=document.getElementById("hudStyle");
+    const hudKills=document.getElementById("hudKills");
     const mainMenu=document.getElementById("mainMenu");
     const normalAbilitiesListEl=document.getElementById("normalAbilitiesList");
     const bossAbilitiesListEl=document.getElementById("bossAbilitiesList");
+    const statsContentEl=document.getElementById("statsContent");
 
     const keys={};
     let mousePos={x:canvas.width/2,y:canvas.height/2};
@@ -415,6 +486,7 @@
     let combatStyle=null;
     let selectedUltId="jjk_domain";
     let selectedArchetype="sorcerer";
+    let difficulty="normal";
     let gameState="menu";
     let lastTime=0;
     let messageTimer=0;
@@ -457,8 +529,7 @@
     let curses=[];
     let activeCurses=[];
     let noLimitMode=false;
-    let pendingAbility=null;
-    let pendingCategory=null;
+    let replaceTarget=null;
 
     let enemyScale={
       hpMult:1,
@@ -470,6 +541,13 @@
     };
 
     let currentWaveEvent=null;
+    let runKills=0;
+
+    const DIFFICULTY_SETTINGS={
+      chill:{enemyHpMult:0.85,enemyDamageMult:0.8,enemyCountMult:0.9},
+      normal:{enemyHpMult:1,enemyDamageMult:1,enemyCountMult:1},
+      cursed:{enemyHpMult:1.2,enemyDamageMult:1.25,enemyCountMult:1.15}
+    };
 
     const BOSS_TEMPLATES=[
       {id:"mahito",name:"Mahito",color:"#b88cff"},
@@ -488,7 +566,7 @@
       swordsman:{id:"swordsman",name:"Sharp Swordsman",startAbilities:["water_breathing","blood_edge"]},
       sorcerer:{id:"sorcerer",name:"Cursed Sorcerer",startAbilities:["shadow_garden","black_flash_rhythm"]},
       titan:{id:"titan",name:"Titan Slayer",startAbilities:["survey_maneuvers","shadow_army_commander"]},
-      hero:{id:"hero",name:"Quirked Hero",startAbilities:["quirk_booster","fire_force_spark"]}
+      hero:{id:"hero",name:"Quirked Hero",startAbilities:["fire_force_spark"]}
     };
 
     const COSMETICS={
@@ -726,20 +804,16 @@
       });
     }
 
-    /* BACKGROUND – Neon Cursed + Retro Grid */
-
-    function updateBackground(dt){
-      bgTime+=dt;
-    }
+    /* BACKGROUND – Neon cursed grid */
+    function updateBackground(dt){bgTime+=dt;}
 
     function drawBackground(){
       const cx=canvas.width/2;
       const cy=canvas.height/2;
 
-      // Big neon radial gradient
       const g=ctx.createRadialGradient(
-        cx, cy, 0,
-        cx, cy, canvas.width*0.9
+        cx,cy,0,
+        cx,cy,canvas.width*0.9
       );
       g.addColorStop(0,"#14172a");
       g.addColorStop(0.4,"#090918");
@@ -747,12 +821,11 @@
       ctx.fillStyle=g;
       ctx.fillRect(0,0,canvas.width,canvas.height);
 
-      // Retro neon grid floor
       const gridSize=32;
       const scroll=(bgTime*25)%gridSize;
 
       ctx.save();
-      ctx.translate(0,canvas.height*0.15); // push "horizon" up
+      ctx.translate(0,canvas.height*0.15);
       ctx.globalAlpha=0.3;
       ctx.strokeStyle="#283757";
       ctx.lineWidth=1;
@@ -772,14 +845,13 @@
       }
       ctx.restore();
 
-      // Extra diagonal "laser" streaks (neon cursed vibe)
       ctx.save();
       ctx.globalAlpha=0.12;
       ctx.strokeStyle="#7e5bff";
       ctx.lineWidth=2;
       const t=bgTime*40;
       for(let i=0;i<4;i++){
-        const offset=(t+i*120)% (canvas.width+200) -100;
+        const offset=(t+i*120)%(canvas.width+200)-100;
         ctx.beginPath();
         ctx.moveTo(offset,-20);
         ctx.lineTo(offset+160,canvas.height+40);
@@ -787,7 +859,6 @@
       }
       ctx.restore();
 
-      // Pixel-ish overlay (retro fuzz)
       const cell=8;
       ctx.save();
       ctx.globalAlpha=0.04;
@@ -801,10 +872,9 @@
       }
       ctx.restore();
 
-      // Vignette
       const vg=ctx.createRadialGradient(
-        cx, cy, canvas.width*0.35,
-        cx, cy, canvas.width*0.95
+        cx,cy,canvas.width*0.35,
+        cx,cy,canvas.width*0.95
       );
       vg.addColorStop(0,"rgba(0,0,0,0)");
       vg.addColorStop(1,"rgba(0,0,0,0.8)");
@@ -813,18 +883,17 @@
     }
 
     /* PARTICLES & FIELDS */
-
     function spawnParticles(x,y,opt={}){
       const {
         count=12,spread=Math.PI*2,
-        speedMin=80,speedMax=260,
-        lifeMin=.25,lifeMax=.6,
+        speedMin:spMin=80,speedMax:spMax=260,
+        lifeMin=0.25,lifeMax=0.6,
         sizeMin=2,sizeMax=4,
         color="rgba(255,255,255,1)"
       }=opt;
       for(let i=0;i<count;i++){
         const ang=Math.random()*spread;
-        const s=speedMin+Math.random()*(speedMax-speedMin);
+        const s=spMin+Math.random()*(spMax-spMin);
         const vx=Math.cos(ang)*s;
         const vy=Math.sin(ang)*s;
         const life=lifeMin+Math.random()*(lifeMax-lifeMin);
@@ -840,9 +909,9 @@
         const t=p.life/p.maxLife;
         p.x+=p.vx*dt;
         p.y+=p.vy*dt;
-        p.vx*=.97;
+        p.vx*=0.97;
         p.vy+=20*dt;
-        const m=p.color.match(/rgba\((\d+),(\d+),(\d+),([\d.]+)\)/);
+        const m=p.color.match(/rgba\\((\\d+),(\\d+),(\\d+),([\\d.]+)\\)/);
         if(m){
           const[r,g,b]=[m[1],m[2],m[3]];
           p.renderColor=`rgba(${r},${g},${b},${t})`;
@@ -868,7 +937,7 @@
     /* PLAYER & STATS */
 
     const BASE_STATS={
-      maxHp:100,
+      maxHp:110,
       damage:16,
       fireRate:3,
       speed:230,
@@ -877,19 +946,19 @@
       spread:0.18,
       pierce:0,
       onHitHeal:0,
-      healAfterWave:10,
+      healAfterWave:12,
       dashCooldown:1.1,
-      dashDuration:.22,
-      meleeDamage:32,
-      meleeRange:80,
+      dashDuration:0.22,
+      meleeDamage:42,
+      meleeRange:95,
       meleeArc:1.7,
-      meleeCooldown:.75,
-      meleeOnHitHeal:0
+      meleeCooldown:0.6,
+      meleeOnHitHeal:1
     };
 
     function createPlayer(){
       return{
-        x:canvas.width/2,y:canvas.height/2,radius:10, // slightly smaller for pixel-y look
+        x:canvas.width/2,y:canvas.height/2,radius:10,
         hp:BASE_STATS.maxHp,maxHp:BASE_STATS.maxHp,
         damage:BASE_STATS.damage,
         fireRate:BASE_STATS.fireRate,
@@ -914,7 +983,7 @@
         meleeCooldown:BASE_STATS.meleeCooldown,
         meleeCooldownTimer:0,
         meleeSwingTimer:0,
-        meleeSwingDuration:.18,
+        meleeSwingDuration:0.18,
         meleeAngle:0,
         meleeOnHitHeal:BASE_STATS.meleeOnHitHeal,
         incomingDamageMult:1,
@@ -945,9 +1014,15 @@
       };
     }
 
-    const getAbilityById=id=>normalAbilities.find(a=>a.id===id)||bossAbilities.find(a=>a.id===id)||null;
-    const getCurseById=id=>curses.find(c=>c.id===id)||null;
-    const hasCurse=id=>activeCurses.includes(id);
+    const rarityOrder={common:0,rare:1,epic:2,legendary:3};
+
+    function getAbilityById(id){
+      return normalAbilities.find(a=>a.id===id)||bossAbilities.find(a=>a.id===id)||null;
+    }
+    function getCurseById(id){
+      return curses.find(c=>c.id===id)||null;
+    }
+    function hasCurse(id){return activeCurses.includes(id);}
 
     function hasBrokenLimit(){
       if(!player)return false;
@@ -980,6 +1055,10 @@
           if(m.enemyBulletDamageMult)enemyScale.bulletDamageMult*=m.enemyBulletDamageMult;
         }
       }
+      const diff=DIFFICULTY_SETTINGS[difficulty]||DIFFICULTY_SETTINGS.normal;
+      enemyScale.hpMult*=diff.enemyHpMult;
+      enemyScale.damageMult*=diff.enemyDamageMult;
+      enemyScale.countMult*=diff.enemyCountMult;
     }
 
     function recomputePlayerStats(keepHpRatio=true){
@@ -1037,20 +1116,20 @@
 
       stats.maxHp=Math.max(20,stats.maxHp);
       stats.damage=Math.max(1,stats.damage);
-      stats.fireRate=Math.max(.4,stats.fireRate);
+      stats.fireRate=Math.max(0.4,stats.fireRate);
       stats.speed=Math.max(60,stats.speed);
       stats.bulletSpeed=Math.max(200,stats.bulletSpeed);
       stats.bulletsPerShot=Math.max(1,Math.round(stats.bulletsPerShot));
-      stats.spread=clamp(stats.spread,0.02,.7);
+      stats.spread=clamp(stats.spread,0.02,0.7);
       stats.pierce=Math.max(0,Math.round(stats.pierce));
       stats.onHitHeal=Math.max(0,stats.onHitHeal);
       stats.healAfterWave=Math.max(0,stats.healAfterWave);
-      stats.dashCooldown=clamp(stats.dashCooldown,.25,3);
-      stats.dashDuration=clamp(stats.dashDuration,.1,.6);
-      stats.meleeDamage=Math.max(4,stats.meleeDamage);
-      stats.meleeRange=Math.max(30,stats.meleeRange);
-      stats.meleeArc=clamp(stats.meleeArc,.6,Math.PI*1.4);
-      stats.meleeCooldown=clamp(stats.meleeCooldown,.15,2);
+      stats.dashCooldown=clamp(stats.dashCooldown,0.25,3);
+      stats.dashDuration=clamp(stats.dashDuration,0.1,0.6);
+      stats.meleeDamage=Math.max(6,stats.meleeDamage);
+      stats.meleeRange=Math.max(35,stats.meleeRange);
+      stats.meleeArc=clamp(stats.meleeArc,0.6,Math.PI*1.4);
+      stats.meleeCooldown=clamp(stats.meleeCooldown,0.15,2);
       stats.meleeOnHitHeal=Math.max(0,stats.meleeOnHitHeal);
 
       const newMax=stats.maxHp;
@@ -1247,8 +1326,6 @@
 
     /* ABILITIES & CURSES */
 
-    const rarityOrder={common:0,rare:1,epic:2,legendary:3};
-
     function addNormalAbility(a){a.type="normal";normalAbilities.push(a);}
     function addBossAbility(a){a.type="boss";bossAbilities.push(a);}
     function addCurseAbility(c){c.type="curse";c.isCurse=true;curses.push(c);}
@@ -1258,14 +1335,15 @@
       bossAbilities.length=0;
       curses.length=0;
 
-      /* Normal abilities – Demon Slayer / JJK / One Piece / MHA / Cyberpunk / Solo Leveling */
+      /* Normal abilities – Demon Slayer / JJK / One Piece / MHA / Cyberpunk / Solo Leveling, melee focus */
+
       addNormalAbility({
         id:"water_breathing",
         name:"Water Breathing",
         rarity:"rare",
         description:"+ melee damage & range, - fire rate.",
         drawback:"Slower gun fire rate.",
-        mods:{meleeDamageMult:1.4,meleeRangeMult:1.25,fireRateMult:0.88}
+        mods:{meleeDamageMult:1.4,meleeRangeMult:1.25,fireRateMult:0.9}
       });
 
       addNormalAbility({
@@ -1274,7 +1352,7 @@
         rarity:"rare",
         description:"+ speed & fire rate, - max HP.",
         drawback:"Lose some max HP.",
-        mods:{speedMult:1.25,fireRateMult:1.25,maxHpMult:0.8}
+        mods:{speedMult:1.25,fireRateMult:1.25,maxHpMult:0.82}
       });
 
       addNormalAbility({
@@ -1282,7 +1360,7 @@
         name:"Sun Breathing",
         rarity:"epic",
         description:"Huge damage, but you take more damage.",
-        drawback:"Enemies hurt you more.",
+        drawback:"Enemies punish you harder.",
         requires:["water_breathing","thunder_breathing"],
         mods:{damageMult:1.6,incomingDamageMult:1.25}
       });
@@ -1302,7 +1380,7 @@
         rarity:"rare",
         description:"Big melee damage boost, but you take more damage.",
         drawback:"You’re easier to kill.",
-        mods:{meleeDamageMult:1.7,incomingDamageMult:1.25}
+        mods:{meleeDamageMult:1.7,incomingDamageMult:1.22}
       });
 
       addNormalAbility({
@@ -1320,7 +1398,7 @@
         rarity:"rare",
         description:"+ fire rate & bullets per shot, - damage.",
         drawback:"Weaker individual hits.",
-        mods:{fireRateMult:1.35,bulletsPerShotAdd:1,damageMult:0.85}
+        mods:{fireRateMult:1.35,bulletsPerShotAdd:1,damageMult:0.86}
       });
 
       addNormalAbility({
@@ -1398,12 +1476,51 @@
         mods:{dashCooldownMult:0.6,dashDurationMult:0.7,maxHpMult:0.95}
       });
 
+      /* Extra melee-focused normals */
+
+      addNormalAbility({
+        id:"breath_focus",
+        name:"Breath Focus",
+        rarity:"rare",
+        description:"+ melee damage & lower melee cooldown, - fire rate & bullet speed.",
+        drawback:"Guns feel heavier.",
+        mods:{meleeDamageMult:1.35,meleeCooldownMult:0.85,fireRateMult:0.9,bulletSpeedMult:0.9}
+      });
+
+      addNormalAbility({
+        id:"oni_killer",
+        name:"Oni Killer",
+        rarity:"epic",
+        description:"Massive melee damage & lifesteal, - max HP.",
+        drawback:"Glass cannon in melee.",
+        mods:{meleeDamageMult:2.1,meleeOnHitHealAdd:3,maxHpMult:0.8}
+      });
+
+      addNormalAbility({
+        id:"parry_instinct",
+        name:"Parry Instinct",
+        rarity:"rare",
+        description:"Very low melee cooldown, but shorter melee range & arc.",
+        drawback:"You must be close & precise.",
+        mods:{meleeCooldownMult:0.55,meleeRangeMult:0.85,meleeArcMult:0.85}
+      });
+
+      addNormalAbility({
+        id:"combo_slashes",
+        name:"Combo Slashes",
+        rarity:"epic",
+        description:"+ melee range & slight damage, - Style gain.",
+        drawback:"Style builds slower.",
+        mods:{meleeRangeMult:1.25,meleeDamageMult:1.2,styleGainMult:0.8}
+      });
+
       /* Toji / Nanami-flavoured normals */
+
       addNormalAbility({
         id:"nanami_ratio_strikes",
         name:"Ratio Strikes",
         rarity:"epic",
-        description:"Melee damage + big, melee cooldown up.",
+        description:"Melee damage up a lot, melee cooldown up.",
         drawback:"Slower melee swings.",
         mods:{meleeDamageMult:1.9,meleeCooldownMult:1.25}
       });
@@ -1437,7 +1554,28 @@
         summonId:"shadow_blade_spirit"
       });
 
+      /* A bit more gun-side variety */
+
+      addNormalAbility({
+        id:"void_rounds",
+        name:"Void Rounds",
+        rarity:"epic",
+        description:"+ pierce & bullet speed, - max HP.",
+        drawback:"You become squishier.",
+        mods:{pierceAdd:1,bulletSpeedMult:1.3,maxHpMult:0.85}
+      });
+
+      addNormalAbility({
+        id:"curse_infused_ammo",
+        name:"Curse-Infused Ammo",
+        rarity:"rare",
+        description:"+ damage & on-hit heal, - fire rate.",
+        drawback:"Slower firing.",
+        mods:{damageMult:1.25,onHitHealAdd:1,fireRateMult:0.9}
+      });
+
       /* Boss power-style legendaries */
+
       addBossAbility({
         id:"shadow_army_commander",
         name:"Shadow Army Commander",
@@ -1486,7 +1624,8 @@
         ultMods:{damageMult:0.9}
       });
 
-      /* CURSES – enemy scaling + hard penalties */
+      /* CURSES */
+
       addCurseAbility({
         id:"glass_cannon",
         name:"Glass Cannon",
@@ -1627,8 +1766,6 @@
 
     /* UPGRADE / POWER-UP PANEL */
 
-    let replaceTarget=null; // {category:"normal"|"boss", index:number}
-
     function abilityRarityClass(r){
       switch(r){
         case "rare":return "rarity-rare card-rarity-rare";
@@ -1637,7 +1774,6 @@
         default:return "rarity-common card-rarity-common";
       }
     }
-
     function abilityRarityBadgeClass(r){
       switch(r){
         case "rare":return "rarityBadge rarity-rare";
@@ -1663,14 +1799,6 @@
           if(!playerHasAbility(req))return false;
         }
       }
-      if(def.type==="normal"){
-        const max=hasBrokenLimit()?99:5;
-        if(player.normalAbilities.length>=max && !(replaceTarget && replaceTarget.category==="normal"))return false;
-      }
-      if(def.type==="boss"){
-        const max=hasBrokenLimit()?99:2;
-        if(player.bossAbilities.length>=max && !(replaceTarget && replaceTarget.category==="boss"))return false;
-      }
       return true;
     }
 
@@ -1679,6 +1807,18 @@
         const j=Math.floor(Math.random()*(i+1));
         [arr[i],arr[j]]=[arr[j],arr[i]];
       }
+    }
+
+    function pickByRarity(pool,desiredCount){
+      const picked=[];
+      // Prefer lower rarities first: more Common/Rare, fewer Epic/Legendary
+      for(const r of ["common","rare","epic","legendary"]){
+        for(const a of pool){
+          if(picked.length>=desiredCount)break;
+          if(a.rarity===r)picked.push(a);
+        }
+      }
+      return picked;
     }
 
     function rollUpgradeOptions(isBossWave){
@@ -1691,17 +1831,6 @@
       shuffleInPlace(poolBoss);
       shuffleInPlace(poolCurses);
 
-      function pickByRarity(pool,desiredCount){
-        const picked=[];
-        for(const r of ["legendary","epic","rare","common"]){
-          for(const a of pool){
-            if(picked.length>=desiredCount)break;
-            if(a.rarity===r)picked.push(a);
-          }
-        }
-        return picked;
-      }
-
       if(!isBossWave){
         const normals=pickByRarity(poolNormal,3);
         options.push(...normals);
@@ -1709,18 +1838,29 @@
           const any=poolNormal[0]||poolBoss[0]||poolCurses[0]||null;
           if(any)options.push(any);
         }
-        if(Math.random()<0.35 && poolCurses.length>0){
+        if(Math.random()<0.35 && poolCurses.length>0 && options.length>0){
           options[Math.floor(Math.random()*options.length)]=poolCurses[0];
         }
       }else{
         if(poolBoss.length>0)options.push(poolBoss[0]);
         const normals=pickByRarity(poolNormal,2);
         options.push(...normals);
-        if(poolCurses.length>0){
+        if(poolCurses.length>0 && options.length>0){
           options[Math.floor(Math.random()*options.length)]=poolCurses[0];
         }
       }
 
+      const allPool1=[...poolBoss,...poolNormal,...poolCurses];
+      const allPool2=[...bossAbilities,...normalAbilities,...curses];
+      const allPool=(allPool1.length>0?allPool1:allPool2);
+      shuffleInPlace(allPool);
+      let idx=0;
+      while(options.length<3 && idx<allPool.length){
+        const cand=allPool[idx++];
+        if(!cand)break;
+        if(options.includes(cand))continue;
+        options.push(cand);
+      }
       while(options.length>3)options.pop();
       return options;
     }
@@ -1775,7 +1915,6 @@
       };
     }
 
-    // closeUpgradePanel uses awaitingWaveStart / startNextWave defined later
     function closeUpgradePanel(){
       upgradePanel.style.display="none";
       replaceTarget=null;
@@ -1789,6 +1928,12 @@
 
     function applyAbilityPick(def){
       if(!def||!player)return;
+
+      if(def.type!=="curse" && playerHasAbility(def.id)){
+        showMessage(def.name+" already taken.",1.4);
+        return;
+      }
+
       if(def.type==="curse"){
         if(!activeCurses.includes(def.id)){
           activeCurses.push(def.id);
@@ -1895,6 +2040,8 @@
       const speed=speedBase*waveSpeedMult*enemyScale.speedMult;
       const contactDamage=contactBase*waveDamageMult*enemyScale.damageMult;
 
+      const bulletDamageBase=7*waveDamageMult*enemyScale.bulletDamageMult;
+
       const e={
         id:enemyIdCounter++,
         x,y,radius,
@@ -1910,7 +2057,7 @@
         shootCooldown:shooter?(1.4-Math.min(0.7,(wv-1)*0.03)):0,
         shootTimer:shooter?Math.random()*0.6:0,
         bulletSpeed:shooter?260*enemyScale.bulletSpeedMult:0,
-        bulletDamage:shooter?(10*enemyScale.bulletDamageMult):0
+        bulletDamage:shooter?bulletDamageBase:0
       };
       enemies.push(e);
     }
@@ -1939,7 +2086,7 @@
         shootCooldown:1.8,
         shootTimer:1,
         bulletSpeed:260*enemyScale.bulletSpeedMult,
-        bulletDamage:12*enemyScale.bulletDamageMult,
+        bulletDamage:9*enemyScale.bulletDamageMult,
         pattern:t.pattern||"cone",
         patternTimer:0
       };
@@ -2006,6 +2153,9 @@
       if(boss)label+=" – Boss";
       if(event==="blood_moon")label+=" (Blood Moon)";
       else if(event==="curse_storm")label+=" (Curse Storm)";
+      if(difficulty==="chill")label+=" [Chill]";
+      else if(difficulty==="cursed")label+=" [Cursed]";
+      hudWave.textContent=label;
       showMessage(label,2.5);
     }
 
@@ -2064,7 +2214,7 @@
       if(!player)return;
       const angle=Math.atan2(player.y-e.y,player.x-e.x);
       const speed=e.bulletSpeed||260*enemyScale.bulletSpeedMult;
-      const dmg=e.bulletDamage||10*enemyScale.bulletDamageMult;
+      const dmg=e.bulletDamage||7*enemyScale.bulletDamageMult;
       spawnEnemyBullet(e.x,e.y,angle,speed,dmg);
     }
 
@@ -2124,6 +2274,8 @@
       addScreenShake(e.isBoss?6:3,e.isBoss?0.25:0.12);
       const styleGain=(e.isBoss?18:6)*(player.styleGainMult||1);
       player.styleMeter=clamp(player.styleMeter+styleGain,0,player.styleMax);
+
+      runKills++;
 
       if(e.isBoss){
         cosmeticStats.bossesKilled++;
@@ -2192,7 +2344,7 @@
             const shots=8;
             for(let i=0;i<shots;i++){
               const ang=Math.random()*Math.PI*2;
-              spawnEnemyBullet(e.x,e.y,ang,e.bulletSpeed*1.1,e.bulletDamage);
+              spawnEnemyBullet(e.x,e.y,ang,e.bulletSpeed*1.05,e.bulletDamage*0.9);
             }
           }
         }else if(e.pattern==="spin"){
@@ -2203,7 +2355,7 @@
             const shots=14;
             for(let i=0;i<shots;i++){
               const ang=(Math.PI*2)*(i/shots);
-              spawnEnemyBullet(e.x,e.y,ang,e.bulletSpeed,e.bulletDamage);
+              spawnEnemyBullet(e.x,e.y,ang,e.bulletSpeed,e.bulletDamage*0.9);
             }
           }
         }
@@ -2257,7 +2409,7 @@
             const shots=12;
             for(let i=0;i<shots;i++){
               const ang=(Math.PI*2)*(i/shots);
-              spawnEnemyBullet(e.x,e.y,ang,230*enemyScale.bulletSpeedMult,12*enemyScale.bulletDamageMult);
+              spawnEnemyBullet(e.x,e.y,ang,230*enemyScale.bulletSpeedMult,9*enemyScale.bulletDamageMult);
             }
           }
           break;
@@ -2274,7 +2426,7 @@
             const spread=0.5;
             for(let i=-2;i<=2;i++){
               const ang=baseAngle+i*(spread/4);
-              spawnEnemyBullet(e.x,e.y,ang,260*enemyScale.bulletSpeedMult,11*enemyScale.bulletDamageMult);
+              spawnEnemyBullet(e.x,e.y,ang,260*enemyScale.bulletSpeedMult,8*enemyScale.bulletDamageMult);
             }
           }
           if(bossGenjutsuTimer<=0 && e.bossTimer>7){
@@ -2297,7 +2449,7 @@
             const shots=20;
             for(let i=0;i<shots;i++){
               const ang=(Math.PI*2)*(i/shots);
-              spawnEnemyBullet(e.x,e.y,ang,260*enemyScale.bulletSpeedMult,10*enemyScale.bulletDamageMult);
+              spawnEnemyBullet(e.x,e.y,ang,260*enemyScale.bulletSpeedMult,7*enemyScale.bulletDamageMult);
             }
           }
           break;
@@ -2328,7 +2480,7 @@
             const baseAngleL=Math.atan2(dy,dx);
             for(let i=-1;i<=1;i++){
               const ang=baseAngleL+i*0.18;
-              spawnEnemyBullet(e.x,e.y,ang,240*enemyScale.bulletSpeedMult,12*enemyScale.bulletDamageMult);
+              spawnEnemyBullet(e.x,e.y,ang,240*enemyScale.bulletSpeedMult,9*enemyScale.bulletDamageMult);
             }
           }
           break;
@@ -2720,7 +2872,6 @@
       ctx.lineWidth=2.5;
       ctx.stroke();
 
-      // rotating "rune" lines
       ctx.translate(domainField.x,domainField.y);
       ctx.rotate(bgTime*0.8);
       ctx.strokeStyle="rgba(255,255,255,0.28)";
@@ -2833,7 +2984,6 @@
 
     function drawEnemies(){
       for(const e of enemies){
-        // body gradient – neon blob, but small radius for pixel vibe
         const bodyGrad=ctx.createRadialGradient(
           e.x-e.radius*0.3,e.y-e.radius*0.3,e.radius*0.2,
           e.x,e.y,e.radius
@@ -2851,7 +3001,6 @@
         ctx.fillStyle=bodyGrad;
         ctx.fill();
 
-        // inner pixel-ish core
         ctx.beginPath();
         ctx.arc(Math.round(e.x)+0.5,Math.round(e.y)+0.5,Math.max(3,e.radius*0.45),0,Math.PI*2);
         ctx.fillStyle="rgba(10,10,15,0.85)";
@@ -2859,7 +3008,6 @@
 
         ctx.restore();
 
-        // HP bar
         const hpRatio=clamp(e.hp/e.maxHp,0,1);
         const barW=e.radius*2;
         const bx=e.x-e.radius;
@@ -2876,7 +3024,6 @@
           ctx.fillText(e.name||"",e.x,by-5);
         }
 
-        // Simple visual features per boss
         if(e.isBoss){
           ctx.save();
           ctx.translate(e.x,e.y);
@@ -2884,7 +3031,6 @@
           ctx.strokeStyle="rgba(0,0,0,0.6)";
           ctx.lineWidth=1.3;
           if(e.bossId==="mahito"){
-            // stitched mouth line
             ctx.beginPath();
             ctx.moveTo(-e.radius*0.7,0);
             ctx.lineTo(e.radius*0.7,0);
@@ -2897,18 +3043,15 @@
               ctx.stroke();
             }
           }else if(e.bossId==="itachi"){
-            // sharingan ring
             ctx.beginPath();
             ctx.arc(0,0,e.radius*0.6,0,Math.PI*2);
             ctx.stroke();
           }else if(e.bossId==="gojo"){
-            // blindfold
             ctx.beginPath();
             ctx.moveTo(-e.radius*0.9,0);
             ctx.lineTo(e.radius*0.9,0);
             ctx.stroke();
           }else if(e.bossId==="luffy"){
-            // gear 5 halo arcs
             ctx.beginPath();
             ctx.arc(0,0,e.radius*0.95,Math.PI*0.1,Math.PI*0.9);
             ctx.stroke();
@@ -2924,7 +3067,6 @@
 
       ctx.save();
 
-      // Outer aura
       ctx.shadowBlur=18;
       ctx.shadowColor=theme.outlineColor||"#9ff6ff";
       const auraR=player.radius+8+(player.ultActiveTimer>0?4:0);
@@ -2933,7 +3075,6 @@
       ctx.fillStyle=theme.auraColor||"rgba(120,200,255,0.45)";
       ctx.fill();
 
-      // Core
       ctx.beginPath();
       ctx.arc(Math.round(player.x)+0.5,Math.round(player.y)+0.5,player.radius,0,Math.PI*2);
       ctx.fillStyle=theme.bodyColor||"#39c5ff";
@@ -2944,7 +3085,6 @@
       ctx.strokeStyle=theme.outlineColor||"#9ff6ff";
       ctx.stroke();
 
-      // Direction "weapon" arrow
       const dx=mousePos.x-player.x;
       const dy=mousePos.y-player.y;
       const ang=Math.atan2(dy,dx);
@@ -2962,7 +3102,6 @@
 
       ctx.restore();
 
-      // Melee swing arc
       if(player.meleeSwingTimer>0){
         const t=1-player.meleeSwingTimer/player.meleeSwingDuration;
         const m=getEffectiveMeleeStats();
@@ -2979,7 +3118,6 @@
         ctx.stroke();
       }
 
-      // Mahito touch indicator
       if(player.mahitoTouchStacks>0){
         ctx.beginPath();
         ctx.arc(player.x,player.y,player.radius+3,0,Math.PI*2);
@@ -3010,6 +3148,47 @@
       else if(ratio>=0.4){rank="B";color="#87c7ff";}
       else if(ratio>=0.2){rank="C";color="#b8f7b8";}
       return{rank,color,ratio};
+    }
+
+    function updateStatsPanel(){
+      if(!statsContentEl)return;
+      if(!player){
+        statsContentEl.innerHTML="";
+        return;
+      }
+
+      const gun=getEffectiveGunStats();
+      const melee=getEffectiveMeleeStats();
+
+      const fireRateText=gun?gun.fireRate.toFixed(1)+" /s":"?";
+      const bulletSpeedText=gun?Math.round(gun.bulletSpeed):"?";
+      const meleeDmgText=melee?Math.round(melee.dmg):"?";
+      const meleeRangeText=melee?Math.round(melee.range):"?";
+
+      const rows=[
+        ["Max HP",Math.round(player.maxHp)],
+        ["Damage",Math.round(player.damage)],
+        ["Fire Rate",fireRateText],
+        ["Bullet Speed",bulletSpeedText],
+        ["Bullets / Shot",player.bulletsPerShot],
+        ["Pierce",player.pierce],
+        ["Move Speed",Math.round(player.speed)],
+        ["Dash CD (s)",player.dashCooldown.toFixed(2)],
+        ["Dash Duration (s)",player.dashDuration.toFixed(2)],
+        ["Melee Damage",meleeDmgText],
+        ["Melee Range",meleeRangeText],
+        ["Melee CD (s)",player.meleeCooldown.toFixed(2)],
+        ["On-Hit Heal",player.onHitHeal.toFixed(1)],
+        ["Melee Heal",player.meleeOnHitHeal.toFixed(1)],
+        ["Summon DPS x",(player.summonDpsMult||1).toFixed(2)],
+        ["Damage Taken x",(player.incomingDamageMult||1).toFixed(2)]
+      ];
+
+      let html="";
+      for(const [label,val] of rows){
+        html+=`<div class="statRow"><span>${label}</span><span>${val}</span></div>`;
+      }
+      statsContentEl.innerHTML=html;
     }
 
     function updatePlayer(dt){
@@ -3072,12 +3251,15 @@
         hudStats.textContent="";
         hudUlt.textContent="";
         hudStyle.textContent="";
+        hudKills.textContent="";
         return;
       }
       const hpRatio=player.hp/player.maxHp;
       let waveLabel="Wave: "+(wave||0);
       if(currentWaveEvent==="blood_moon")waveLabel+=" (Blood Moon)";
       else if(currentWaveEvent==="curse_storm")waveLabel+=" (Curse Storm)";
+      if(difficulty==="chill")waveLabel+=" [Chill]";
+      else if(difficulty==="cursed")waveLabel+=" [Cursed]";
       hudWave.textContent=waveLabel;
 
       hudHP.textContent=`HP: ${Math.round(player.hp)}/${Math.round(player.maxHp)}`;
@@ -3106,6 +3288,10 @@
       hudStyle.textContent=`Style: Rank ${styleInfo.rank} (${percent}/${player.styleMax})`;
       hudStyle.style.color=styleInfo.color;
       hudStyle.classList.toggle("style-high",["A","S"].includes(styleInfo.rank));
+
+      hudKills.textContent=`Kills: ${runKills}`;
+
+      updateStatsPanel();
     }
 
     function draw(){
@@ -3192,6 +3378,7 @@
       screenShakeDuration=0.2;
       screenShakeIntensity=3;
       whiteFlashAlpha=0;
+      runKills=0;
 
       player=createPlayer();
       player.normalAbilities=[];
@@ -3233,6 +3420,16 @@
     }
 
     function setupMainMenu(){
+      const modeButtons=document.querySelectorAll(".modeButton");
+      modeButtons.forEach(btn=>{
+        btn.addEventListener("click",()=>{
+          difficulty=btn.getAttribute("data-mode");
+          modeButtons.forEach(b=>b.classList.remove("styleActive"));
+          btn.classList.add("styleActive");
+          recomputeEnemyScale();
+        });
+      });
+
       const styleButtons=document.querySelectorAll('.menuButton[data-style]');
       styleButtons.forEach(btn=>{
         btn.addEventListener("click",()=>{
