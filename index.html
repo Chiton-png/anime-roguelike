@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Anime Roguelike – Melee or Ranged</title>
+  <title>Anime Roguelike Shooter</title>
   <style>
     * {
       box-sizing: border-box;
@@ -10,7 +10,7 @@
       margin: 0;
     }
     body {
-      background: #050505;
+      background: #050509;
       color: #f5f5f5;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       display: flex;
@@ -28,149 +28,34 @@
       margin-bottom: 6px;
       opacity: 0.8;
     }
-    #game {
-      background: radial-gradient(circle at center, #202020 0, #050505 70%);
-      border: 2px solid #333;
-      border-radius: 8px;
-      display: block;
+
+    #container {
+      position: relative;
+      display: inline-block;
     }
+
+    #game {
+      display: block;
+      border-radius: 8px;
+      border: 2px solid #333;
+      background: #000;
+    }
+
     #hud {
       margin-top: 6px;
       font-size: 13px;
       display: flex;
       gap: 16px;
       justify-content: center;
+      flex-wrap: wrap;
     }
-
-    /* Upgrade panel */
-    #upgradePanel {
-      position: absolute;
-      inset: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 0, 0, 0.7);
-      z-index: 10;
+    #hudHP.low {
+      color: #ff7070;
+      text-shadow: 0 0 8px rgba(255,90,90,0.9);
     }
-    #upgradePanelInner {
-      background: #111;
-      border-radius: 10px;
-      padding: 16px;
-      max-width: 620px;
-      width: 90%;
-      box-shadow: 0 0 20px rgba(0,0,0,0.8);
-    }
-    #upgradePanelInner h2 {
-      margin-bottom: 8px;
-      font-size: 18px;
-    }
-    #upgradePanelInner p {
-      margin-bottom: 10px;
-      font-size: 12px;
-      opacity: 0.85;
-    }
-    #upgrades {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-    .upgradeButton {
-      background: #181818;
-      border-radius: 6px;
-      padding: 8px;
-      text-align: left;
-      cursor: pointer;
-      transition: background 0.1s, transform 0.05s, box-shadow 0.1s, border-color 0.1s;
-      font-size: 13px;
-      color: #f8f8f8;
-      border: 1px solid #555;
-    }
-    .upgradeButton:hover {
-      background: #262626;
-      transform: translateY(-1px);
-      box-shadow: 0 0 20px rgba(255,255,255,0.25);
-    }
-    .upgradeTopRow {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2px;
-    }
-    .upgradeName {
-      font-weight: 600;
-      display: inline-block;
-    }
-    .upgradeDesc {
-      font-size: 11px;
-      opacity: 0.93;
-      color: #e6e6e6; /* lighter text */
-    }
-
-    /* Rarity badges */
-    .rarityBadge {
-      font-size: 10px;
-      padding: 2px 6px;
-      border-radius: 999px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      font-weight: 600;
-      border: 1px solid transparent;
-    }
-    .rarity-common {
-      color: #b8f7b8;
-      background: rgba(80, 160, 80, 0.15);
-      border-color: rgba(120, 220, 120, 0.6);
-    }
-    .rarity-rare {
-      color: #87c7ff;
-      background: rgba(80, 120, 200, 0.18);
-      border-color: rgba(120, 180, 255, 0.7);
-    }
-    .rarity-epic {
-      color: #e3b3ff;
-      background: rgba(150, 80, 200, 0.2);
-      border-color: rgba(210, 150, 255, 0.8);
-    }
-    .rarity-legendary {
-      color: #ffe08a;
-      background: rgba(200, 140, 40, 0.25);
-      border-color: rgba(255, 206, 120, 0.9);
-    }
-
-    /* Card glow by rarity */
-    .card-rarity-common {
-      box-shadow: 0 0 6px rgba(130, 220, 130, 0.5);
-      border-color: rgba(130, 220, 130, 0.7);
-    }
-    .card-rarity-rare {
-      box-shadow: 0 0 10px rgba(120, 180, 255, 0.7);
-      border-color: rgba(120, 180, 255, 0.9);
-    }
-    .card-rarity-epic {
-      box-shadow: 0 0 12px rgba(210, 140, 255, 0.8);
-      border-color: rgba(210, 140, 255, 1);
-    }
-    .card-rarity-legendary {
-      box-shadow: 0 0 16px rgba(255, 210, 100, 0.95);
-      border-color: rgba(255, 210, 100, 1);
-    }
-
-    #skipButton {
-      margin-top: 4px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid #777;
-      background: #222;
-      color: #f5f5f5;
-      cursor: pointer;
-      font-size: 12px;
-      float: right;
-      transition: background 0.1s, transform 0.05s;
-    }
-    #skipButton:hover {
-      background: #333;
-      transform: translateY(-1px);
+    #hudStats.ult-ready {
+      color: #e5f6ff;
+      text-shadow: 0 0 8px rgba(120,215,255,0.9);
     }
 
     #overlayMessage {
@@ -184,19 +69,141 @@
       font-size: 12px;
       pointer-events: none;
     }
-    #container {
-      position: relative;
-      display: inline-block;
+
+    /* Upgrade panel */
+    #upgradePanel {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.75);
+      z-index: 10;
+    }
+    #upgradePanelInner {
+      background: #101010;
+      border-radius: 10px;
+      padding: 14px;
+      max-width: 620px;
+      width: 92%;
+      box-shadow: 0 0 24px rgba(0,0,0,0.9);
+      font-size: 13px;
+    }
+    #upgradePanelInner h2 {
+      margin-bottom: 6px;
+      font-size: 18px;
+    }
+    #upgradePanelInner p {
+      margin-bottom: 8px;
+      font-size: 11px;
+      opacity: 0.9;
+    }
+    #upgrades {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .upgradeButton {
+      background: #181818;
+      border-radius: 6px;
+      padding: 7px;
+      text-align: left;
+      cursor: pointer;
+      font-size: 12px;
+      border: 1px solid #555;
+      color: #f5f5f5;
+      transition: background 0.1s, transform 0.05s, box-shadow 0.1s, border-color 0.1s;
+    }
+    .upgradeButton:hover {
+      background: #252525;
+      transform: translateY(-1px);
+      box-shadow: 0 0 16px rgba(255,255,255,0.16);
+    }
+    .upgradeTopRow {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+    .upgradeName {
+      font-weight: 600;
+    }
+    .upgradeDesc {
+      font-size: 11px;
+      opacity: 0.92;
+      color: #f0f0f0;
     }
 
-    /* Abilities bar at bottom */
+    .rarityBadge {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      border: 1px solid transparent;
+    }
+    .rarity-common {
+      color: #b8f7b8;
+      background: rgba(80,160,80,0.18);
+      border-color: rgba(120,220,120,0.7);
+    }
+    .rarity-rare {
+      color: #87c7ff;
+      background: rgba(80,120,200,0.18);
+      border-color: rgba(120,180,255,0.7);
+    }
+    .rarity-epic {
+      color: #e3b3ff;
+      background: rgba(150,80,200,0.20);
+      border-color: rgba(210,150,255,0.8);
+    }
+    .rarity-legendary {
+      color: #ffe08a;
+      background: rgba(200,140,40,0.25);
+      border-color: rgba(255,206,120,0.9);
+    }
+
+    .card-rarity-common {
+      box-shadow: 0 0 6px rgba(130,220,130,0.5);
+      border-color: rgba(130,220,130,0.7);
+    }
+    .card-rarity-rare {
+      box-shadow: 0 0 9px rgba(120,180,255,0.7);
+      border-color: rgba(120,180,255,0.9);
+    }
+    .card-rarity-epic {
+      box-shadow: 0 0 11px rgba(210,140,255,0.8);
+      border-color: rgba(210,140,255,1);
+    }
+    .card-rarity-legendary {
+      box-shadow: 0 0 14px rgba(255,210,100,1);
+      border-color: rgba(255,210,100,1);
+    }
+
+    #skipButton {
+      margin-top: 2px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid #777;
+      background: #222;
+      color: #f5f5f5;
+      cursor: pointer;
+      font-size: 11px;
+      float: right;
+    }
+    #skipButton:hover {
+      background: #333;
+    }
+
+    /* Abilities bar */
     #abilitiesBar {
       margin-top: 8px;
-      max-width: 960px;
       display: flex;
       gap: 20px;
-      flex-wrap: wrap;
       justify-content: center;
+      flex-wrap: wrap;
+      max-width: 960px;
       font-size: 11px;
     }
     .abilitiesGroup {
@@ -206,7 +213,7 @@
       align-items: flex-start;
     }
     .abilitiesTitle {
-      opacity: 0.7;
+      opacity: 0.75;
       font-size: 11px;
     }
     .abilitiesList {
@@ -217,161 +224,115 @@
     }
     .abilitySlot {
       border-radius: 999px;
-      padding: 3px 8px;
+      padding: 3px 7px;
       border: 1px solid #666;
-      font-size: 11px;
-      cursor: pointer;
       background: #151515;
+      font-size: 10px;
+      cursor: pointer;
+      white-space: nowrap;
       display: inline-flex;
       align-items: center;
-      white-space: nowrap;
-      transition: background 0.1s, box-shadow 0.1s, transform 0.05s;
+      transition: background 0.1s, transform 0.05s, box-shadow 0.1s, border-color 0.1s;
     }
     .abilitySlot:hover {
       background: #232323;
       transform: translateY(-1px);
     }
-    .abilityName {
-      margin-right: 4px;
-    }
+
     .abilitySlot.card-rarity-common {
-      box-shadow: 0 0 4px rgba(130, 220, 130, 0.5);
-      border-color: rgba(130, 220, 130, 0.7);
+      box-shadow: 0 0 4px rgba(130,220,130,0.5);
+      border-color: rgba(130,220,130,0.7);
     }
     .abilitySlot.card-rarity-rare {
-      box-shadow: 0 0 6px rgba(120, 180, 255, 0.7);
-      border-color: rgba(120, 180, 255, 0.9);
+      box-shadow: 0 0 6px rgba(120,180,255,0.7);
+      border-color: rgba(120,180,255,0.9);
     }
     .abilitySlot.card-rarity-epic {
-      box-shadow: 0 0 7px rgba(210, 140, 255, 0.8);
-      border-color: rgba(210, 140, 255, 1);
+      box-shadow: 0 0 7px rgba(210,140,255,0.8);
+      border-color: rgba(210,140,255,1);
     }
     .abilitySlot.card-rarity-legendary {
-      box-shadow: 0 0 9px rgba(255, 210, 100, 0.95);
-      border-color: rgba(255, 210, 100, 1);
+      box-shadow: 0 0 9px rgba(255,210,100,1);
+      border-color: rgba(255,210,100,1);
     }
 
-    /* MAIN MENU */
+    /* Main menu */
     #mainMenu {
       position: fixed;
       inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(0,0,0,0.85);
+      background: rgba(0,0,0,0.9);
       z-index: 20;
     }
     #mainMenuInner {
       background: #111;
       padding: 16px 20px;
       border-radius: 10px;
-      text-align: center;
-      box-shadow: 0 0 20px rgba(0,0,0,0.8);
       max-width: 520px;
-      width: 90%;
+      width: 92%;
+      box-shadow: 0 0 24px rgba(0,0,0,0.9);
+      text-align: center;
+      font-size: 13px;
     }
     #mainMenuInner h2 {
+      margin-bottom: 4px;
       font-size: 20px;
-      margin-bottom: 6px;
     }
     #mainMenuInner p {
-      font-size: 12px;
       opacity: 0.85;
+      margin-bottom: 6px;
+      font-size: 11px;
     }
     .menuButtons {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       justify-content: center;
-      margin: 10px 0;
       flex-wrap: wrap;
+      margin: 6px 0;
     }
     .menuButton {
-      padding: 8px 12px;
+      padding: 7px 12px;
       border-radius: 999px;
       border: 1px solid #666;
       background: #222;
       color: #f5f5f5;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 12px;
       transition: background 0.1s, transform 0.05s, box-shadow 0.1s;
     }
     .menuButton:hover {
       background: #333;
       transform: translateY(-1px);
-      box-shadow: 0 0 10px rgba(255,255,255,0.15);
+      box-shadow: 0 0 12px rgba(255,255,255,0.15);
+    }
+    .menuButton.styleActive {
+      background: #203040;
+      border-color: #7bd0ff;
+      box-shadow: 0 0 12px rgba(123,208,255,0.8);
     }
     .menuHint {
-      margin-top: 6px;
+      margin-top: 4px;
       font-size: 11px;
       opacity: 0.75;
-    }
-    .trialSection {
-      margin-top: 6px;
-    }
-    .menuButton.trialActive {
-      background: #552020;
-      border-color: #ff7777;
-      box-shadow: 0 0 12px rgba(255, 120, 120, 0.7);
-    }
-    .menuButton.ultActive {
-      background: #20394f;
-      border-color: #7bd0ff;
-      box-shadow: 0 0 12px rgba(123, 208, 255, 0.7);
-    }
-    .menuButton.arcActive {
-      background: #203225;
-      border-color: #7bff9a;
-      box-shadow: 0 0 12px rgba(123, 255, 154, 0.7);
     }
   </style>
 </head>
 <body>
-  <h1>Anime Roguelike – Melee / Ranged</h1>
-  <p>WASD / Arrows move • Mouse aim • Left click shoot • Right click or E melee • Space dash • Q ultimate • R restart</p>
-  <p>Anime-only: JJK, MHA, AOT, Kaiju No.8, Tokyo Ghoul, Cyberpunk, Naruto, Fire Force, Eminence, Demon Slayer, One Piece. Bosses every 5 waves, curses, dash mods, fusions, and now themed arcs & arena hazards.</p>
+  <h1>Anime Roguelike Shooter</h1>
+  <p>WASD / Arrows move • Mouse aim • Left click shoot • Right click or E melee • Space dash • Boss every 5 waves • Upgrades with drawbacks</p>
 
   <!-- MAIN MENU -->
   <div id="mainMenu">
     <div id="mainMenuInner">
       <h2>Choose Combat Style</h2>
-      <p>Anime-only run. Start as a melee slasher or ranged blaster.</p>
+      <p>Start as melee slasher or ranged blaster. Anime power-ups every wave.</p>
       <div class="menuButtons">
         <button class="menuButton" data-style="melee">Melee Focus</button>
         <button class="menuButton" data-style="ranged">Ranged Focus</button>
       </div>
-
-      <div>
-        <p class="menuHint" style="margin-bottom:4px;">Choose your Ultimate (optional – default based on style if none picked):</p>
-        <div class="menuButtons">
-          <button class="menuButton ultButton" data-ult="jjk_domain">JJK Domain</button>
-          <button class="menuButton ultButton" data-ult="ranged_storm">Black Flash Storm</button>
-          <button class="menuButton ultButton" data-ult="mha_100">OFA 100% (MHA)</button>
-          <button class="menuButton ultButton" data-ult="aot_rush">ODM Rush (AOT)</button>
-          <button class="menuButton ultButton" data-ult="cyber_slow">Sandevistan (Cyberpunk)</button>
-          <button class="menuButton ultButton" data-ult="ghoul_rampage">Ghoul Rampage</button>
-        </div>
-      </div>
-
-      <div class="arcSection">
-        <p class="menuHint" style="margin-top:4px;margin-bottom:4px;">Choose Arc (boss & hazard theme):</p>
-        <div class="menuButtons">
-          <button class="menuButton arcButton arcActive" data-arc="mixed">Mixed Arc</button>
-          <button class="menuButton arcButton" data-arc="jjk">JJK Arc</button>
-          <button class="menuButton arcButton" data-arc="mha">MHA Arc</button>
-          <button class="menuButton arcButton" data-arc="ds">Demon Slayer Arc</button>
-        </div>
-      </div>
-
-      <div class="trialSection">
-        <p class="menuHint" style="margin-top:4px;margin-bottom:4px;">Optional Anime Trials (pre-run curses):</p>
-        <div class="menuButtons">
-          <button class="menuButton trialButton" data-trial="trial_shibuya">Shibuya Incident</button>
-          <button class="menuButton trialButton" data-trial="trial_rumbling">Rumbling Approaches</button>
-          <button class="menuButton trialButton" data-trial="trial_night_raid">Night Raid</button>
-        </div>
-      </div>
-
-      <p class="menuHint">Press R after Game Over to restart with the same style, ult, arc & trials.</p>
+      <p class="menuHint">After you die, press R to restart with the same style.</p>
     </div>
   </div>
 
@@ -383,8 +344,8 @@
       <div id="upgradePanelInner">
         <h2>Choose a Power-Up</h2>
         <p>
-          You gain a power every wave. Boss waves (every 5th) offer <b>Legendary</b> powers and <b>Curses</b> with extreme tradeoffs.<br>
-          Base cap: <b>5 normal</b> powers and <b>2 boss</b> powers — unless you take <b>Forbidden Overflow</b>. Some powers replace your dash with bombs / fire / blinks.
+          Every wave you get a power with a drawback. Max <b>5 normal</b> powers and <b>2 boss</b> powers.
+          Boss waves (5, 10, 15…) can give <b>Legendary</b> and <b>Curses</b> with extreme tradeoffs.
         </p>
         <div id="upgrades"></div>
         <button id="skipButton">Skip – no power this wave</button>
@@ -400,11 +361,11 @@
 
   <div id="abilitiesBar">
     <div class="abilitiesGroup">
-      <span class="abilitiesTitle">Normal Powers (base cap 5):</span>
+      <span class="abilitiesTitle">Normal Powers (cap 5, unless Broken Limit):</span>
       <div id="normalAbilitiesList" class="abilitiesList"></div>
     </div>
     <div class="abilitiesGroup">
-      <span class="abilitiesTitle">Boss Powers (base cap 2):</span>
+      <span class="abilitiesTitle">Boss Powers (cap 2):</span>
       <div id="bossAbilitiesList" class="abilitiesList"></div>
     </div>
   </div>
@@ -428,48 +389,47 @@
     let mousePos = { x: canvas.width / 2, y: canvas.height / 2 };
     let mouseDown = false;
 
-    let combatStyle = null;     // "melee" or "ranged"
-    let loopStarted = false;
-    let currentArc = "mixed";   // "mixed", "jjk", "mha", "ds"
+    let combatStyle = null; // "melee" or "ranged"
+    let gameState = "menu"; // "menu", "playing", "upgrade", "chooseReplace", "gameover"
 
-    // Ultimate types
-    const ULT_TYPE = {
-      NONE: "none",
-      RANGED_STORM: "ranged_storm",
-      MELEE_FRENZY: "melee_frenzy",
-      JJK_DOMAIN: "jjk_domain",
-      MHA_100: "mha_100",
-      AOT_RUSH: "aot_rush",
-      GHOUL_RAMPAGE: "ghoul_rampage",
-      CYBER_SLOW: "cyber_slow"
-    };
-
-    let selectedUltimateKey = null;
-
-    // Game state
-    let player;
-    let bullets = [];
-    let enemies = [];
-    let enemyBullets = [];
-    let playerBombs = [];
-    let fireBursts = [];
-    let hazards = [];
-    let wave = 0;
-    let gameState = "menu"; // "menu", "playing", "choosingUpgrade", "choosingReplace", "gameOver"
     let lastTime = 0;
     let messageTimer = 0;
 
-    // Abilities & curses
-    const normalAbilities = [];
-    const bossAbilities = [];
-    const curses = [];
+    // Background orbs
+    const bgOrbs = [];
+    const MAX_BG_ORBS = 40;
+    let bgTime = 0;
+
+    // Particles
+    const particles = [];
+
+    // Screen shake / white flash
+    let screenShakeTimer = 0;
+    let screenShakeDuration = 0;
+    let screenShakeIntensity = 0;
+    let whiteFlashAlpha = 0;
+
+    // Entities
+    let player = null;
+    let bullets = [];
+    let enemies = [];
+    let enemyBullets = [];
+
+    // Dashes & melee ex
+    let playerBombs = [];
+    let fireBursts = [];
+
+    // Waves / abilities
+    let wave = 0;
+    let normalAbilities = [];
+    let bossAbilities = [];
+    let curses = [];
     let activeCurses = [];
-    let selectedTrialCurseIds = [];
-
-    // No-limit meta power flag
     let noLimitMode = false;
+    let pendingAbility = null;
+    let pendingCategory = null;
 
-    // Global enemy scaling from curses
+    // Enemy scaling from curses
     let enemyScale = {
       hpMult: 1,
       speedMult: 1,
@@ -479,52 +439,19 @@
       bulletDamageMult: 1
     };
 
-    let pendingAbility = null;
-    let pendingCategory = null;
-
-    // Base stats
-    const BASE_STATS = {
-      maxHp: 100,
-      damage: 16,
-      fireRate: 3,
-      speed: 230,
-      bulletSpeed: 550,
-      bulletsPerShot: 1,
-      spread: 0.18,
-      pierce: 0,
-      onHitHeal: 0,
-      healAfterWave: 10,
-      dashCooldown: 1.1,
-      dashDuration: 0.22,
-      // melee
-      meleeDamage: 32,
-      meleeRange: 80,
-      meleeArc: 1.7,
-      meleeCooldown: 0.75,
-      meleeOnHitHeal: 0
-    };
-
-    /* ========= INPUT ========= */
+    /* ==================== INPUT ==================== */
 
     window.addEventListener("keydown", (e) => {
       const k = e.key.toLowerCase();
       keys[k] = true;
 
-      if (e.code === "Space") {
-        if (gameState === "playing") {
-          startDash();
-        }
+      if (e.code === "Space" && gameState === "playing") {
+        startDash();
       }
-
       if (k === "e" && gameState === "playing") {
         tryMeleeAttack();
       }
-
-      if (k === "q" && gameState === "playing") {
-        activateUltimate();
-      }
-
-      if (k === "r" && gameState === "gameOver") {
+      if (k === "r" && gameState === "gameover") {
         resetGame();
       }
     });
@@ -540,1296 +467,225 @@
     });
 
     canvas.addEventListener("mousedown", (e) => {
-      if (e.button === 0) {
-        mouseDown = true;
-      } else if (e.button === 2 && gameState === "playing") {
-        tryMeleeAttack();
-      }
+      if (e.button === 0) mouseDown = true;
+      if (e.button === 2 && gameState === "playing") tryMeleeAttack();
     });
     canvas.addEventListener("mouseup", (e) => {
-      if (e.button === 0) {
-        mouseDown = false;
-      }
+      if (e.button === 0) mouseDown = false;
     });
-    canvas.addEventListener("contextmenu", (e) => {
-      e.preventDefault();
-    });
+    canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 
-    /* ========= UTIL ========= */
+    /* ==================== UTILS ==================== */
 
-    function shuffled(array) {
-      const a = array.slice();
+    function clamp(v, min, max) {
+      return Math.max(min, Math.min(max, v));
+    }
+    function distance(x1, y1, x2, y2) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      return Math.hypot(dx, dy);
+    }
+    function shuffled(arr) {
+      const a = arr.slice();
       for (let i = a.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [a[i], a[j]] = [a[j], a[i]];
       }
       return a;
     }
-
-    function clamp(value, min, max) {
-      return Math.max(min, Math.min(max, value));
-    }
-
-    function distance(x1, y1, x2, y2) {
-      const dx = x2 - x1;
-      const dy = y2 - y1;
-      return Math.hypot(dx, dy);
-    }
-
     function angleDiff(a, b) {
       let d = a - b;
-      while (d > Math.PI) d -= Math.PI * 2;
-      while (d < -Math.PI) d += Math.PI * 2;
+      while (d > Math.PI) d -= 2 * Math.PI;
+      while (d < -Math.PI) d += 2 * Math.PI;
       return d;
     }
 
-    function arcLabel() {
-      switch (currentArc) {
-        case "jjk": return "JJK";
-        case "mha": return "MHA";
-        case "ds": return "Demon Slayer";
-        default: return "Mixed";
+    function showMessage(msg, t = 2) {
+      overlayMessageEl.textContent = msg;
+      messageTimer = t;
+    }
+
+    function addScreenShake(intensity, duration) {
+      screenShakeIntensity = Math.max(screenShakeIntensity, intensity);
+      screenShakeDuration = Math.max(screenShakeDuration, duration);
+      screenShakeTimer = Math.max(screenShakeTimer, duration);
+    }
+    function addWhiteFlash(strength) {
+      whiteFlashAlpha = Math.min(1, whiteFlashAlpha + strength);
+    }
+
+    /* ==================== BACKGROUND & PARTICLES ==================== */
+
+    function initBackground() {
+      bgOrbs.length = 0;
+      for (let i = 0; i < MAX_BG_ORBS; i++) {
+        bgOrbs.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          r: 20 + Math.random() * 60,
+          speed: 5 + Math.random() * 15,
+          drift: (Math.random() * 0.4 + 0.2) * (Math.random() < 0.5 ? -1 : 1),
+          alpha: 0.06 + Math.random() * 0.10
+        });
       }
     }
 
-    /* Ultimate helpers */
-
-    function mapSelectedKeyToUltType(key) {
-      switch (key) {
-        case "jjk_domain": return ULT_TYPE.JJK_DOMAIN;
-        case "ranged_storm": return ULT_TYPE.RANGED_STORM;
-        case "mha_100": return ULT_TYPE.MHA_100;
-        case "aot_rush": return ULT_TYPE.AOT_RUSH;
-        case "cyber_slow": return ULT_TYPE.CYBER_SLOW;
-        case "ghoul_rampage": return ULT_TYPE.GHOUL_RAMPAGE;
-        default: return null;
+    function updateBackground(dt) {
+      bgTime += dt;
+      for (const orb of bgOrbs) {
+        orb.y += orb.speed * dt;
+        orb.x += orb.drift * dt;
+        if (orb.y - orb.r > canvas.height) orb.y = -orb.r;
+        if (orb.y + orb.r < 0) orb.y = canvas.height + orb.r;
+        if (orb.x - orb.r > canvas.width) orb.x = -orb.r;
+        if (orb.x + orb.r < 0) orb.x = canvas.width + orb.r;
       }
     }
 
-    function ultTypeLabel(type) {
-      switch (type) {
-        case ULT_TYPE.JJK_DOMAIN: return "Domain";
-        case ULT_TYPE.RANGED_STORM: return "Black Flash";
-        case ULT_TYPE.MELEE_FRENZY: return "Kakuja Frenzy";
-        case ULT_TYPE.MHA_100: return "OFA 100%";
-        case ULT_TYPE.AOT_RUSH: return "ODM Rush";
-        case ULT_TYPE.GHOUL_RAMPAGE: return "Ghoul Rampage";
-        case ULT_TYPE.CYBER_SLOW: return "Sandevistan";
-        default: return "Ult";
+    function drawBackground() {
+      // main gradient
+      const g = ctx.createRadialGradient(
+        canvas.width * 0.5,
+        canvas.height * 0.35,
+        0,
+        canvas.width * 0.5,
+        canvas.height * 0.5,
+        canvas.width * 0.9
+      );
+      g.addColorStop(0, "#22263a");
+      g.addColorStop(1, "#050509");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // soft orbs
+      for (const orb of bgOrbs) {
+        ctx.beginPath();
+        ctx.arc(orb.x, orb.y, orb.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(150,170,255,${orb.alpha})`;
+        ctx.fill();
+      }
+
+      // faint grid
+      ctx.save();
+      ctx.globalAlpha = 0.15;
+      ctx.strokeStyle = "#444";
+      const step = 40;
+      ctx.beginPath();
+      for (let x = 0; x < canvas.width; x += step) {
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+      }
+      for (let y = 0; y < canvas.height; y += step) {
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+
+      // vignette
+      const vg = ctx.createRadialGradient(
+        canvas.width / 2,
+        canvas.height / 2,
+        canvas.width * 0.2,
+        canvas.width / 2,
+        canvas.height / 2,
+        canvas.width * 0.7
+      );
+      vg.addColorStop(0, "rgba(0,0,0,0)");
+      vg.addColorStop(1, "rgba(0,0,0,0.7)");
+      ctx.fillStyle = vg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function spawnParticles(x, y, options = {}) {
+      const {
+        count = 12,
+        spread = Math.PI * 2,
+        speedMin = 80,
+        speedMax = 260,
+        lifeMin = 0.25,
+        lifeMax = 0.6,
+        sizeMin = 2,
+        sizeMax = 4,
+        color = "rgba(255,255,255,1)"
+      } = options;
+
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * spread;
+        const speed = speedMin + Math.random() * (speedMax - speedMin);
+        const vx = Math.cos(angle) * speed;
+        const vy = Math.sin(angle) * speed;
+        const life = lifeMin + Math.random() * (lifeMax - lifeMin);
+        const size = sizeMin + Math.random() * (sizeMax - sizeMin);
+
+        particles.push({
+          x,
+          y,
+          vx,
+          vy,
+          life,
+          maxLife: life,
+          size,
+          color,
+          renderColor: color
+        });
       }
     }
 
-    function pickUltimateType() {
-      if (player && player.selectedUltType && player.selectedUltType !== ULT_TYPE.NONE) {
-        return player.selectedUltType;
+    function updateParticles(dt) {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.life -= dt;
+        if (p.life <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+        const t = p.life / p.maxLife;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vx *= 0.97;
+        p.vy += 20 * dt;
+
+        const match = p.color.match(/rgba\((\d+),(\d+),(\d+),([\d.]+)\)/);
+        if (match) {
+          const r = match[1], g = match[2], b = match[3];
+          p.renderColor = `rgba(${r},${g},${b},${t})`;
+        } else {
+          p.renderColor = p.color;
+        }
       }
-      if (combatStyle === "ranged") return ULT_TYPE.RANGED_STORM;
-      if (combatStyle === "melee") return ULT_TYPE.MELEE_FRENZY;
-      return ULT_TYPE.RANGED_STORM;
     }
 
-    function getUltimateLabel() {
-      if (!player) return "";
-      const baseType =
-        player.ultimateActiveTimer > 0
-          ? player.ultimateType
-          : (player.selectedUltType && player.selectedUltType !== ULT_TYPE.NONE
-              ? player.selectedUltType
-              : pickUltimateType());
-
-      const label = ultTypeLabel(baseType);
-
-      if (player.ultimateActiveTimer > 0) {
-        return label;
+    function drawParticles() {
+      for (const p of particles) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = p.renderColor || p.color;
+        ctx.fill();
       }
-      if (player.ultimateReady) {
-        return `${label} READY (Q)`;
-      }
-      return `${label} ${Math.round(player.ultimateCharge)}%`;
     }
 
-    /* ========= ABILITY & CURSE DEFINITIONS ========= */
+    /* ==================== PLAYER & STATS ==================== */
 
-    function addNormalAbility(
-      id,
-      name,
-      rarity,
-      description,
-      mods,
-      requires = null,
-      requiresAll = null
-    ) {
-      normalAbilities.push({
-        id,
-        name,
-        rarity,
-        description,
-        mods,
-        requires,
-        requiresAll,
-        category: "normal"
-      });
-    }
-
-    function addBossAbility(
-      id,
-      name,
-      rarity,
-      description,
-      mods,
-      requires = null,
-      requiresAll = null
-    ) {
-      bossAbilities.push({
-        id,
-        name,
-        rarity,
-        description,
-        mods,
-        requires,
-        requiresAll,
-        category: "boss"
-      });
-    }
-
-    function addCurse(id, name, rarity, description, mods, enemyMods, special = {}) {
-      curses.push({
-        id,
-        name,
-        rarity,
-        description,
-        mods,
-        enemyMods,
-        special,
-        isCurse: true
-      });
-    }
-
-    /* ========= ANIME MODE ABILITIES ========= */
-
-    function initAnimeAbilities() {
-      normalAbilities.length = 0;
-      bossAbilities.length = 0;
-
-      // ---- Core anime stat powers ----
-      addNormalAbility(
-        "anime_cursed_overflow",
-        "Cursed Overflow",
-        "Rare",
-        "Damage +25% and on-hit heal +0.7, but max HP -15% and heal after wave -5.",
-        {
-          damageMult: 1.25,
-          onHitHealAdd: 0.7,
-          maxHpMult: 0.85,
-          healAfterWaveAdd: -5
-        }
-      );
-      addNormalAbility(
-        "anime_quirk_booster",
-        "Quirk Booster",
-        "Common",
-        "Fire rate +25% and move speed +10%, but damage -10% and spread +15%.",
-        {
-          fireRateMult: 1.25,
-          speedMult: 1.10,
-          damageMult: 0.90,
-          spreadMult: 1.15
-        }
-      );
-      addNormalAbility(
-        "anime_survey_maneuvers",
-        "Survey Maneuvers",
-        "Rare",
-        "Move speed +35% and dash cooldown -25%, but max HP -10% and heal after wave -5.",
-        {
-          speedMult: 1.35,
-          dashCooldownMult: 0.75,
-          maxHpMult: 0.90,
-          healAfterWaveAdd: -5
-        }
-      );
-      addNormalAbility(
-        "anime_grapple_gear",
-        "Grapple Gear",
-        "Common",
-        "Bullet speed +25% and damage +10%, but fire rate -10%.",
-        {
-          bulletSpeedMult: 1.25,
-          damageMult: 1.10,
-          fireRateMult: 0.90
-        }
-      );
-      addNormalAbility(
-        "anime_kaiju_instinct",
-        "Kaiju Instinct",
-        "Rare",
-        "Max HP +50 and damage +15%, but fire rate -10% and spread +10%.",
-        {
-          maxHpAdd: 50,
-          damageMult: 1.15,
-          fireRateMult: 0.90,
-          spreadMult: 1.10
-        }
-      );
-      addNormalAbility(
-        "anime_cursed_reversal",
-        "Cursed Reversal",
-        "Rare",
-        "Heal after wave +25 and on-hit heal +0.8, but damage -15%.",
-        {
-          healAfterWaveAdd: 25,
-          onHitHealAdd: 0.8,
-          damageMult: 0.85
-        }
-      );
-      addNormalAbility(
-        "anime_hero_resolve",
-        "Hero Resolve",
-        "Common",
-        "Max HP +15% and fire rate +10%, but move speed -10%.",
-        {
-          maxHpMult: 1.15,
-          fireRateMult: 1.10,
-          speedMult: 0.90
-        }
-      );
-      addNormalAbility(
-        "anime_rogue_titan",
-        "Rogue Titan",
-        "Epic",
-        "Damage +35% and pierce +1, but heal after wave -15 and spread +25%.",
-        {
-          damageMult: 1.35,
-          pierceAdd: 1,
-          healAfterWaveAdd: -15,
-          spreadMult: 1.25
-        }
-      );
-      addNormalAbility(
-        "anime_smash_style",
-        "Smash Style",
-        "Epic",
-        "+2 bullets per shot and damage +20%, but spread +30% and fire rate -15%.",
-        {
-          bulletsPerShotAdd: 2,
-          damageMult: 1.20,
-          spreadMult: 1.30,
-          fireRateMult: 0.85
-        }
-      );
-      addNormalAbility(
-        "anime_anti_kaiju_rounds",
-        "Anti-Kaiju Rounds",
-        "Rare",
-        "Bullet speed +40% and pierce +1, but -1 bullet per shot and heal after wave -10.",
-        {
-          bulletSpeedMult: 1.40,
-          pierceAdd: 1,
-          bulletsPerShotAdd: -1,
-          healAfterWaveAdd: -10
-        }
-      );
-
-      addNormalAbility(
-        "anime_flash_step",
-        "Flash Step",
-        "Rare",
-        "Dash cooldown -30% and move speed +15%, but max HP -10% and heal after wave -5.",
-        {
-          dashCooldownMult: 0.70,
-          speedMult: 1.15,
-          maxHpMult: 0.90,
-          healAfterWaveAdd: -5
-        }
-      );
-      addNormalAbility(
-        "anime_cursed_chains",
-        "Cursed Chains",
-        "Rare",
-        "Pierce +1 and bullet speed +20%, but fire rate -10% and heal after wave -5.",
-        {
-          pierceAdd: 1,
-          bulletSpeedMult: 1.20,
-          fireRateMult: 0.90,
-          healAfterWaveAdd: -5
-        }
-      );
-      addNormalAbility(
-        "anime_gear_shift",
-        "Gear Shift",
-        "Epic",
-        "Fire rate +20% and damage +15%, but move speed -10% and max HP -10%.",
-        {
-          fireRateMult: 1.20,
-          damageMult: 1.15,
-          speedMult: 0.90,
-          maxHpMult: 0.90
-        }
-      );
-      addNormalAbility(
-        "anime_wings_freedom",
-        "Wings of Freedom",
-        "Epic",
-        "Move speed +30% and bullet speed +25%, but spread +20% and heal after wave -10.",
-        {
-          speedMult: 1.30,
-          bulletSpeedMult: 1.25,
-          spreadMult: 1.20,
-          healAfterWaveAdd: -10
-        }
-      );
-
-      // Eminence / Ghoul / Cyberpunk / Naruto / Fire Force style
-      addNormalAbility(
-        "anime_shadow_garden",
-        "Shadow Garden Arts",
-        "Rare",
-        "Damage +20% and spread -20%, but fire rate -10% and move speed -10%.",
-        {
-          damageMult: 1.20,
-          spreadMult: 0.80,
-          fireRateMult: 0.90,
-          speedMult: 0.90
-        }
-      );
-      addNormalAbility(
-        "anime_kagune_rampage",
-        "Kagune Rampage",
-        "Epic",
-        "Damage +25% and on-hit heal +1.2, but max HP -15% and heal after wave -15.",
-        {
-          damageMult: 1.25,
-          onHitHealAdd: 1.2,
-          maxHpMult: 0.85,
-          healAfterWaveAdd: -15
-        }
-      );
-      addNormalAbility(
-        "anime_edgerunner_overclock",
-        "Edgerunner Overclock",
-        "Epic",
-        "Fire rate +35%, move speed +20% and dash cooldown -20%, but max HP -25% and heal after wave -20.",
-        {
-          fireRateMult: 1.35,
-          speedMult: 1.20,
-          dashCooldownMult: 0.80,
-          maxHpMult: 0.75,
-          healAfterWaveAdd: -20
-        }
-      );
-      addNormalAbility(
-        "anime_shinobi_footwork",
-        "Shinobi Footwork",
-        "Rare",
-        "Move speed +25% and dash duration +20%, but damage -10% and bullet speed -10%.",
-        {
-          speedMult: 1.25,
-          dashDurationMult: 1.20,
-          damageMult: 0.90,
-          bulletSpeedMult: 0.90
-        }
-      );
-      addNormalAbility(
-        "anime_ignition_style",
-        "Ignition Style",
-        "Rare",
-        "+1 bullet per shot and bullet speed +15%, but spread +20% and fire rate -10%.",
-        {
-          bulletsPerShotAdd: 1,
-          bulletSpeedMult: 1.15,
-          spreadMult: 1.20,
-          fireRateMult: 0.90
-        }
-      );
-
-      // Melee upgrades
-      addNormalAbility(
-        "anime_blade_training",
-        "Blade Training",
-        "Common",
-        "Melee damage +30% and melee range +20%, but bullet damage -10%.",
-        {
-          meleeDamageMult: 1.30,
-          meleeRangeMult: 1.20,
-          damageMult: 0.90
-        }
-      );
-      addNormalAbility(
-        "anime_blood_edge",
-        "Blood-Edge Style",
-        "Rare",
-        "Melee damage +45% and melee lifesteal +0.8, but melee cooldown +20% and max HP -10%.",
-        {
-          meleeDamageMult: 1.45,
-          meleeOnHitHealAdd: 0.8,
-          meleeCooldownMult: 1.20,
-          maxHpMult: 0.90
-        }
-      );
-
-      // Precision & stockpiles
-      addNormalAbility(
-        "anime_six_eyes_focus",
-        "Six Eyes Focus",
-        "Epic",
-        "Bullet speed +45% and spread -25%, damage +20%, but max HP -15% and heal after wave -15.",
-        {
-          bulletSpeedMult: 1.45,
-          spreadMult: 0.75,
-          damageMult: 1.20,
-          maxHpMult: 0.85,
-          healAfterWaveAdd: -15
-        }
-      );
-      addNormalAbility(
-        "anime_stockpile_power",
-        "One For All: Stockpile",
-        "Rare",
-        "Damage +25% and max HP +15%, but fire rate -10% and move speed -10%.",
-        {
-          damageMult: 1.25,
-          maxHpMult: 1.15,
-          fireRateMult: 0.90,
-          speedMult: 0.90
-        }
-      );
-
-      // Basic general buffs
-      addNormalAbility(
-        "anime_training_arc",
-        "Training Arc",
-        "Common",
-        "Damage +10%, fire rate +10% and move speed +10%, but max HP -10.",
-        {
-          damageMult: 1.10,
-          fireRateMult: 1.10,
-          speedMult: 1.10,
-          maxHpAdd: -10
-        }
-      );
-      addNormalAbility(
-        "anime_basic_reinforcement",
-        "Basic Reinforcement",
-        "Common",
-        "Max HP +15 and heal after wave +5, but fire rate -5%.",
-        {
-          maxHpAdd: 15,
-          healAfterWaveAdd: 5,
-          fireRateMult: 0.95
-        }
-      );
-
-      // More melee / movement
-      addNormalAbility(
-        "anime_resonant_blades",
-        "Resonant Blades",
-        "Epic",
-        "Melee damage +35% and dash duration +15%, but bullet speed -10% and heal after wave -10.",
-        {
-          meleeDamageMult: 1.35,
-          dashDurationMult: 1.15,
-          bulletSpeedMult: 0.90,
-          healAfterWaveAdd: -10
-        }
-      );
-      addNormalAbility(
-        "anime_heroic_instinct",
-        "Heroic Instinct",
-        "Common",
-        "Max HP +10% and move speed +10%, but fire rate -10% and damage -5%.",
-        {
-          maxHpMult: 1.10,
-          speedMult: 1.10,
-          fireRateMult: 0.90,
-          damageMult: 0.95
-        }
-      );
-
-      // Dash replacement powers (bomb / flame / blink)
-      addNormalAbility(
-        "anime_cursed_dash_bomb",
-        "Cursed Dash Bomb",
-        "Rare",
-        "Your dash drops a cursed bomb that explodes after a short delay, dealing huge area damage. Dash cooldown +15% and max HP -10%.",
-        {
-          dashCooldownMult: 1.15,
-          maxHpMult: 0.90
-        }
-      );
-      addNormalAbility(
-        "anime_flame_step",
-        "Flame Step",
-        "Rare",
-        "Your dash releases a burst of fire around you, heavily damaging nearby enemies. Dash duration -10% and heal after wave -5.",
-        {
-          dashDurationMult: 0.90,
-          healAfterWaveAdd: -5
-        }
-      );
-      addNormalAbility(
-        "anime_blink_step",
-        "Blink Step",
-        "Epic",
-        "Your dash becomes a short-range teleport toward your aim direction and grants brief invulnerability. Dash cooldown -10% and max HP -10%.",
-        {
-          dashCooldownMult: 0.90,
-          maxHpMult: 0.90
-        }
-      );
-
-      // Fusions
-      addNormalAbility(
-        "anime_limit_break",
-        "Limit Break State",
-        "Epic",
-        "Fusion: Cursed Overflow + Quirk Booster. Damage +35%, fire rate +25% and on-hit heal +1.2, but max HP -25% and spread +25%.",
-        {
-          damageMult: 1.35,
-          fireRateMult: 1.25,
-          onHitHealAdd: 1.2,
-          maxHpMult: 0.75,
-          spreadMult: 1.25
-        },
-        null,
-        ["anime_cursed_overflow", "anime_quirk_booster"]
-      );
-      addNormalAbility(
-        "anime_sky_ripper",
-        "Sky Ripper Maneuvers",
-        "Epic",
-        "Fusion: Survey Maneuvers + Grapple Gear. Move speed +50%, dash cooldown -45% and bullet speed +35%, but max HP -15% and heal after wave -15.",
-        {
-          speedMult: 1.50,
-          dashCooldownMult: 0.55,
-          bulletSpeedMult: 1.35,
-          maxHpMult: 0.85,
-          healAfterWaveAdd: -15
-        },
-        null,
-        ["anime_survey_maneuvers", "anime_grapple_gear"]
-      );
-      addNormalAbility(
-        "anime_infinity_step",
-        "Infinity Step",
-        "Epic",
-        "Fusion: Flash Step + Sky Ripper Maneuvers. Dash cooldown -55%, dash duration +25% and move speed +20%, but max HP -20% and heal after wave -15.",
-        {
-          dashCooldownMult: 0.45,
-          dashDurationMult: 1.25,
-          speedMult: 1.20,
-          maxHpMult: 0.80,
-          healAfterWaveAdd: -15
-        },
-        null,
-        ["anime_flash_step", "anime_sky_ripper"]
-      );
-      addNormalAbility(
-        "anime_calamity_drive",
-        "Calamity Drive",
-        "Epic",
-        "Fusion: Kaiju Instinct + Gear Shift. Damage +40% and fire rate +20%, but max HP -20% and heal after wave -20.",
-        {
-          damageMult: 1.40,
-          fireRateMult: 1.20,
-          maxHpMult: 0.80,
-          healAfterWaveAdd: -20
-        },
-        null,
-        ["anime_kaiju_instinct", "anime_gear_shift"]
-      );
-      addNormalAbility(
-        "anime_shadow_protocol",
-        "Shadow Protocol",
-        "Epic",
-        "Fusion: Shadow Garden Arts + Cursed Chains. Damage +35%, pierce +2 and spread -20%, but move speed -15% and heal after wave -15.",
-        {
-          damageMult: 1.35,
-          pierceAdd: 2,
-          spreadMult: 0.80,
-          speedMult: 0.85,
-          healAfterWaveAdd: -15
-        },
-        null,
-        ["anime_shadow_garden", "anime_cursed_chains"]
-      );
-      addNormalAbility(
-        "anime_neon_ghoul",
-        "Neon Ghoul",
-        "Epic",
-        "Fusion: Kagune Rampage + Edgerunner Overclock. Damage +40%, fire rate +25% and on-hit heal +1.5, but max HP -25% and heal after wave -30.",
-        {
-          damageMult: 1.40,
-          fireRateMult: 1.25,
-          onHitHealAdd: 1.5,
-          maxHpMult: 0.75,
-          healAfterWaveAdd: -30
-        },
-        null,
-        ["anime_kagune_rampage", "anime_edgerunner_overclock"]
-      );
-
-      // Forbidden Overflow – no limit slots
-      addNormalAbility(
-        "forbidden_overflow",
-        "Forbidden Overflow",
-        "Rare",
-        "Removes all limits on how many powers you can hold, but halves the effect of every ability you take. Curses stay full strength.",
-        {}
-      );
-
-      /* ====== Demon Slayer & One Piece normals ====== */
-
-      addNormalAbility(
-        "ds_water_breathing",
-        "Water Breathing – Flowing Form",
-        "Rare",
-        "Melee range +25%, melee cooldown -15% and move speed +10%, but bullet damage -10% and heal after wave -5.",
-        {
-          meleeRangeMult: 1.25,
-          meleeCooldownMult: 0.85,
-          speedMult: 1.10,
-          damageMult: 0.90,
-          healAfterWaveAdd: -5
-        }
-      );
-      addNormalAbility(
-        "ds_breath_beast",
-        "Breath of the Beast",
-        "Rare",
-        "Melee damage +35% and move speed +10%, but bullet damage -15% and heal after wave -5.",
-        {
-          meleeDamageMult: 1.35,
-          speedMult: 1.10,
-          damageMult: 0.85,
-          healAfterWaveAdd: -5
-        }
-      );
-      addNormalAbility(
-        "ds_demon_regeneration",
-        "Demon Regeneration",
-        "Epic",
-        "Max HP +20%, on-hit heal +1.0 and heal after wave +10, but damage -15% and fire rate -10%.",
-        {
-          maxHpMult: 1.20,
-          onHitHealAdd: 1.0,
-          healAfterWaveAdd: 10,
-          damageMult: 0.85,
-          fireRateMult: 0.90
-        }
-      );
-
-      addNormalAbility(
-        "ds_thunder_breathing",
-        "Thunder Breathing: First Form",
-        "Epic",
-        "Dash cooldown -25%, dash duration +10% and melee damage +30%, but max HP -15% and heal after wave -10.",
-        {
-          dashCooldownMult: 0.75,
-          dashDurationMult: 1.10,
-          meleeDamageMult: 1.30,
-          maxHpMult: 0.85,
-          healAfterWaveAdd: -10
-        }
-      );
-      addNormalAbility(
-        "ds_flame_ninth",
-        "Flame Breathing – Ninth Form",
-        "Epic",
-        "Melee damage +50%, melee range +20% and damage +15%, but melee cooldown +25% and max HP -10%.",
-        {
-          meleeDamageMult: 1.50,
-          meleeRangeMult: 1.20,
-          damageMult: 1.15,
-          meleeCooldownMult: 1.25,
-          maxHpMult: 0.90
-        }
-      );
-      addNormalAbility(
-        "ds_mist_obscuring",
-        "Mist Breathing – Obscuring Clouds",
-        "Rare",
-        "Move speed +20% and dash cooldown -15%, and you take 15% less damage, but damage -10% and heal after wave -5.",
-        {
-          speedMult: 1.20,
-          dashCooldownMult: 0.85,
-          incomingDamageMult: 0.85,
-          damageMult: 0.90,
-          healAfterWaveAdd: -5
-        }
-      );
-
-      addNormalAbility(
-        "op_gear_second",
-        "Gear Second",
-        "Epic",
-        "Fire rate +35%, move speed +20% and dash cooldown -20%, but max HP -25% and heal after wave -15. While firing you slowly drain HP.",
-        {
-          fireRateMult: 1.35,
-          speedMult: 1.20,
-          dashCooldownMult: 0.80,
-          maxHpMult: 0.75,
-          healAfterWaveAdd: -15
-        }
-      );
-      addNormalAbility(
-        "op_flame_fruit",
-        "Flame-Flame Fruit",
-        "Epic",
-        "Bullets create small explosions on hit that damage nearby enemies. Damage +15%, but bullet speed -10% and spread +15%.",
-        {
-          damageMult: 1.15,
-          bulletSpeedMult: 0.90,
-          spreadMult: 1.15
-        }
-      );
-      addNormalAbility(
-        "op_santoryu",
-        "Santoryu – Three-Sword Style",
-        "Epic",
-        "Melee attacks also fire two weaker slashes forward. Melee cooldown -10%, but bullet damage -10% and max HP -10%.",
-        {
-          meleeCooldownMult: 0.90,
-          damageMult: 0.90,
-          maxHpMult: 0.90
-        }
-      );
-
-      /* ====== NEW JJK & MHA NORMAL ABILITIES ====== */
-
-      addNormalAbility(
-        "jjk_hollow_purple",
-        "Hollow Purple Core",
-        "Epic",
-        "Damage +30% and pierce +1, but fire rate -15% and bullet speed -10%.",
-        {
-          damageMult: 1.30,
-          pierceAdd: 1,
-          fireRateMult: 0.85,
-          bulletSpeedMult: 0.90
-        }
-      );
-      addNormalAbility(
-        "jjk_simple_domain",
-        "Simple Domain Guard",
-        "Rare",
-        "You take 20% less damage, but damage -10% and fire rate -5%.",
-        {
-          incomingDamageMult: 0.80,
-          damageMult: 0.90,
-          fireRateMult: 0.95
-        }
-      );
-      addNormalAbility(
-        "mha_explosion_gauntlets",
-        "Explosion Gauntlets",
-        "Epic",
-        "+2 bullets per shot and damage +10%, but spread +35% and fire rate -10%.",
-        {
-          bulletsPerShotAdd: 2,
-          damageMult: 1.10,
-          spreadMult: 1.35,
-          fireRateMult: 0.90
-        }
-      );
-      addNormalAbility(
-        "mha_hardening_armor",
-        "Hardening Armor",
-        "Rare",
-        "You take 25% less damage, but move speed -10% and fire rate -10%.",
-        {
-          incomingDamageMult: 0.75,
-          speedMult: 0.90,
-          fireRateMult: 0.90
-        }
-      );
-
-      /* ====== BOSS LEGENDARIES ====== */
-
-      addBossAbility(
-        "anime_domain_collapse",
-        "Domain Collapse",
-        "Legendary",
-        "Damage x2.0, +2 bullets per shot and fire rate +15%, but max HP -40%, spread +50% and heal after wave -30.",
-        {
-          damageMult: 2.0,
-          bulletsPerShotAdd: 2,
-          fireRateMult: 1.15,
-          maxHpMult: 0.60,
-          spreadMult: 1.50,
-          healAfterWaveAdd: -30
-        }
-      );
-      addBossAbility(
-        "anime_titan_ascendance",
-        "Titan Ascendance",
-        "Legendary",
-        "Max HP +40%, damage +60% and pierce +2, but move speed -30% and heal after wave -25.",
-        {
-          maxHpMult: 1.40,
-          damageMult: 1.60,
-          pierceAdd: 2,
-          speedMult: 0.70,
-          healAfterWaveAdd: -25
-        }
-      );
-      addBossAbility(
-        "anime_kaiju_core_reactor",
-        "Kaiju Core Reactor",
-        "Legendary",
-        "+4 bullets per shot and fire rate +40%, but damage -15%, spread +90% and bullet speed -15%.",
-        {
-          bulletsPerShotAdd: 4,
-          fireRateMult: 1.40,
-          damageMult: 0.85,
-          spreadMult: 1.90,
-          bulletSpeedMult: 0.85
-        }
-      );
-      addBossAbility(
-        "anime_overclocked_quirk",
-        "Overclocked Quirk",
-        "Legendary",
-        "Fire rate x2.1 and move speed +30%, but max HP -50%, damage -10% and heal after wave -40.",
-        {
-          fireRateMult: 2.10,
-          speedMult: 1.30,
-          maxHpMult: 0.50,
-          damageMult: 0.90,
-          healAfterWaveAdd: -40
-        }
-      );
-      addBossAbility(
-        "anime_heavenly_binding",
-        "Heavenly Binding",
-        "Legendary",
-        "On-hit heal +3 and heal after wave +60, but damage -20%, fire rate -15% and move speed -15%.",
-        {
-          onHitHealAdd: 3,
-          healAfterWaveAdd: 60,
-          damageMult: 0.80,
-          fireRateMult: 0.85,
-          speedMult: 0.85
-        }
-      );
-      addBossAbility(
-        "anime_rumbling_echo",
-        "Rumbling Echo",
-        "Legendary",
-        "Damage +80% and pierce +3, but spread +70%, fire rate -30% and max HP -25%.",
-        {
-          damageMult: 1.80,
-          pierceAdd: 3,
-          spreadMult: 1.70,
-          fireRateMult: 0.70,
-          maxHpMult: 0.75
-        }
-      );
-      addBossAbility(
-        "anime_monster_unit",
-        "Monster Unit Suit",
-        "Legendary",
-        "Max HP +220, damage +30% and bullet speed +10%, but move speed -40%, fire rate -20% and heal after wave -20.",
-        {
-          maxHpAdd: 220,
-          damageMult: 1.30,
-          bulletSpeedMult: 1.10,
-          speedMult: 0.60,
-          fireRateMult: 0.80,
-          healAfterWaveAdd: -20
-        }
-      );
-
-      addBossAbility(
-        "anime_black_flash_barrage",
-        "Black Flash Barrage",
-        "Legendary",
-        "Damage +50% and fire rate +25%, but max HP -30% and heal after wave -20.",
-        {
-          damageMult: 1.50,
-          fireRateMult: 1.25,
-          maxHpMult: 0.70,
-          healAfterWaveAdd: -20
-        }
-      );
-      addBossAbility(
-        "anime_full_cowl",
-        "Full Cowl Mode",
-        "Legendary",
-        "Move speed +40% and dash cooldown -40%, but max HP -25% and damage -10%.",
-        {
-          speedMult: 1.40,
-          dashCooldownMult: 0.60,
-          maxHpMult: 0.75,
-          damageMult: 0.90
-        }
-      );
-      addBossAbility(
-        "anime_eminence_shadow",
-        "Eminence of Shadow",
-        "Legendary",
-        "Damage +70% and bullet speed +20%, but max HP -30% and heal after wave -20.",
-        {
-          damageMult: 1.70,
-          bulletSpeedMult: 1.20,
-          maxHpMult: 0.70,
-          healAfterWaveAdd: -20
-        }
-      );
-      addBossAbility(
-        "anime_one_eyed_king",
-        "One-Eyed King",
-        "Legendary",
-        "Max HP +35%, damage +30% and on-hit heal +1.5, but move speed -20% and fire rate -15%.",
-        {
-          maxHpMult: 1.35,
-          damageMult: 1.30,
-          onHitHealAdd: 1.5,
-          speedMult: 0.80,
-          fireRateMult: 0.85
-        }
-      );
-      addBossAbility(
-        "anime_cyberpsycho_rush",
-        "Cyberpsycho Rush",
-        "Legendary",
-        "Fire rate x2.0 and move speed +35%, but max HP -40% and heal after wave -35.",
-        {
-          fireRateMult: 2.0,
-          speedMult: 1.35,
-          maxHpMult: 0.60,
-          healAfterWaveAdd: -35
-        }
-      );
-      addBossAbility(
-        "anime_tailed_beast_mode",
-        "Tailed Beast Mode",
-        "Legendary",
-        "+3 bullets per shot and damage +45%, but spread +70%, max HP -25% and heal after wave -20.",
-        {
-          bulletsPerShotAdd: 3,
-          damageMult: 1.45,
-          spreadMult: 1.70,
-          maxHpMult: 0.75,
-          healAfterWaveAdd: -20
-        }
-      );
-      addBossAbility(
-        "anime_ignition_burst_core",
-        "Ignition Burst Core",
-        "Legendary",
-        "Bullet speed +40%, fire rate +25% and dash cooldown -25%, but max HP -20% and heal after wave -15.",
-        {
-          bulletSpeedMult: 1.40,
-          fireRateMult: 1.25,
-          dashCooldownMult: 0.75,
-          maxHpMult: 0.80,
-          healAfterWaveAdd: -15
-        }
-      );
-
-      // Inverted Spear of Heaven
-      addBossAbility(
-        "anime_cursed_family",
-        "Cursed Family – Inverted Spear",
-        "Legendary",
-        "Unlocks a brutal anti-energy blade: melee damage x2.5, melee range +60%, melee cooldown -35% and melee lifesteal +2, but ranged damage -35%, -1 bullet per shot and fire rate -15%.",
-        {
-          meleeDamageMult: 2.5,
-          meleeRangeMult: 1.6,
-          meleeCooldownMult: 0.65,
-          meleeOnHitHealAdd: 2,
-          damageMult: 0.65,
-          bulletsPerShotAdd: -1,
-          fireRateMult: 0.85
-        }
-      );
-      addBossAbility(
-        "anime_overdrive_sync",
-        "Overdrive Sync",
-        "Legendary",
-        "Fire rate x2.0 and dash cooldown -35%, but max HP -40%, heal after wave -25 and spread +40%.",
-        {
-          fireRateMult: 2.0,
-          dashCooldownMult: 0.65,
-          maxHpMult: 0.60,
-          healAfterWaveAdd: -25,
-          spreadMult: 1.40
-        }
-      );
-      addBossAbility(
-        "anime_shadow_moment",
-        "Shadow Moment",
-        "Legendary",
-        "Melee damage x2.0 and dash duration +40%, bullet damage +15%, but fire rate -25% and max HP -25%.",
-        {
-          meleeDamageMult: 2.0,
-          dashDurationMult: 1.40,
-          damageMult: 1.15,
-          fireRateMult: 0.75,
-          maxHpMult: 0.75
-        }
-      );
-      addBossAbility(
-        "anime_infernal_sun",
-        "Infernal Sun",
-        "Legendary",
-        "Damage x2.0 and bullet speed +40%, but max HP -30% and heal after wave -45.",
-        {
-          damageMult: 2.0,
-          bulletSpeedMult: 1.40,
-          maxHpMult: 0.70,
-          healAfterWaveAdd: -45
-        }
-      );
-      addBossAbility(
-        "anime_true_hero_form",
-        "True Hero Form",
-        "Legendary",
-        "Max HP +50%, damage +25% and move speed +20%, but you take 25% more damage from all sources.",
-        {
-          maxHpMult: 1.50,
-          damageMult: 1.25,
-          speedMult: 1.20,
-          incomingDamageMult: 1.25
-        }
-      );
-      addBossAbility(
-        "op_conqueror_haki",
-        "Conqueror's Haki",
-        "Legendary",
-        "Your overwhelming presence boosts damage +25% and max HP +10%, but heal after wave -25 and you take 15% more damage.",
-        {
-          damageMult: 1.25,
-          maxHpMult: 1.10,
-          healAfterWaveAdd: -25,
-          incomingDamageMult: 1.15
-        }
-      );
-
-      // New JJK / MHA / Demon Slayer boss legendaries
-      addBossAbility(
-        "jjk_malevolent_shrine",
-        "Malevolent Shrine",
-        "Legendary",
-        "Damage +60%, pierce +2 and +1 bullet per shot, but max HP -30%, heal after wave -30 and you take 25% more damage.",
-        {
-          damageMult: 1.60,
-          pierceAdd: 2,
-          bulletsPerShotAdd: 1,
-          maxHpMult: 0.70,
-          healAfterWaveAdd: -30,
-          incomingDamageMult: 1.25
-        }
-      );
-      addBossAbility(
-        "mha_united_smash",
-        "United States of Smash",
-        "Legendary",
-        "Damage x2.0 and fire rate +20%, but max HP -35% and heal after wave -30.",
-        {
-          damageMult: 2.0,
-          fireRateMult: 1.20,
-          maxHpMult: 0.65,
-          healAfterWaveAdd: -30
-        }
-      );
-      addBossAbility(
-        "ds_sun_scarlet",
-        "Sun Breathing – Scarlet Dawn",
-        "Legendary",
-        "Melee damage x2.2, melee range +30% and damage +15%, but max HP -25%, heal after wave -35 and you take 20% more damage.",
-        {
-          meleeDamageMult: 2.2,
-          meleeRangeMult: 1.30,
-          damageMult: 1.15,
-          maxHpMult: 0.75,
-          healAfterWaveAdd: -35,
-          incomingDamageMult: 1.20
-        }
-      );
-
-      // Fusion boss abilities
-      addBossAbility(
-        "anime_colossal_core",
-        "Colossal Core Awakening",
-        "Legendary",
-        "Fusion: Titan Ascendance + Kaiju Core Reactor. Damage x2.0, +3 bullets per shot and max HP +25%, but move speed -35%, heal after wave -35 and spread +70%.",
-        {
-          damageMult: 2.0,
-          bulletsPerShotAdd: 3,
-          maxHpMult: 1.25,
-          speedMult: 0.65,
-          healAfterWaveAdd: -35,
-          spreadMult: 1.70
-        },
-        null,
-        ["anime_titan_ascendance", "anime_kaiju_core_reactor"]
-      );
-      addBossAbility(
-        "anime_domain_breaker",
-        "Domain Breaker",
-        "Legendary",
-        "Fusion: Domain Collapse + Overclocked Quirk. Fire rate x2.3 and damage +40%, but max HP -55% and heal after wave -45.",
-        {
-          fireRateMult: 2.30,
-          damageMult: 1.40,
-          maxHpMult: 0.45,
-          healAfterWaveAdd: -45
-        },
-        null,
-        ["anime_domain_collapse", "anime_overclocked_quirk"]
-      );
-      addBossAbility(
-        "anime_apex_rumbling",
-        "Apex Rumbling",
-        "Legendary",
-        "Fusion: Titan Ascendance + Rumbling Echo. Damage x2.1, pierce +3 and max HP +20%, but move speed -40% and heal after wave -40.",
-        {
-          damageMult: 2.10,
-          pierceAdd: 3,
-          maxHpMult: 1.20,
-          speedMult: 0.60,
-          healAfterWaveAdd: -40
-        },
-        null,
-        ["anime_titan_ascendance", "anime_rumbling_echo"]
-      );
-      addBossAbility(
-        "anime_sun_moon_cataclysm",
-        "Sun & Moon Cataclysm",
-        "Legendary",
-        "Fusion: Tailed Beast Mode + Ignition Burst Core. Damage x2.0, +4 bullets per shot and bullet speed +35%, but spread +80%, max HP -30% and heal after wave -35.",
-        {
-          damageMult: 2.0,
-          bulletsPerShotAdd: 4,
-          bulletSpeedMult: 1.35,
-          spreadMult: 1.80,
-          maxHpMult: 0.70,
-          healAfterWaveAdd: -35
-        },
-        null,
-        ["anime_tailed_beast_mode", "anime_ignition_burst_core"]
-      );
-    }
-
-    /* ========= CURSES ========= */
-
-    function initCurses() {
-      curses.length = 0;
-
-      addCurse(
-        "blood_moon",
-        "Blood Moon",
-        "Legendary",
-        "CURSE: Damage +25%, but enemies move 20% faster and spawn 15% more.",
-        { damageMult: 1.25 },
-        { enemySpeedMult: 1.2, enemyCountMult: 1.15 }
-      );
-      addCurse(
-        "fragile_rage",
-        "Fragile Rage",
-        "Legendary",
-        "CURSE: Fire rate +40%, but max HP -40%.",
-        { fireRateMult: 1.4, maxHpMult: 0.6 },
-        {}
-      );
-      addCurse(
-        "predator_hunger",
-        "Predator's Hunger",
-        "Legendary",
-        "CURSE: On-hit heal +2, but waves spawn 25% more enemies.",
-        { onHitHealAdd: 2 },
-        { enemyCountMult: 1.25 }
-      );
-      addCurse(
-        "abyss_pact",
-        "Abyss Pact",
-        "Legendary",
-        "CURSE: Damage +60%, but you lose 3 HP per second during combat.",
-        { damageMult: 1.6 },
-        {},
-        { hpDrainPerSecond: 3 }
-      );
-      addCurse(
-        "gear_sacrifice",
-        "Gear Sacrifice",
-        "Legendary",
-        "CURSE: Bullet speed +40% and damage +15%, but enemy contact and bullet damage +30%.",
-        { bulletSpeedMult: 1.4, damageMult: 1.15 },
-        { enemyDamageMult: 1.3, enemyBulletDamageMult: 1.3 }
-      );
-      addCurse(
-        "kaiju_eclipse",
-        "Kaiju Eclipse",
-        "Legendary",
-        "CURSE: Max HP +40% and on-hit heal +1.5, but enemies move 20% faster and spawn 20% more.",
-        { maxHpMult: 1.4, onHitHealAdd: 1.5 },
-        { enemySpeedMult: 1.2, enemyCountMult: 1.2 }
-      );
-      addCurse(
-        "timeline_fracture",
-        "Timeline Fracture",
-        "Legendary",
-        "CURSE: Fire rate +25% and bullet speed +25%, but enemy damage +25% and enemy bullets hit harder.",
-        { fireRateMult: 1.25, bulletSpeedMult: 1.25 },
-        { enemyDamageMult: 1.25, enemyBulletDamageMult: 1.25 }
-      );
-      addCurse(
-        "all_or_nothing",
-        "All or Nothing",
-        "Legendary",
-        "CURSE: Damage x2.4, but max HP -70%.",
-        { damageMult: 2.4, maxHpMult: 0.30 },
-        {}
-      );
-      addCurse(
-        "glass_comet",
-        "Glass Comet",
-        "Legendary",
-        "CURSE: Move speed +40% and fire rate +20%, but max HP -60%.",
-        { speedMult: 1.40, fireRateMult: 1.20, maxHpMult: 0.40 },
-        {}
-      );
-      addCurse(
-        "endless_waves",
-        "Endless Waves",
-        "Legendary",
-        "CURSE: Waves spawn 20% more enemies, but you gain +10% damage and +5% move speed.",
-        { damageMult: 1.10, speedMult: 1.05 },
-        { enemyCountMult: 1.20 }
-      );
-
-      // Trials (arc-related pre-run curses)
-      addCurse(
-        "trial_shibuya",
-        "Trial: Shibuya Incident",
-        "Legendary",
-        "TRIAL: Enemies spawn 30% more and move 10% faster from wave 1.",
-        {},
-        { enemySpeedMult: 1.10, enemyCountMult: 1.30 },
-        { isTrialOnly: true }
-      );
-      addCurse(
-        "trial_rumbling",
-        "Trial: Rumbling Approaches",
-        "Legendary",
-        "TRIAL: Enemies (especially bosses) have 30% more HP and 20% more contact damage.",
-        {},
-        { enemyHpMult: 1.30, enemyDamageMult: 1.20 },
-        { isTrialOnly: true }
-      );
-      addCurse(
-        "trial_night_raid",
-        "Trial: Night Raid",
-        "Legendary",
-        "TRIAL: Enemies move 15% faster, but you heal +15 HP more after each wave.",
-        { healAfterWaveAdd: 15 },
-        { enemySpeedMult: 1.15 },
-        { isTrialOnly: true }
-      );
-    }
-
-    /* ========= PLAYER & STATS ========= */
+    const BASE_STATS = {
+      maxHp: 100,
+      damage: 16,
+      fireRate: 3,
+      speed: 230,
+      bulletSpeed: 550,
+      bulletsPerShot: 1,
+      spread: 0.18,
+      pierce: 0,
+      onHitHeal: 0,
+      healAfterWave: 10,
+      dashCooldown: 1.1,
+      dashDuration: 0.22,
+      meleeDamage: 32,
+      meleeRange: 80,
+      meleeArc: 1.7,
+      meleeCooldown: 0.75,
+      meleeOnHitHeal: 0
+    };
 
     function createPlayer() {
       return {
@@ -1848,7 +704,6 @@
         onHitHeal: BASE_STATS.onHitHeal,
         healAfterWave: BASE_STATS.healAfterWave,
         shootTimer: 0,
-        // dash
         dashCooldown: BASE_STATS.dashCooldown,
         dashDuration: BASE_STATS.dashDuration,
         dashCooldownTimer: 0,
@@ -1857,7 +712,6 @@
         dashVelX: 0,
         dashVelY: 0,
         dashMode: "normal",
-        // melee
         meleeDamage: BASE_STATS.meleeDamage,
         meleeRange: BASE_STATS.meleeRange,
         meleeArc: BASE_STATS.meleeArc,
@@ -1867,27 +721,16 @@
         meleeSwingTimer: 0,
         meleeSwingDuration: 0.18,
         meleeAngle: 0,
-        // ultimate
-        ultimateCharge: 0,
-        ultimateReady: false,
-        ultimateActiveTimer: 0,
-        ultimateDuration: 6,
-        ultimateType: ULT_TYPE.NONE,
-        selectedUltType: ULT_TYPE.NONE,
-        // abilities
+        incomingDamageMult: 1,
         normalAbilities: [],
-        bossAbilities: [],
-        // damage taken multiplier
-        incomingDamageMult: 1
+        bossAbilities: []
       };
     }
 
     function getAbilityById(id) {
-      return (
-        normalAbilities.find(a => a.id === id) ||
-        bossAbilities.find(a => a.id === id) ||
-        null
-      );
+      return normalAbilities.find(a => a.id === id)
+        || bossAbilities.find(a => a.id === id)
+        || null;
     }
 
     function getCurseById(id) {
@@ -1903,16 +746,10 @@
       return player.normalAbilities.includes(id) || player.bossAbilities.includes(id);
     }
 
-    function hasForbiddenOverflow() {
+    function hasBrokenLimit() {
       if (!player) return false;
-      return (
-        player.normalAbilities.includes("forbidden_overflow") ||
-        player.bossAbilities.includes("forbidden_overflow")
-      );
-    }
-
-    function updateNoLimitMode() {
-      noLimitMode = hasForbiddenOverflow();
+      return player.normalAbilities.includes("broken_limit")
+        || player.bossAbilities.includes("broken_limit");
     }
 
     function recomputeEnemyScale() {
@@ -1939,7 +776,7 @@
 
     function recomputePlayerStats(keepHpRatio = true) {
       if (!player) return;
-      updateNoLimitMode();
+      noLimitMode = hasBrokenLimit();
 
       const oldMax = player.maxHp || BASE_STATS.maxHp;
       const oldRatio = oldMax > 0 ? player.hp / oldMax : 1;
@@ -1965,62 +802,67 @@
       };
 
       let incomingDamageMult = 1;
+
       const allIds = [...player.normalAbilities, ...player.bossAbilities];
       const abilityFactor = noLimitMode ? 0.5 : 1.0;
 
       function applyMods(m, factor) {
         if (!m) return;
-        if (m.maxHpMult) stats.maxHp *= 1 + (m.maxHpMult - 1) * factor;
-        if (m.maxHpAdd) stats.maxHp += m.maxHpAdd * factor;
-        if (m.damageMult) stats.damage *= 1 + (m.damageMult - 1) * factor;
-        if (m.damageAdd) stats.damage += m.damageAdd * factor;
-        if (m.fireRateMult) stats.fireRate *= 1 + (m.fireRateMult - 1) * factor;
-        if (m.fireRateAdd) stats.fireRate += m.fireRateAdd * factor;
-        if (m.speedMult) stats.speed *= 1 + (m.speedMult - 1) * factor;
-        if (m.speedAdd) stats.speed += m.speedAdd * factor;
-        if (m.bulletSpeedMult) stats.bulletSpeed *= 1 + (m.bulletSpeedMult - 1) * factor;
-        if (m.bulletSpeedAdd) stats.bulletSpeed += m.bulletSpeedAdd * factor;
-        if (m.bulletsPerShotAdd) stats.bulletsPerShot += m.bulletsPerShotAdd * factor;
-        if (m.spreadMult) stats.spread *= 1 + (m.spreadMult - 1) * factor;
-        if (m.spreadAdd) stats.spread += m.spreadAdd * factor;
-        if (m.pierceAdd) stats.pierce += m.pierceAdd * factor;
-        if (m.onHitHealAdd) stats.onHitHeal += m.onHitHealAdd * factor;
-        if (m.healAfterWaveAdd) stats.healAfterWave += m.healAfterWaveAdd * factor;
-        if (m.dashCooldownMult) stats.dashCooldown *= 1 + (m.dashCooldownMult - 1) * factor;
-        if (m.dashCooldownAdd) stats.dashCooldown += m.dashCooldownAdd * factor;
-        if (m.dashDurationMult) stats.dashDuration *= 1 + (m.dashDurationMult - 1) * factor;
-        if (m.dashDurationAdd) stats.dashDuration += m.dashDurationAdd * factor;
+        const f = factor;
 
-        if (m.meleeDamageMult) stats.meleeDamage *= 1 + (m.meleeDamageMult - 1) * factor;
-        if (m.meleeDamageAdd) stats.meleeDamage += m.meleeDamageAdd * factor;
-        if (m.meleeRangeMult) stats.meleeRange *= 1 + (m.meleeRangeMult - 1) * factor;
-        if (m.meleeRangeAdd) stats.meleeRange += m.meleeRangeAdd * factor;
-        if (m.meleeArcMult) stats.meleeArc *= 1 + (m.meleeArcMult - 1) * factor;
-        if (m.meleeArcAdd) stats.meleeArc += m.meleeArcAdd * factor;
-        if (m.meleeCooldownMult) stats.meleeCooldown *= 1 + (m.meleeCooldownMult - 1) * factor;
-        if (m.meleeCooldownAdd) stats.meleeCooldown += m.meleeCooldownAdd * factor;
-        if (m.meleeOnHitHealAdd) stats.meleeOnHitHeal += m.meleeOnHitHealAdd * factor;
+        if (m.maxHpMult) stats.maxHp *= 1 + (m.maxHpMult - 1) * f;
+        if (m.maxHpAdd) stats.maxHp += m.maxHpAdd * f;
+        if (m.damageMult) stats.damage *= 1 + (m.damageMult - 1) * f;
+        if (m.damageAdd) stats.damage += m.damageAdd * f;
+        if (m.fireRateMult) stats.fireRate *= 1 + (m.fireRateMult - 1) * f;
+        if (m.fireRateAdd) stats.fireRate += m.fireRateAdd * f;
+        if (m.speedMult) stats.speed *= 1 + (m.speedMult - 1) * f;
+        if (m.speedAdd) stats.speed += m.speedAdd * f;
+        if (m.bulletSpeedMult) stats.bulletSpeed *= 1 + (m.bulletSpeedMult - 1) * f;
+        if (m.bulletSpeedAdd) stats.bulletSpeed += m.bulletSpeedAdd * f;
+        if (m.bulletsPerShotAdd) stats.bulletsPerShot += m.bulletsPerShotAdd * f;
+        if (m.spreadMult) stats.spread *= 1 + (m.spreadMult - 1) * f;
+        if (m.spreadAdd) stats.spread += m.spreadAdd * f;
+        if (m.pierceAdd) stats.pierce += m.pierceAdd * f;
+        if (m.onHitHealAdd) stats.onHitHeal += m.onHitHealAdd * f;
+        if (m.healAfterWaveAdd) stats.healAfterWave += m.healAfterWaveAdd * f;
+        if (m.dashCooldownMult) stats.dashCooldown *= 1 + (m.dashCooldownMult - 1) * f;
+        if (m.dashCooldownAdd) stats.dashCooldown += m.dashCooldownAdd * f;
+        if (m.dashDurationMult) stats.dashDuration *= 1 + (m.dashDurationMult - 1) * f;
+        if (m.dashDurationAdd) stats.dashDuration += m.dashDurationAdd * f;
+
+        if (m.meleeDamageMult) stats.meleeDamage *= 1 + (m.meleeDamageMult - 1) * f;
+        if (m.meleeDamageAdd) stats.meleeDamage += m.meleeDamageAdd * f;
+        if (m.meleeRangeMult) stats.meleeRange *= 1 + (m.meleeRangeMult - 1) * f;
+        if (m.meleeRangeAdd) stats.meleeRange += m.meleeRangeAdd * f;
+        if (m.meleeArcMult) stats.meleeArc *= 1 + (m.meleeArcMult - 1) * f;
+        if (m.meleeArcAdd) stats.meleeArc += m.meleeArcAdd * f;
+        if (m.meleeCooldownMult) stats.meleeCooldown *= 1 + (m.meleeCooldownMult - 1) * f;
+        if (m.meleeCooldownAdd) stats.meleeCooldown += m.meleeCooldownAdd * f;
+        if (m.meleeOnHitHealAdd) stats.meleeOnHitHeal += m.meleeOnHitHealAdd * f;
 
         if (m.incomingDamageMult) {
-          incomingDamageMult *= 1 + (m.incomingDamageMult - 1) * factor;
+          incomingDamageMult *= 1 + (m.incomingDamageMult - 1) * f;
         }
       }
 
+      // abilities
       for (const id of allIds) {
         const ab = getAbilityById(id);
         if (!ab) continue;
         applyMods(ab.mods, abilityFactor);
       }
 
-      for (const cid of activeCurses) {
-        const c = getCurseById(cid);
+      // curses (full)
+      for (const id of activeCurses) {
+        const c = getCurseById(id);
         if (!c) continue;
-        applyMods(c.mods, 1.0);
+        applyMods(c.mods, 1);
       }
 
       stats.maxHp = Math.max(20, stats.maxHp);
       stats.damage = Math.max(1, stats.damage);
-      stats.fireRate = Math.max(0.3, stats.fireRate);
+      stats.fireRate = Math.max(0.4, stats.fireRate);
       stats.speed = Math.max(60, stats.speed);
       stats.bulletSpeed = Math.max(200, stats.bulletSpeed);
       stats.bulletsPerShot = Math.max(1, Math.round(stats.bulletsPerShot));
@@ -2036,928 +878,576 @@
       stats.meleeCooldown = clamp(stats.meleeCooldown, 0.15, 2.0);
       stats.meleeOnHitHeal = Math.max(0, stats.meleeOnHitHeal);
 
-      const newMax = stats.maxHp;
-      if (keepHpRatio) {
-        player.hp = clamp(oldRatio * newMax, 1, newMax);
-      } else {
-        player.hp = newMax;
-      }
-
-      player.maxHp = newMax;
-      player.damage = stats.damage;
-      player.fireRate = stats.fireRate;
-      player.speed = stats.speed;
-      player.bulletSpeed = stats.bulletSpeed;
-      player.bulletsPerShot = stats.bulletsPerShot;
-      player.spread = stats.spread;
-      player.pierce = stats.pierce;
-      player.onHitHeal = stats.onHitHeal;
-      player.healAfterWave = stats.healAfterWave;
-      player.dashCooldown = stats.dashCooldown;
-      player.dashDuration = stats.dashDuration;
-      player.meleeDamage = stats.meleeDamage;
-      player.meleeRange = stats.meleeRange;
-      player.meleeArc = stats.meleeArc;
-      player.meleeCooldown = stats.meleeCooldown;
-      player.meleeOnHitHeal = stats.meleeOnHitHeal;
-      player.incomingDamageMult = incomingDamageMult;
-
-      // Dash mode
-      let dashMode = "normal";
-      const allAbilityIds = [...player.normalAbilities, ...player.bossAbilities];
-      if (allAbilityIds.includes("anime_cursed_dash_bomb")) dashMode = "bomb";
-      if (allAbilityIds.includes("anime_flame_step")) dashMode = "flame";
-      if (allAbilityIds.includes("anime_blink_step")) dashMode = "blink";
-      player.dashMode = dashMode;
+    const newMax = stats.maxHp;
+    if (keepHpRatio) {
+      player.hp = clamp(oldRatio * newMax, 1, newMax);
+    } else {
+      player.hp = newMax;
     }
 
-    function showMessage(text, time = 2) {
-      overlayMessageEl.textContent = text;
-      messageTimer = time;
+    player.maxHp = newMax;
+    player.damage = stats.damage;
+    player.fireRate = stats.fireRate;
+    player.speed = stats.speed;
+    player.bulletSpeed = stats.bulletSpeed;
+    player.bulletsPerShot = stats.bulletsPerShot;
+    player.spread = stats.spread;
+    player.pierce = stats.pierce;
+    player.onHitHeal = stats.onHitHeal;
+    player.healAfterWave = stats.healAfterWave;
+    player.dashCooldown = stats.dashCooldown;
+    player.dashDuration = stats.dashDuration;
+    player.meleeDamage = stats.meleeDamage;
+    player.meleeRange = stats.meleeRange;
+    player.meleeArc = stats.meleeArc;
+    player.meleeCooldown = stats.meleeCooldown;
+    player.meleeOnHitHeal = stats.meleeOnHitHeal;
+    player.incomingDamageMult = incomingDamageMult;
+
+    // dash mode from abilities
+    let dashMode = "normal";
+    const allAbilityIds = [...player.normalAbilities, ...player.bossAbilities];
+    if (allAbilityIds.includes("cursed_dash_bomb")) dashMode = "bomb";
+    if (allAbilityIds.includes("flame_step")) dashMode = "flame";
+    if (allAbilityIds.includes("blink_step")) dashMode = "blink";
+    player.dashMode = dashMode;
+  }
+  /* ==================== ABILITY & CURSE DEFINITIONS ==================== */
+
+  function addNormalAbility(id, name, rarity, description, mods, requires = null, requiresAll = null) {
+    normalAbilities.push({ id, name, rarity, description, mods, requires, requiresAll, category: "normal" });
+  }
+  function addBossAbility(id, name, rarity, description, mods, requires = null, requiresAll = null) {
+    bossAbilities.push({ id, name, rarity, description, mods, requires, requiresAll, category: "boss" });
+  }
+  function addCurse(id, name, rarity, description, mods, enemyMods) {
+    curses.push({ id, name, rarity, description, mods, enemyMods, isCurse: true });
+  }
+
+  function initAbilities() {
+    normalAbilities.length = 0;
+    bossAbilities.length = 0;
+    curses.length = 0;
+
+    // ===== Normal abilities (all have drawbacks) =====
+    addNormalAbility(
+      "cursed_overflow",
+      "Cursed Overflow",
+      "Rare",
+      "DMG +25%, on-hit heal +0.7, max HP -15%, wave heal -5.",
+      { damageMult: 1.25, onHitHealAdd: 0.7, maxHpMult: 0.85, healAfterWaveAdd: -5 }
+    );
+    addNormalAbility(
+      "quirk_booster",
+      "Quirk Booster",
+      "Common",
+      "Fire rate +25%, speed +10%, DMG -10%, spread +15%.",
+      { fireRateMult: 1.25, speedMult: 1.1, damageMult: 0.9, spreadMult: 1.15 }
+    );
+    addNormalAbility(
+      "survey_maneuvers",
+      "Survey Maneuvers",
+      "Rare",
+      "Speed +35%, dash CD -25%, max HP -10%, wave heal -5.",
+      { speedMult: 1.35, dashCooldownMult: 0.75, maxHpMult: 0.9, healAfterWaveAdd: -5 }
+    );
+    addNormalAbility(
+      "kaiju_instinct",
+      "Kaiju Instinct",
+      "Rare",
+      "Max HP +50, DMG +15%, fire rate -10%, spread +10%.",
+      { maxHpAdd: 50, damageMult: 1.15, fireRateMult: 0.9, spreadMult: 1.1 }
+    );
+    addNormalAbility(
+      "shadow_garden",
+      "Shadow Garden Arts",
+      "Rare",
+      "DMG +20%, spread -20%, fire rate -10%, speed -10%.",
+      { damageMult: 1.2, spreadMult: 0.8, fireRateMult: 0.9, speedMult: 0.9 }
+    );
+    addNormalAbility(
+      "edgerunner_core",
+      "Edgerunner Overclock",
+      "Epic",
+      "Fire rate +35%, speed +20%, dash CD -20%, max HP -25%, wave heal -20.",
+      { fireRateMult: 1.35, speedMult: 1.2, dashCooldownMult: 0.8, maxHpMult: 0.75, healAfterWaveAdd: -20 }
+    );
+    addNormalAbility(
+      "water_breathing",
+      "Water Breathing",
+      "Rare",
+      "Melee range +25%, melee CD -15%, bullet DMG -10%, wave heal -5.",
+      { meleeRangeMult: 1.25, meleeCooldownMult: 0.85, damageMult: 0.9, healAfterWaveAdd: -5 }
+    );
+    addNormalAbility(
+      "blood_edge",
+      "Blood-Edge Style",
+      "Rare",
+      "Melee DMG +45%, melee lifesteal +0.8, melee CD +20%, max HP -10%.",
+      { meleeDamageMult: 1.45, meleeOnHitHealAdd: 0.8, meleeCooldownMult: 1.2, maxHpMult: 0.9 }
+    );
+    addNormalAbility(
+      "six_eyes",
+      "Six Eyes Focus",
+      "Epic",
+      "Bullet speed +45%, spread -25%, DMG +20%, max HP -15%, wave heal -15.",
+      { bulletSpeedMult: 1.45, spreadMult: 0.75, damageMult: 1.2, maxHpMult: 0.85, healAfterWaveAdd: -15 }
+    );
+    addNormalAbility(
+      "gear_shift",
+      "Gear Shift",
+      "Epic",
+      "Fire rate +20%, DMG +15%, speed -10%, max HP -10%.",
+      { fireRateMult: 1.2, damageMult: 1.15, speedMult: 0.9, maxHpMult: 0.9 }
+    );
+
+    // dash mods
+    addNormalAbility(
+      "cursed_dash_bomb",
+      "Cursed Dash Bomb",
+      "Rare",
+      "Dash drops a bomb (big AOE DMG). Dash CD +15%, max HP -10%.",
+      { dashCooldownMult: 1.15, maxHpMult: 0.9 }
+    );
+    addNormalAbility(
+      "flame_step",
+      "Flame Step",
+      "Rare",
+      "Dash burns around you, big close damage. Dash duration -10%, wave heal -5.",
+      { dashDurationMult: 0.9, healAfterWaveAdd: -5 }
+    );
+    addNormalAbility(
+      "blink_step",
+      "Blink Step",
+      "Epic",
+      "Dash becomes short-range teleport with brief invuln. Dash CD -10%, max HP -10%.",
+      { dashCooldownMult: 0.9, maxHpMult: 0.9 }
+    );
+
+    // fusions
+    addNormalAbility(
+      "limit_break",
+      "Limit Break State",
+      "Epic",
+      "FUSION: Cursed Overflow + Quirk Booster. Huge DPS, max HP -25%, spread +25%.",
+      { damageMult: 1.35, fireRateMult: 1.25, onHitHealAdd: 1.0, maxHpMult: 0.75, spreadMult: 1.25 },
+      null,
+      ["cursed_overflow", "quirk_booster"]
+    );
+    addNormalAbility(
+      "sky_ripper",
+      "Sky Ripper Maneuvers",
+      "Epic",
+      "FUSION: Survey + Kaiju. Crazy mobility, max HP -15%, wave heal -15.",
+      { speedMult: 1.45, dashCooldownMult: 0.6, bulletSpeedMult: 1.3, maxHpMult: 0.85, healAfterWaveAdd: -15 },
+      null,
+      ["survey_maneuvers", "kaiju_instinct"]
+    );
+    addNormalAbility(
+      "neon_ghoul",
+      "Neon Ghoul",
+      "Epic",
+      "FUSION: Shadow Garden + Edgerunner. High risk, high sustain.",
+      { damageMult: 1.35, fireRateMult: 1.25, onHitHealAdd: 1.2, maxHpMult: 0.8, healAfterWaveAdd: -20 },
+      null,
+      ["shadow_garden", "edgerunner_core"]
+    );
+
+    // Broken limit
+    addNormalAbility(
+      "broken_limit",
+      "Broken Limit",
+      "Rare",
+      "Removes cap on powers but halves all ability effects. Curses unaffected.",
+      {}
+    );
+
+    // ===== Boss abilities =====
+    addBossAbility(
+      "domain_collapse",
+      "Domain Collapse",
+      "Legendary",
+      "DMG x2.0, +2 bullets, fire rate +15%, max HP -40%, spread +50%, wave heal -30.",
+      { damageMult: 2.0, bulletsPerShotAdd: 2, fireRateMult: 1.15, maxHpMult: 0.6, spreadMult: 1.5, healAfterWaveAdd: -30 }
+    );
+    addBossAbility(
+      "titan_ascend",
+      "Titan Ascendance",
+      "Legendary",
+      "Max HP +40%, DMG +60%, pierce +2, speed -30%, wave heal -25.",
+      { maxHpMult: 1.4, damageMult: 1.6, pierceAdd: 2, speedMult: 0.7, healAfterWaveAdd: -25 }
+    );
+    addBossAbility(
+      "overclocked_quirk",
+      "Overclocked Quirk",
+      "Legendary",
+      "Fire rate x2.0, speed +30%, max HP -50%, wave heal -35.",
+      { fireRateMult: 2.0, speedMult: 1.3, maxHpMult: 0.5, healAfterWaveAdd: -35 }
+    );
+    addBossAbility(
+      "cursed_family",
+      "Cursed Family – Inverted Spear",
+      "Legendary",
+      "Melee DMG x2.5, range +60%, melee CD -35%, lifesteal +2, bullets weaker.",
+      { meleeDamageMult: 2.5, meleeRangeMult: 1.6, meleeCooldownMult: 0.65, meleeOnHitHealAdd: 2, damageMult: 0.65, bulletsPerShotAdd: -1 }
+    );
+
+    // ===== Curses =====
+    addCurse(
+      "blood_moon",
+      "Blood Moon",
+      "Legendary",
+      "DMG +25%, enemies faster + spawns +15%.",
+      { damageMult: 1.25 },
+      { enemySpeedMult: 1.2, enemyCountMult: 1.15 }
+    );
+    addCurse(
+      "fragile_rage",
+      "Fragile Rage",
+      "Legendary",
+      "Fire rate +40%, max HP -40%.",
+      { fireRateMult: 1.4, maxHpMult: 0.6 },
+      {}
+    );
+    addCurse(
+      "predator",
+      "Predator's Hunger",
+      "Legendary",
+      "On-hit heal +2, enemies +25%.",
+      { onHitHealAdd: 2 },
+      { enemyCountMult: 1.25 }
+    );
+    addCurse(
+      "all_or_nothing",
+      "All or Nothing",
+      "Legendary",
+      "DMG x2.4, max HP -70%.",
+      { damageMult: 2.4, maxHpMult: 0.3 },
+      {}
+    );
+  }
+
+  /* ==================== ABILITY UI ==================== */
+
+  function hideUpgradePanel() {
+    upgradePanel.style.display = "none";
+  }
+
+  function renderAbilitiesBar() {
+    normalAbilitiesListEl.innerHTML = "";
+    bossAbilitiesListEl.innerHTML = "";
+
+    function addSlot(id, category, parent) {
+      const ab = getAbilityById(id);
+      if (!ab) return;
+      const rarityKey = (ab.rarity || "Common").toLowerCase();
+      const slot = document.createElement("button");
+      slot.className = `abilitySlot card-rarity-${rarityKey}`;
+      slot.textContent = ab.name;
+      slot.onclick = () => onAbilitySlotClick(id, category);
+      parent.appendChild(slot);
     }
 
-    function hideUpgradePanel() {
-      upgradePanel.style.display = "none";
+    for (const id of player.normalAbilities) addSlot(id, "normal", normalAbilitiesListEl);
+    for (const id of player.bossAbilities) addSlot(id, "boss", bossAbilitiesListEl);
+  }
+
+  function equipAbility(ability) {
+    if (ability.isCurse) return false;
+    const isBoss = ability.category === "boss";
+    const list = isBoss ? player.bossAbilities : player.normalAbilities;
+    const maxSlots = isBoss ? 2 : 5;
+    const unlimited = hasBrokenLimit();
+
+    if (list.includes(ability.id)) {
+      showMessage("Already have " + ability.name, 2);
+      return false;
     }
 
-    function renderAbilitiesBar() {
-      normalAbilitiesListEl.innerHTML = "";
-      bossAbilitiesListEl.innerHTML = "";
-
-      function makeSlot(id, category, parentEl) {
-        const ab = getAbilityById(id);
-        if (!ab) return;
-        const rarityKey = (ab.rarity || "Common").toLowerCase();
-        const slot = document.createElement("button");
-        slot.className = `abilitySlot card-rarity-${rarityKey}`;
-        slot.innerHTML = `<span class="abilityName">${ab.name}</span>`;
-        slot.addEventListener("click", () => {
-          onAbilitySlotClick(id, category);
-        });
-        parentEl.appendChild(slot);
-      }
-
-      for (const id of player.normalAbilities) {
-        makeSlot(id, "normal", normalAbilitiesListEl);
-      }
-      for (const id of player.bossAbilities) {
-        makeSlot(id, "boss", bossAbilitiesListEl);
-      }
-    }
-
-    function resetCursesAndEnemyScale() {
-      activeCurses = [];
-      recomputeEnemyScale();
-    }
-
-    function applySelectedTrialsToActiveCurses() {
-      for (const id of selectedTrialCurseIds) {
-        if (!activeCurses.includes(id)) {
-          activeCurses.push(id);
-        }
-      }
-      recomputeEnemyScale();
-    }
-
-    function takeCurse(curse) {
-      if (hasCurse(curse.id)) {
-        showMessage("You already bear " + curse.name, 2);
-        return false;
-      }
-      activeCurses.push(curse.id);
-      recomputeEnemyScale();
+    if (unlimited || list.length < maxSlots) {
+      list.push(ability.id);
       recomputePlayerStats(true);
-      showMessage("Curse taken: " + curse.name, 3);
+      renderAbilitiesBar();
+
+      const rarity = ability.rarity || "Common";
+      if (rarity === "Legendary") {
+        addScreenShake(9, 0.4);
+        addWhiteFlash(0.6);
+        spawnParticles(player.x, player.y, {
+          count: 32,
+          speedMin: 160,
+          speedMax: 320,
+          sizeMin: 3,
+          sizeMax: 6,
+          color: "rgba(255,220,120,1)"
+        });
+      } else if (rarity === "Epic") {
+        addScreenShake(6, 0.3);
+      } else if (rarity === "Rare") {
+        addScreenShake(4, 0.2);
+      }
+
       return true;
     }
 
-    function gainUltimateCharge(damageDealt, killed) {
-      if (!player) return;
-      if (player.ultimateActiveTimer > 0 || player.ultimateReady) return;
-      const baseGain = damageDealt * 0.04;
-      let gain = baseGain;
-      if (killed) gain += 5;
-      player.ultimateCharge = Math.min(100, player.ultimateCharge + gain);
-      if (player.ultimateCharge >= 100 && !player.ultimateReady) {
-        player.ultimateCharge = 100;
-        player.ultimateReady = true;
-        showMessage("Ultimate ready – press Q!", 2.5);
-      }
+    pendingAbility = ability;
+    pendingCategory = ability.category;
+    gameState = "chooseReplace";
+    hideUpgradePanel();
+    showMessage("Click a " + (isBoss ? "boss" : "normal") + " power at the bottom to replace", 999);
+    return null;
+  }
+
+  function onAbilitySlotClick(id, category) {
+    if (!pendingAbility) return;
+    if (category !== pendingCategory) {
+      showMessage("Pick a " + (pendingCategory === "boss" ? "boss" : "normal") + " power to replace", 2);
+      return;
     }
+    const list = category === "boss" ? player.bossAbilities : player.normalAbilities;
+    const idx = list.indexOf(id);
+    if (idx === -1) return;
+    list.splice(idx, 1);
+    list.push(pendingAbility.id);
+    recomputePlayerStats(true);
+    renderAbilitiesBar();
+    showMessage(pendingAbility.name + " equipped", 2);
+    pendingAbility = null;
+    pendingCategory = null;
+    gameState = "playing";
+    startNextWave();
+  }
 
-    function activateUltimate() {
-      if (!player) return;
-      if (!player.ultimateReady || player.ultimateActiveTimer > 0) return;
-      if (gameState !== "playing") return;
+  function showUpgradePanel(options) {
+    upgradePanel.style.display = "flex";
+    upgradesContainer.innerHTML = "";
 
-      const type = pickUltimateType();
-      player.ultimateType = type;
-      let duration = 6;
-      let msg = "Ultimate activated!";
+    for (const opt of options) {
+      const isCurse = !!opt.isCurse;
+      const rarityKey = (opt.rarity || "Common").toLowerCase();
+      const badgeClass = `rarityBadge rarity-${rarityKey}`;
+      const cardClass = `upgradeButton card-rarity-${rarityKey}`;
+      const badgeText = isCurse ? "CURSE" : opt.rarity || "Common";
 
-      switch (type) {
-        case ULT_TYPE.JJK_DOMAIN:
-          duration = 7;
-          msg = "Domain Expansion: Infinite Void!";
-          break;
-        case ULT_TYPE.RANGED_STORM:
-          duration = 6;
-          msg = "Ultimate: Black Flash Storm!";
-          break;
-        case ULT_TYPE.MELEE_FRENZY:
-          duration = 6;
-          msg = "Ultimate: Kakuja Frenzy!";
-          break;
-        case ULT_TYPE.MHA_100:
-          duration = 6;
-          msg = "Ultimate: One For All – 100%!";
-          break;
-        case ULT_TYPE.AOT_RUSH:
-          duration = 6;
-          msg = "Ultimate: ODM Thunder Rush!";
-          break;
-        case ULT_TYPE.GHOUL_RAMPAGE:
-          duration = 6;
-          msg = "Ultimate: Ghoul Rampage!";
-          break;
-        case ULT_TYPE.CYBER_SLOW:
-          duration = 6;
-          msg = "Ultimate: Sandevistan Overdrive!";
-          break;
-      }
+      const btn = document.createElement("button");
+      btn.className = cardClass;
+      btn.innerHTML =
+        `<div class="upgradeTopRow">
+          <span class="upgradeName">${opt.name}</span>
+          <span class="${badgeClass}">${badgeText}</span>
+        </div>
+        <span class="upgradeDesc">${opt.description}</span>`;
 
-      player.ultimateReady = false;
-      player.ultimateActiveTimer = duration;
-      player.ultimateDuration = duration;
-      player.ultimateCharge = 0;
-
-      showMessage(msg, 3);
-    }
-
-    function applyJjkDomainDamage(dt) {
-      const radius = 260;
-      const dps = 30 + wave * 4;
-      const damagePer = dps * dt;
-
-      for (let i = enemies.length - 1; i >= 0; i--) {
-        const e = enemies[i];
-        const distToPlayer = distance(e.x, e.y, player.x, player.y);
-        if (distToPlayer <= radius + e.radius) {
-          e.hp -= damagePer;
-          const died = e.hp <= 0;
-          if (died) {
-            if (e.type === "bomber") {
-              triggerBomberExplosion(e);
-            }
-            enemies.splice(i, 1);
+      btn.onclick = () => {
+        if (isCurse) {
+          const ok = takeCurse(opt);
+          if (ok) {
+            hideUpgradePanel();
+            startNextWave();
           }
-          gainUltimateCharge(damagePer, died);
-        }
-      }
-    }
-
-    function equipAbility(ability) {
-      if (ability.isCurse) return false;
-      const isBoss = ability.category === "boss";
-      const list = isBoss ? player.bossAbilities : player.normalAbilities;
-      const maxSlots = isBoss ? 2 : 5;
-
-      if (list.includes(ability.id)) {
-        showMessage("Already using " + ability.name, 2);
-        return false;
-      }
-
-      const unlimited = hasForbiddenOverflow();
-
-      if (unlimited || list.length < maxSlots) {
-        list.push(ability.id);
-        recomputePlayerStats(true);
-        renderAbilitiesBar();
-        if (ability.id === "forbidden_overflow") {
-          showMessage("Forbidden Overflow: no more limits, half the power.", 4);
-        } else if (ability.id === "anime_cursed_family") {
-          showMessage("Inverted Spear of Heaven awakened.", 4);
         } else {
-          showMessage(`${ability.name} equipped`, 2);
-        }
-        return true;
-      }
-
-      pendingAbility = ability;
-      pendingCategory = ability.category;
-      gameState = "choosingReplace";
-      hideUpgradePanel();
-      showMessage(
-        `Click a ${isBoss ? "boss" : "normal"} power at the bottom to replace`,
-        999
-      );
-      return null;
-    }
-
-    function onAbilitySlotClick(id, category) {
-      if (!pendingAbility) {
-        const ab = getAbilityById(id);
-        if (ab) showMessage(ab.name, 1.5);
-        return;
-      }
-      if (category !== pendingCategory) {
-        showMessage(
-          `Select a ${pendingCategory === "boss" ? "boss" : "normal"} power to replace`,
-          2
-        );
-        return;
-      }
-      const list = category === "boss" ? player.bossAbilities : player.normalAbilities;
-      const idx = list.indexOf(id);
-      if (idx === -1) return;
-      list.splice(idx, 1);
-      list.push(pendingAbility.id);
-      recomputePlayerStats(true);
-      renderAbilitiesBar();
-      showMessage(`${pendingAbility.name} equipped`, 2);
-      pendingAbility = null;
-      pendingCategory = null;
-      gameState = "playing";
-      startNextWave();
-    }
-
-    function showUpgradePanel(options) {
-      upgradePanel.style.display = "flex";
-      upgradesContainer.innerHTML = "";
-      options.forEach((opt) => {
-        const isCurse = !!opt.isCurse;
-        const rarityKey = (opt.rarity || "Common").toLowerCase();
-        const badgeClass = `rarityBadge rarity-${rarityKey}`;
-        const cardClass = `upgradeButton card-rarity-${rarityKey}`;
-        const badgeText = isCurse ? "CURSE" : (opt.rarity || "Common");
-
-        const btn = document.createElement("button");
-        btn.className = cardClass;
-        btn.innerHTML =
-          `<div class="upgradeTopRow">` +
-            `<span class="upgradeName">${opt.name}</span>` +
-            `<span class="${badgeClass}">${badgeText}</span>` +
-          `</div>` +
-          `<span class="upgradeDesc">${opt.description}</span>`;
-
-        btn.onclick = () => {
-          if (isCurse) {
-            const ok = takeCurse(opt);
-            if (ok) {
-              hideUpgradePanel();
-              startNextWave();
-            }
-          } else {
-            const result = equipAbility(opt);
-            if (result === true) {
-              hideUpgradePanel();
-              startNextWave();
-            }
+          const result = equipAbility(opt);
+          if (result === true) {
+            hideUpgradePanel();
+            startNextWave();
           }
-        };
-        upgradesContainer.appendChild(btn);
+        }
+      };
+
+      upgradesContainer.appendChild(btn);
+    }
+  }
+
+  function getAbilityOptions(count, isBossWave) {
+    const owned = new Set([...player.normalAbilities, ...player.bossAbilities]);
+
+    const normalAvailable = normalAbilities.filter(a => {
+      if (owned.has(a.id)) return false;
+      if (a.requires && !owned.has(a.requires)) return false;
+      if (a.requiresAll && !a.requiresAll.every(id => owned.has(id))) return false;
+      return true;
+    });
+
+    const bossAvailable = isBossWave
+      ? bossAbilities.filter(a => {
+          if (owned.has(a.id)) return false;
+          if (a.requires && !owned.has(a.requires)) return false;
+          if (a.requiresAll && !a.requiresAll.every(id => owned.has(id))) return false;
+          return true;
+        })
+      : [];
+
+    const options = [];
+    const usedIds = new Set();
+
+    if (isBossWave) {
+      const pool = bossAvailable.length > 0 ? bossAvailable : bossAbilities;
+      const arr = shuffled(pool);
+      if (arr[0]) {
+        options.push(arr[0]);
+        usedIds.add(arr[0].id);
+      }
+    }
+
+    const needed = count - options.length;
+    if (needed > 0) {
+      let pool = normalAvailable.length > 0 ? normalAvailable : normalAbilities;
+      pool = shuffled(pool);
+      for (const a of pool) {
+        if (options.length >= count) break;
+        if (usedIds.has(a.id)) continue;
+        options.push(a);
+        usedIds.add(a.id);
+      }
+    }
+
+    return options;
+  }
+
+  function getCurseOptions(count) {
+    let available = curses.filter(c => !activeCurses.includes(c.id));
+    if (available.length === 0) available = curses.slice();
+    const arr = shuffled(available);
+    return arr.slice(0, count);
+  }
+
+  function takeCurse(curse) {
+    if (hasCurse(curse.id)) {
+      showMessage("Already cursed by " + curse.name, 2);
+      return false;
+    }
+    activeCurses.push(curse.id);
+    recomputeEnemyScale();
+    recomputePlayerStats(true);
+    addScreenShake(7, 0.35);
+    addWhiteFlash(0.45);
+    spawnParticles(player.x, player.y, {
+      count: 24,
+      speedMin: 120,
+      speedMax: 260,
+      sizeMin: 3,
+      sizeMax: 5,
+      color: "rgba(200,120,255,1)"
+    });
+    return true;
+  }
+
+  /* ==================== ENEMIES & WAVES ==================== */
+
+  function spawnEnemy(isBoss = false) {
+    const margin = 40;
+    let x, y;
+    do {
+      x = Math.random() * (canvas.width - margin * 2) + margin;
+      y = Math.random() * (canvas.height - margin * 2) + margin;
+    } while (distance(x, y, player.x, player.y) < 160);
+
+    if (isBoss) {
+      let hpBase = 400 + wave * 40;
+      hpBase *= enemyScale.hpMult;
+      const speed = (100 + wave * 5) * enemyScale.speedMult;
+      const contactDamage = (45 + wave * 3) * enemyScale.damageMult;
+
+      enemies.push({
+        x,
+        y,
+        radius: 40,
+        speed,
+        hp: hpBase,
+        maxHp: hpBase,
+        contactDamage,
+        isBoss: true,
+        phase: 1,
+        ringCooldown: 2.5,
+        rushCooldown: 3.0
       });
-    }
+    } else {
+      let hpBase = 35 + wave * 6;
+      hpBase *= enemyScale.hpMult;
+      let speed = (140 + wave * 8) * enemyScale.speedMult;
+      let contactDamage = (12 + wave * 1.5) * enemyScale.damageMult;
+      const typeRand = Math.random();
+      let type = "runner";
+      if (wave >= 3 && typeRand < 0.25) type = "sniper";
+      else if (wave >= 5 && typeRand < 0.5) type = "bomber";
 
-    function getAbilityOptions(count, isBossWave) {
-      const owned = new Set([
-        ...player.normalAbilities,
-        ...player.bossAbilities
-      ]);
+      let radius = 16;
+      if (type === "sniper") { speed *= 0.8; radius = 17; }
+      if (type === "bomber") { speed *= 1.05; contactDamage *= 2; radius = 18; }
 
-      const normalAvailable = normalAbilities.filter(a => {
-        if (owned.has(a.id)) return false;
-        if (a.requires && !owned.has(a.requires)) return false;
-        if (a.requiresAll && !a.requiresAll.every(id => owned.has(id))) return false;
-        return true;
-      });
-
-      const bossAvailable = isBossWave
-        ? bossAbilities.filter(a => {
-            if (owned.has(a.id)) return false;
-            if (a.requires && !owned.has(a.requires)) return false;
-            if (a.requiresAll && !a.requiresAll.every(id => owned.has(id))) return false;
-            return true;
-          })
-        : [];
-
-      const options = [];
-      const usedIds = new Set();
-
-      if (isBossWave && bossAbilities.length > 0) {
-        const pool = bossAvailable.length > 0 ? bossAvailable : bossAbilities;
-        const arr = shuffled(pool);
-        const b = arr[0];
-        if (b) {
-          options.push(b);
-          usedIds.add(b.id);
-        }
+      const e = {
+        x,
+        y,
+        radius,
+        speed,
+        hp: hpBase,
+        maxHp: hpBase,
+        contactDamage,
+        type,
+        isBoss: false
+      };
+      if (type === "sniper") {
+        e.shotCooldown = 2.2;
+        e.strafeDir = Math.random() < 0.5 ? 1 : -1;
       }
-
-      const needed = count - options.length;
-      if (needed > 0) {
-        let pool = normalAvailable.length > 0 ? normalAvailable : normalAbilities;
-        pool = shuffled(pool);
-        for (const a of pool) {
-          if (options.length >= count) break;
-          if (usedIds.has(a.id)) continue;
-          options.push(a);
-          usedIds.add(a.id);
-        }
-      }
-
-      if (options.length < count && bossAbilities.length > 0) {
-        const pool = shuffled(bossAbilities);
-        for (const a of pool) {
-          if (options.length >= count) break;
-          if (usedIds.has(a.id)) continue;
-          options.push(a);
-          usedIds.add(a.id);
-        }
-      }
-
-      return options;
+      enemies.push(e);
     }
+  }
 
-    function getCurseOptions(count) {
-      let available = curses.filter(
-        c =>
-          !activeCurses.includes(c.id) &&
-          !(c.special && c.special.isTrialOnly)
-      );
-      if (available.length === 0) {
-        available = curses.filter(c => !(c.special && c.special.isTrialOnly));
-      }
-      const arr = shuffled(available);
-      return arr.slice(0, count);
+  function startNextWave() {
+    wave += 1;
+    enemies = [];
+    bullets = [];
+    enemyBullets = [];
+    playerBombs = [];
+    fireBursts = [];
+    const isBossWave = wave % 5 === 0;
+
+    let baseCount = 4 + wave * 2;
+    baseCount = Math.round(baseCount * enemyScale.countMult);
+    baseCount = Math.max(1, baseCount);
+
+    if (isBossWave) {
+      spawnEnemy(true);
+      const extra = Math.max(2, Math.floor(baseCount / 3));
+      for (let i = 0; i < extra; i++) spawnEnemy(false);
+      showMessage("Boss Wave " + wave, 3);
+      addScreenShake(8, 0.4);
+      addWhiteFlash(0.3);
+    } else {
+      for (let i = 0; i < baseCount; i++) spawnEnemy(false);
+      showMessage("Wave " + wave, 2);
     }
+  }
 
-    /* ========= HAZARDS ========= */
-
-    function spawnHazard(x, y, radius, dps, life, type) {
-      hazards.push({ x, y, radius, dps, life, maxLife: life, type });
-    }
-
-    function updateHazards(dt) {
-      if (!player) return;
-      for (let i = hazards.length - 1; i >= 0; i--) {
-        const h = hazards[i];
-        h.life -= dt;
-        if (h.life <= 0) {
-          hazards.splice(i, 1);
-          continue;
-        }
-        const distToPlayer = distance(player.x, player.y, h.x, h.y);
-        if (distToPlayer < h.radius + player.radius && !player.isDashing) {
-          const dmg = h.dps * dt * (player.incomingDamageMult || 1);
-          player.hp -= dmg;
-          if (player.hp <= 0) {
-            player.hp = 0;
-            gameOver();
-            return;
-          }
-        }
+  function triggerBomberExplosion(e) {
+    const radius = 90;
+    const baseDamage = (30 + wave * 2.5) * enemyScale.damageMult;
+    const distToPlayer = distance(e.x, e.y, player.x, player.y);
+    if (distToPlayer <= radius + player.radius && !player.isDashing) {
+      const dmg = baseDamage * (player.incomingDamageMult || 1);
+      player.hp -= dmg;
+      if (player.hp <= 0) {
+        player.hp = 0;
+        gameOver();
       }
     }
+    fireBursts.push({
+      x: e.x,
+      y: e.y,
+      radius,
+      life: 0.25,
+      maxLife: 0.25,
+      color: "#ff7744"
+    });
+  }
 
-    /* ========= DASH / AOE HELPERS ========= */
-
-    function damageEnemiesInRadius(x, y, radius, damage) {
-      for (let i = enemies.length - 1; i >= 0; i--) {
-        const e = enemies[i];
-        const dist = distance(e.x, e.y, x, y);
-        if (dist <= radius + e.radius) {
-          e.hp -= damage;
-          let died = false;
-          if (e.hp <= 0) {
-            died = true;
-            if (e.type === "bomber") {
-              triggerBomberExplosion(e);
-            }
-            enemies.splice(i, 1);
-          }
-          gainUltimateCharge(damage, died);
-        }
-      }
-    }
-
-    function startDash() {
-      if (!player || gameState !== "playing") return;
-      if (player.dashActiveTimer > 0) return;
-      if (player.dashCooldownTimer > 0) return;
-
-      let dirX = 0;
-      let dirY = 0;
-      if (keys["w"] || keys["arrowup"]) dirY -= 1;
-      if (keys["s"] || keys["arrowdown"]) dirY += 1;
-      if (keys["a"] || keys["arrowleft"]) dirX -= 1;
-      if (keys["d"] || keys["arrowright"]) dirX += 1;
-
-      let len = Math.hypot(dirX, dirY);
-      if (len === 0) {
-        dirX = mousePos.x - player.x;
-        dirY = mousePos.y - player.y;
-        len = Math.hypot(dirX, dirY) || 1;
-      }
-      dirX /= len;
-      dirY /= len;
-
-      let dashSpeed = player.speed * 4.0;
-      if (player.ultimateActiveTimer > 0) {
-        if (player.ultimateType === ULT_TYPE.MELEE_FRENZY || player.ultimateType === ULT_TYPE.GHOUL_RAMPAGE) {
-          dashSpeed = player.speed * 5.0;
-        } else if (player.ultimateType === ULT_TYPE.MHA_100 || player.ultimateType === ULT_TYPE.AOT_RUSH) {
-          dashSpeed = player.speed * 5.2;
-        }
-      }
-
-      // Blink dash
-      if (player.dashMode === "blink") {
-        const blinkDistance = 180;
-        const targetX = player.x + dirX * blinkDistance;
-        const targetY = player.y + dirY * blinkDistance;
-        player.x = clamp(targetX, player.radius, canvas.width - player.radius);
-        player.y = clamp(targetY, player.radius, canvas.height - player.radius);
-
-        player.dashVelX = 0;
-        player.dashVelY = 0;
-        player.dashActiveTimer = Math.max(0.12, player.dashDuration * 0.6);
-        player.dashCooldownTimer = player.dashCooldown;
-        player.isDashing = true;
-
-        fireBursts.push({
-          x: player.x,
-          y: player.y,
-          radius: 90,
-          life: 0.2,
-          maxLife: 0.2,
-          color: "#6bf7ff"
-        });
-
-        return;
-      }
-
-      // Bomb dash
-      if (player.dashMode === "bomb") {
-        const radius = 120;
-        const bombDamage = player.damage * 3 + 40 + wave * 4;
-        const fuse = 0.55;
-        playerBombs.push({
-          x: player.x,
-          y: player.y,
-          radius,
-          damage: bombDamage,
-          fuse,
-          maxFuse: fuse
-        });
-      }
-
-      // Flame step
-      if (player.dashMode === "flame") {
-        const flameRadius = 130;
-        const flameDamage = player.damage * 2.1 + 30 + wave * 3;
-        damageEnemiesInRadius(player.x, player.y, flameRadius, flameDamage);
-        fireBursts.push({
-          x: player.x,
-          y: player.y,
-          radius: flameRadius,
-          life: 0.18,
-          maxLife: 0.18,
-          color: "#ff7b47"
-        });
-      }
-
-      player.dashVelX = dirX * dashSpeed;
-      player.dashVelY = dirY * dashSpeed;
-      player.dashActiveTimer = player.dashDuration;
-      player.dashCooldownTimer = player.dashCooldown;
-      player.isDashing = true;
-    }
-
-    /* ========= MELEE ========= */
-
-    function tryMeleeAttack() {
-      if (!player || gameState !== "playing") return;
-      if (player.meleeCooldownTimer > 0) return;
-
-      const dx = mousePos.x - player.x;
-      const dy = mousePos.y - player.y;
-      const baseAngle = Math.atan2(dy, dx);
-
-      player.meleeAngle = baseAngle;
-      player.meleeSwingTimer = player.meleeSwingDuration;
-
-      let cooldownFactor = 1;
-      let rangeMult = 1;
-      let dmgMult = 1;
-      let bonusHeal = 0;
-
-      if (player.ultimateActiveTimer > 0) {
-        const t = player.ultimateType;
-        if (t === ULT_TYPE.MELEE_FRENZY || t === ULT_TYPE.GHOUL_RAMPAGE) {
-          cooldownFactor = 0.5;
-          rangeMult = 1.3;
-          dmgMult = (t === ULT_TYPE.GHOUL_RAMPAGE) ? 2.5 : 2.0;
-          bonusHeal = (t === ULT_TYPE.GHOUL_RAMPAGE) ? 2.0 : 1.0;
-        } else if (t === ULT_TYPE.MHA_100 || t === ULT_TYPE.AOT_RUSH) {
-          cooldownFactor = 0.7;
-          rangeMult = 1.15;
-          dmgMult = 1.6;
-        } else if (t === ULT_TYPE.JJK_DOMAIN) {
-          dmgMult = 1.3;
-        }
-      }
-
-      player.meleeCooldownTimer = player.meleeCooldown * cooldownFactor;
-
-      // Santoryu slashes
-      if (playerHasAbility("op_santoryu")) {
-        spawnMeleeSlashes(baseAngle);
-      }
-
-      const range = player.meleeRange * rangeMult;
-      const dmgBase = player.meleeDamage * dmgMult;
-
-      for (let i = enemies.length - 1; i >= 0; i--) {
-        const e = enemies[i];
-        const ex = e.x - player.x;
-        const ey = e.y - player.y;
-        const dist = Math.hypot(ex, ey);
-        if (dist > range + e.radius) continue;
-
-        const ang = Math.atan2(ey, ex);
-        const diff = Math.abs(angleDiff(ang, baseAngle));
-        if (diff <= player.meleeArc / 2) {
-          const dmg = dmgBase;
-          e.hp -= dmg;
-          const healAmount = player.meleeOnHitHeal + bonusHeal;
-          if (healAmount > 0) {
-            player.hp = Math.min(player.maxHp, player.hp + healAmount);
-          }
-          const died = e.hp <= 0;
-          if (died) {
-            if (e.type === "bomber") {
-              triggerBomberExplosion(e);
-            }
-            enemies.splice(i, 1);
-          }
-          gainUltimateCharge(dmg, died);
-        }
-      }
-    }
-
-    /* ========= WAVES, ENEMIES, BOSSES & PHASES ========= */
-
-    function spawnBossBulletsRing(boss, count, speed) {
-      const finalSpeed = speed * enemyScale.bulletSpeedMult;
-      const baseDamage = 14 + wave * 1.5;
-      const dmg = baseDamage * enemyScale.bulletDamageMult;
-      for (let i = 0; i < count; i++) {
-        const angle = (Math.PI * 2 * i) / count;
-        const vx = Math.cos(angle) * finalSpeed;
-        const vy = Math.sin(angle) * finalSpeed;
-        enemyBullets.push({
-          x: boss.x,
-          y: boss.y,
-          vx,
-          vy,
-          radius: 4,
-          damage: dmg
-        });
-      }
-    }
-
-    function spawnBossShotAtPlayer(boss, speed) {
-      const dx = player.x - boss.x;
-      const dy = player.y - boss.y;
-      const dist = Math.hypot(dx, dy) || 1;
-      const finalSpeed = speed * enemyScale.bulletSpeedMult;
-      const vx = (dx / dist) * finalSpeed;
-      const vy = (dy / dist) * finalSpeed;
-      const baseDamage = 16 + wave * 1.8;
-      const dmg = baseDamage * enemyScale.bulletDamageMult;
-      enemyBullets.push({
-        x: boss.x,
-        y: boss.y,
-        vx,
-        vy,
-        radius: 4,
-        damage: dmg
-      });
-    }
-
-    function triggerBomberExplosion(e) {
-      if (!player) return;
-      const radius = 100;
-      const baseDamage = (30 + wave * 2.5) * enemyScale.damageMult;
-      const distToPlayer = distance(e.x, e.y, player.x, player.y);
-      if (distToPlayer <= radius + player.radius && !player.isDashing) {
-        const dmg = baseDamage * (player.incomingDamageMult || 1);
-        player.hp -= dmg;
-        if (player.hp <= 0) {
-          player.hp = 0;
-          gameOver();
-        }
-      }
-    }
-
-    function spawnEnemy(isBoss = false) {
-      const margin = 40;
-      let x, y;
-      do {
-        x = Math.random() * (canvas.width - margin * 2) + margin;
-        y = Math.random() * (canvas.height - margin * 2) + margin;
-      } while (player && distance(x, y, player.x, player.y) < 160);
-
-      if (isBoss) {
-        let hpBase = 400 + wave * 40;
-        hpBase *= enemyScale.hpMult;
-        const baseSpeed = (90 + wave * 5) * enemyScale.speedMult;
-        const contactDamage = (45 + wave * 3) * enemyScale.damageMult;
-
-        let patternType;
-        let displayName = "Anime Boss";
-        const bossIndex = Math.floor((wave - 1) / 5);
-
-        if (currentArc === "jjk") {
-          patternType = "domain";
-          displayName = bossIndex % 2 === 0 ? "King of Curses" : "Cursed Disaster";
-        } else if (currentArc === "mha") {
-          patternType = bossIndex % 2 === 0 ? "charger" : "bullet_hell";
-          displayName = bossIndex % 2 === 0 ? "Symbol of Fear" : "Quirk Anomaly";
-        } else if (currentArc === "ds") {
-          patternType = bossIndex % 2 === 0 ? "summoner" : "bullet_hell";
-          displayName = bossIndex % 2 === 0 ? "Upper Moon Demon" : "Blood Demon Art";
-        } else {
-          const patterns = ["charger", "bullet_hell", "summoner", "domain", "cyber"];
-          const names = [
-            "Brutal Titan",
-            "Bullet Curse",
-            "Demon Captain",
-            "Domain Tyrant",
-            "Chrome Reaper"
-          ];
-          const idx = bossIndex % patterns.length;
-          patternType = patterns[idx];
-          displayName = names[idx];
-        }
-
-        const boss = {
-          x,
-          y,
-          radius: 40,
-          speed: baseSpeed,
-          baseSpeed: baseSpeed,
-          hp: hpBase,
-          maxHp: hpBase,
-          contactDamage: contactDamage,
-          isBoss: true,
-          type: "boss",
-          patternType,
-          displayName,
-          phase: 1,
-          dashCooldown: 2.5,
-          dashTime: 0,
-          shotCooldown: 1.5,
-          ringCooldown: 3.0,
-          summonCooldown: 4.0,
-          blinkCooldown: 3.0
-        };
-
-        enemies.push(boss);
-      } else {
-        let hpBase = 35 + wave * 6;
-        hpBase *= enemyScale.hpMult;
-        let baseSpeed = (140 + wave * 8) * enemyScale.speedMult;
-        let contactDamage = (12 + wave * 1.5) * enemyScale.damageMult;
-
-        let type = "runner";
-        const r = Math.random();
-        if (wave >= 3 && r < 0.2) {
-          type = "sniper";
-        } else if (wave >= 5 && r < 0.4) {
-          type = "bomber";
-        } else if (wave >= 7 && r < 0.6) {
-          type = "dasher";
-        } else if (wave >= 6 && r < 0.8) {
-          type = "curse";
-        }
-
-        let radius = 16;
-
-        if (type === "sniper") {
-          baseSpeed *= 0.75;
-          contactDamage *= 1.1;
-          radius = 17;
-        } else if (type === "bomber") {
-          baseSpeed *= 1.05;
-          contactDamage *= 2.0;
-          radius = 18;
-        } else if (type === "dasher") {
-          baseSpeed *= 1.25;
-          contactDamage *= 1.5;
-          radius = 17;
-        } else if (type === "curse") {
-          baseSpeed *= 0.8;
-          contactDamage *= 1.2;
-          radius = 19;
-        }
-
-        const enemy = {
-          x,
-          y,
-          radius,
-          speed: baseSpeed,
-          hp: hpBase,
-          maxHp: hpBase,
-          contactDamage,
-          isBoss: false,
-          type
-        };
-
-        if (type === "sniper") {
-          enemy.shotCooldown = 2.2;
-          enemy.strafeDir = Math.random() < 0.5 ? 1 : -1;
-        }
-        if (type === "dasher") {
-          enemy.dashCooldown = 2.5;
-          enemy.dashTime = 0;
-        }
-        if (type === "curse") {
-          enemy.curseShotCooldown = 3.0;
-        }
-
-        enemies.push(enemy);
-      }
-    }
-
-    function handleBossPhase(e) {
-      const ratio = e.hp / e.maxHp;
-      if (e.phase === 1 && ratio <= 0.66) {
-        e.phase = 2;
-        showMessage("Boss enters Phase 2!", 2);
-      } else if (e.phase === 2 && ratio <= 0.33) {
-        e.phase = 3;
-        showMessage("Boss enters Final Phase!", 2.5);
-      }
-    }
-
-    function updateBoss(e, dt) {
-      handleBossPhase(e);
-
-      let moveSpeed = e.baseSpeed;
-
-      if (e.patternType === "charger") {
-        e.dashCooldown -= dt;
-        if (e.dashTime > 0) {
-          e.dashTime -= dt;
-          moveSpeed = e.baseSpeed * (e.phase === 3 ? 3.5 : 3.0);
-        } else {
-          moveSpeed = e.baseSpeed * (e.phase === 1 ? 0.8 : e.phase === 2 ? 1.0 : 1.1);
-          if (e.dashCooldown <= 0) {
-            e.dashTime = e.phase === 3 ? 0.6 : 0.4;
-            e.dashCooldown = (e.phase === 1 ? 3.0 : e.phase === 2 ? 2.2 : 1.6) + Math.random() * 0.4;
-          }
-        }
-
-        e.shotCooldown -= dt;
-        if (e.shotCooldown <= 0) {
-          const shots = e.phase === 3 ? 3 : e.phase === 2 ? 2 : 1;
-          for (let i = 0; i < shots; i++) {
-            spawnBossShotAtPlayer(e, 260 + wave * 5 + 20 * e.phase);
-          }
-          e.shotCooldown = e.phase === 1 ? 2.5 : e.phase === 2 ? 2.0 : 1.5;
-        }
-      } else if (e.patternType === "bullet_hell") {
-        moveSpeed = e.baseSpeed * (e.phase === 1 ? 0.6 : e.phase === 2 ? 0.7 : 0.8);
-
-        e.ringCooldown -= dt;
-        if (e.ringCooldown <= 0) {
-          const baseCount = 10 + Math.min(14, Math.floor(wave / 2));
-          const count = e.phase === 1 ? baseCount : e.phase === 2 ? baseCount + 4 : baseCount + 8;
-          spawnBossBulletsRing(e, count, 220 + wave * 4 + 20 * e.phase);
-          e.ringCooldown = e.phase === 1 ? 3.0 : e.phase === 2 ? 2.4 : 1.8;
-
-          if (e.phase >= 2) {
-            const hx = e.x + (Math.random() - 0.5) * 260;
-            const hy = e.y + (Math.random() - 0.5) * 260;
-            spawnHazard(
-              clamp(hx, 40, canvas.width - 40),
-              clamp(hy, 40, canvas.height - 40),
-              70 + 10 * e.phase,
-              30 + wave * 2,
-              6,
-              currentArc === "ds" ? "flame" : "lava"
-            );
-          }
-        }
-
-        e.shotCooldown -= dt;
-        if (e.shotCooldown <= 0) {
-          const volleys = e.phase === 3 ? 4 : e.phase === 2 ? 3 : 2;
-          for (let i = 0; i < volleys; i++) {
-            spawnBossShotAtPlayer(e, 280 + wave * 4 + 20 * e.phase);
-          }
-          e.shotCooldown = e.phase === 1 ? 2.0 : e.phase === 2 ? 1.6 : 1.2;
-        }
-      } else if (e.patternType === "summoner") {
-        moveSpeed = e.baseSpeed * (e.phase === 1 ? 0.8 : e.phase === 2 ? 0.9 : 1.0);
-
-        e.summonCooldown -= dt;
-        if (e.summonCooldown <= 0) {
-          const baseCount = 2 + Math.floor(wave / 5);
-          const count = e.phase === 1 ? baseCount : e.phase === 2 ? baseCount + 1 : baseCount + 2;
-          for (let i = 0; i < count; i++) {
-            spawnEnemy(false);
-          }
-          e.summonCooldown = e.phase === 1 ? 5.0 : e.phase === 2 ? 4.0 : 3.2;
-          showMessage("Boss summons reinforcements!", 1.5);
-
-          if (e.phase >= 2) {
-            const hx = Math.random() * (canvas.width - 160) + 80;
-            const hy = Math.random() * (canvas.height - 160) + 80;
-            spawnHazard(hx, hy, 80, 26 + wave * 1.8, 7, "curse");
-          }
-        }
-
-        e.shotCooldown -= dt;
-        if (e.shotCooldown <= 0) {
-          const volleys = e.phase === 3 ? 3 : 2;
-          for (let i = 0; i < volleys; i++) {
-            spawnBossShotAtPlayer(e, 260 + wave * 3 + 15 * e.phase);
-          }
-          e.shotCooldown = e.phase === 1 ? 2.2 : e.phase === 2 ? 1.8 : 1.3;
-        }
-
-        if (e.phase === 3) {
-          e.ringCooldown -= dt;
-          if (e.ringCooldown <= 0) {
-            spawnBossBulletsRing(e, 12 + Math.floor(wave / 2), 230 + wave * 3);
-            e.ringCooldown = 4.0;
-          }
-        }
-      } else if (e.patternType === "domain") {
-        moveSpeed = e.baseSpeed * (e.phase === 1 ? 0.7 : e.phase === 2 ? 0.8 : 0.9);
-
-        e.ringCooldown -= dt;
-        if (e.ringCooldown <= 0) {
-          const baseCount = 8 + Math.min(10, Math.floor(wave / 2));
-          const count = e.phase === 1 ? baseCount : e.phase === 2 ? baseCount + 4 : baseCount + 8;
-          spawnBossBulletsRing(e, count, 220 + wave * 4 + 15 * e.phase);
-          e.ringCooldown = e.phase === 1 ? 3.2 : e.phase === 2 ? 2.5 : 2.0;
-
-          if (e.phase >= 2) {
-            spawnHazard(
-              e.x,
-              e.y,
-              90 + 10 * e.phase,
-              32 + wave * 2,
-              6,
-              "curse"
-            );
-          }
-        }
-
-        const auraRadius = e.phase === 1 ? 170 : e.phase === 2 ? 200 : 230;
-        const auraDpsBase = 18 + wave * 2.5;
-        const auraDps = auraDpsBase * enemyScale.damageMult;
-        const distToPlayer = distance(e.x, e.y, player.x, player.y);
-        if (distToPlayer <= auraRadius + player.radius && !player.isDashing) {
-          const dmg = auraDps * dt * (player.incomingDamageMult || 1);
-          player.hp -= dmg;
-          if (player.hp <= 0) {
-            player.hp = 0;
-            gameOver();
-            return;
-          }
-        }
-      } else if (e.patternType === "cyber") {
-        moveSpeed = e.baseSpeed * (e.phase === 1 ? 1.0 : e.phase === 2 ? 1.1 : 1.3);
-
-        if (typeof e.blinkCooldown !== "number") {
-          e.blinkCooldown = 3.0;
-        }
-        e.blinkCooldown -= dt;
-        if (e.blinkCooldown <= 0) {
-          const distToPlayer = distance(e.x, e.y, player.x, player.y);
-          const blinkDist = 200;
-          const ang = Math.atan2(player.y - e.y, player.x - e.x);
-          const offset = Math.max(80, distToPlayer - blinkDist);
-          e.x = clamp(player.x - Math.cos(ang) * offset, e.radius, canvas.width - e.radius);
-          e.y = clamp(player.y - Math.sin(ang) * offset, e.radius, canvas.height - e.radius);
-          e.blinkCooldown = (e.phase === 1 ? 3.2 : e.phase === 2 ? 2.6 : 2.0) + Math.random() * 0.3;
-
-          spawnBossBulletsRing(e, 8 + e.phase * 2, 260 + wave * 3);
-        }
-
-        e.shotCooldown -= dt;
-        if (e.shotCooldown <= 0) {
-          const volleys = e.phase === 3 ? 4 : e.phase === 2 ? 3 : 2;
-          for (let i = 0; i < volleys; i++) {
-            spawnBossShotAtPlayer(e, 320 + wave * 4 + 20 * e.phase);
-          }
-          e.shotCooldown = e.phase === 1 ? 2.0 : e.phase === 2 ? 1.6 : 1.2;
-        }
+  function updateEnemies(dt) {
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      const e = enemies[i];
+      if (e.isBoss) {
+        updateBoss(e, dt);
+        continue;
       }
 
       const dx = player.x - e.x;
@@ -2966,8 +1456,40 @@
       const dirX = dx / dist;
       const dirY = dy / dist;
 
-      e.x += dirX * moveSpeed * dt;
-      e.y += dirY * moveSpeed * dt;
+      if (e.type === "sniper") {
+        const minDist = 260;
+        const maxDist = 360;
+        let moveX = 0;
+        let moveY = 0;
+        if (dist < minDist) { moveX = -dirX; moveY = -dirY; }
+        else if (dist > maxDist) { moveX = dirX; moveY = dirY; }
+        else {
+          moveX = -dirY * e.strafeDir;
+          moveY = dirX * e.strafeDir;
+        }
+        const len = Math.hypot(moveX, moveY) || 1;
+        moveX /= len; moveY /= len;
+        let nx = e.x + moveX * e.speed * dt;
+        let ny = e.y + moveY * e.speed * dt;
+        if (nx < e.radius || nx > canvas.width - e.radius) {
+          e.strafeDir = -e.strafeDir;
+          nx = clamp(nx, e.radius, canvas.width - e.radius);
+        }
+        if (ny < e.radius || ny > canvas.height - e.radius) {
+          e.strafeDir = -e.strafeDir;
+          ny = clamp(ny, e.radius, canvas.height - e.radius);
+        }
+        e.x = nx; e.y = ny;
+
+        e.shotCooldown -= dt;
+        if (e.shotCooldown <= 0) {
+          spawnEnemyBulletAtPlayer(e, 260 + wave * 3);
+          e.shotCooldown = 2.4;
+        }
+      } else {
+        e.x += dirX * e.speed * dt;
+        e.y += dirY * e.speed * dt;
+      }
 
       e.x = clamp(e.x, e.radius, canvas.width - e.radius);
       e.y = clamp(e.y, e.radius, canvas.height - e.radius);
@@ -2983,910 +1505,779 @@
         e.x -= pushX * overlap * 0.5;
         e.y -= pushY * overlap * 0.5;
 
+        if (e.type === "bomber") {
+          triggerBomberExplosion(e);
+          enemies.splice(i, 1);
+          continue;
+        }
+
         if (!player.isDashing) {
-          const dmg = e.contactDamage * dt * 1.2 * (player.incomingDamageMult || 1);
+          const dmg = e.contactDamage * dt * (player.incomingDamageMult || 1);
+          player.hp -= dmg;
+          if (player.hp <= 0) {
+            player.hp = 0;
+            gameOver();
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  function spawnEnemyBulletAtPlayer(e, speed) {
+    const dx = player.x - e.x;
+    const dy = player.y - e.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const finalSpeed = speed * enemyScale.bulletSpeedMult;
+    const vx = (dx / dist) * finalSpeed;
+    const vy = (dy / dist) * finalSpeed;
+    const baseDamage = (18 + wave * 1.8) * enemyScale.bulletDamageMult;
+    enemyBullets.push({
+      x: e.x,
+      y: e.y,
+      vx,
+      vy,
+      radius: 4,
+      damage: baseDamage
+    });
+  }
+
+  function spawnBossRing(e, count, speed) {
+    const finalSpeed = speed * enemyScale.bulletSpeedMult;
+    const baseDamage = (16 + wave * 1.6) * enemyScale.bulletDamageMult;
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 * i) / count;
+      enemyBullets.push({
+        x: e.x,
+        y: e.y,
+        vx: Math.cos(angle) * finalSpeed,
+        vy: Math.sin(angle) * finalSpeed,
+        radius: 4,
+        damage: baseDamage
+      });
+    }
+  }
+
+  function updateBoss(e, dt) {
+    const ratio = e.hp / e.maxHp;
+    if (e.phase === 1 && ratio <= 0.66) {
+      e.phase = 2;
+      showMessage("Boss Phase 2!", 2);
+      addScreenShake(8, 0.35);
+      addWhiteFlash(0.3);
+      spawnParticles(e.x, e.y, {
+        count: 28,
+        speedMin: 150,
+        speedMax: 320,
+        sizeMin: 3,
+        sizeMax: 5,
+        color: "rgba(255,220,140,1)"
+      });
+    } else if (e.phase === 2 && ratio <= 0.33) {
+      e.phase = 3;
+      showMessage("Boss Final Phase!", 2.5);
+      addScreenShake(10, 0.4);
+      addWhiteFlash(0.4);
+      spawnParticles(e.x, e.y, {
+        count: 32,
+        speedMin: 170,
+        speedMax: 340,
+        sizeMin: 3,
+        sizeMax: 6,
+        color: "rgba(255,150,150,1)"
+      });
+    }
+
+    const dx = player.x - e.x;
+    const dy = player.y - e.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const dirX = dx / dist;
+    const dirY = dy / dist;
+
+    const moveSpeed = e.speed * (e.phase === 1 ? 0.7 : e.phase === 2 ? 0.85 : 1.0);
+    e.x += dirX * moveSpeed * dt;
+    e.y += dirY * moveSpeed * dt;
+
+    e.x = clamp(e.x, e.radius, canvas.width - e.radius);
+    e.y = clamp(e.y, e.radius, canvas.height - e.radius);
+
+    e.ringCooldown -= dt;
+    if (e.ringCooldown <= 0) {
+      const baseCount = 10 + Math.min(10, Math.floor(wave / 2));
+      const count = e.phase === 1 ? baseCount : e.phase === 2 ? baseCount + 4 : baseCount + 8;
+      spawnBossRing(e, count, 230 + wave * 4 + 20 * e.phase);
+      e.ringCooldown = e.phase === 1 ? 3.2 : e.phase === 2 ? 2.6 : 2.0;
+    }
+
+    e.rushCooldown -= dt;
+    if (e.rushCooldown <= 0) {
+      spawnEnemyBulletAtPlayer(e, 260 + wave * 4 + 20 * e.phase);
+      if (e.phase >= 2) spawnEnemyBulletAtPlayer(e, 260 + wave * 4 + 40 * e.phase);
+      e.rushCooldown = e.phase === 1 ? 2.3 : e.phase === 2 ? 1.8 : 1.4;
+    }
+
+    const distToPlayer = distance(e.x, e.y, player.x, player.y);
+    const minDist = e.radius + player.radius;
+    if (distToPlayer < minDist) {
+      const overlap = minDist - distToPlayer;
+      const pushX = (player.x - e.x) / (distToPlayer || 1);
+      const pushY = (player.y - e.y) / (distToPlayer || 1);
+      player.x += pushX * overlap * 0.5;
+      player.y += pushY * overlap * 0.5;
+      e.x -= pushX * overlap * 0.5;
+      e.y -= pushY * overlap * 0.5;
+
+      if (!player.isDashing) {
+        const dmg = e.contactDamage * dt * 1.3 * (player.incomingDamageMult || 1);
+        player.hp -= dmg;
+        if (player.hp <= 0) {
+          player.hp = 0;
+          gameOver();
+          return;
+        }
+      }
+    }
+  }
+
+  function updateEnemyBullets(dt) {
+    for (let i = enemyBullets.length - 1; i >= 0; i--) {
+      const b = enemyBullets[i];
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+
+      if (b.x < -50 || b.x > canvas.width + 50 || b.y < -50 || b.y > canvas.height + 50) {
+        enemyBullets.splice(i, 1);
+        continue;
+      }
+
+      const distToPlayer = distance(b.x, b.y, player.x, player.y);
+      if (distToPlayer < b.radius + player.radius) {
+        if (!player.isDashing) {
+          const dmg = b.damage * (player.incomingDamageMult || 1);
           player.hp -= dmg;
           if (player.hp <= 0) {
             player.hp = 0;
             gameOver();
           }
         }
+        enemyBullets.splice(i, 1);
+      }
+    }
+  }
+
+  function checkWaveCleared() {
+    if (gameState !== "playing") return;
+    if (enemies.length === 0) onWaveCleared();
+  }
+
+  function onWaveCleared() {
+    gameState = "upgrade";
+    player.hp = Math.min(player.maxHp, player.hp + player.healAfterWave);
+    pendingAbility = null;
+    pendingCategory = null;
+
+    const isBossWave = wave % 5 === 0;
+    const abilityOptions = getAbilityOptions(2, isBossWave);
+    let finalOptions = abilityOptions;
+    if (isBossWave) {
+      const curseOptions = getCurseOptions(1);
+      finalOptions = abilityOptions.concat(curseOptions);
+    }
+    showUpgradePanel(finalOptions);
+  }
+
+  /* ==================== DASH, MELEE, BULLETS ==================== */
+
+  function damageEnemiesInRadius(x, y, radius, damage) {
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      const e = enemies[i];
+      const dist = distance(e.x, e.y, x, y);
+      if (dist <= radius + e.radius) {
+        e.hp -= damage;
+        if (e.hp <= 0) {
+          if (e.isBoss) {
+            spawnParticles(e.x, e.y, {
+              count: 40,
+              speedMin: 150,
+              speedMax: 350,
+              sizeMin: 3,
+              sizeMax: 6,
+              color: "rgba(255,210,140,1)"
+            });
+          }
+          if (e.type === "bomber") triggerBomberExplosion(e);
+          enemies.splice(i, 1);
+        }
+      }
+    }
+  }
+
+  function startDash() {
+    if (!player || gameState !== "playing") return;
+    if (player.dashActiveTimer > 0) return;
+    if (player.dashCooldownTimer > 0) return;
+
+    let dirX = 0, dirY = 0;
+    if (keys["w"] || keys["arrowup"]) dirY -= 1;
+    if (keys["s"] || keys["arrowdown"]) dirY += 1;
+    if (keys["a"] || keys["arrowleft"]) dirX -= 1;
+    if (keys["d"] || keys["arrowright"]) dirX += 1;
+    let len = Math.hypot(dirX, dirY);
+    if (len === 0) {
+      dirX = mousePos.x - player.x;
+      dirY = mousePos.y - player.y;
+      len = Math.hypot(dirX, dirY) || 1;
+    }
+    dirX /= len; dirY /= len;
+
+    let dashSpeed = player.speed * 4.0;
+
+    // dash particles on start
+    spawnParticles(player.x, player.y, {
+      count: 18,
+      speedMin: 90,
+      speedMax: 220,
+      sizeMin: 2,
+      sizeMax: 4,
+      color: "rgba(160,220,255,1)"
+    });
+
+    if (player.dashMode === "blink") {
+      const blinkDist = 180;
+      const tx = player.x + dirX * blinkDist;
+      const ty = player.y + dirY * blinkDist;
+      player.x = clamp(tx, player.radius, canvas.width - player.radius);
+      player.y = clamp(ty, player.radius, canvas.height - player.radius);
+      player.dashVelX = 0;
+      player.dashVelY = 0;
+      player.dashActiveTimer = Math.max(0.12, player.dashDuration * 0.6);
+      player.dashCooldownTimer = player.dashCooldown;
+      player.isDashing = true;
+      return;
+    }
+
+    if (player.dashMode === "bomb") {
+      const radius = 120;
+      const dmg = player.damage * 3 + 40 + wave * 4;
+      const fuse = 0.55;
+      playerBombs.push({
+        x: player.x,
+        y: player.y,
+        radius,
+        damage: dmg,
+        fuse,
+        maxFuse: fuse
+      });
+    }
+
+    if (player.dashMode === "flame") {
+      const r = 130;
+      const dmg = player.damage * 2.1 + 30 + wave * 3;
+      damageEnemiesInRadius(player.x, player.y, r, dmg);
+      fireBursts.push({
+        x: player.x,
+        y: player.y,
+        radius: r,
+        life: 0.2,
+        maxLife: 0.2,
+        color: "#ff7b47"
+      });
+    }
+
+    player.dashVelX = dirX * dashSpeed;
+    player.dashVelY = dirY * dashSpeed;
+    player.dashActiveTimer = player.dashDuration;
+    player.dashCooldownTimer = player.dashCooldown;
+    player.isDashing = true;
+  }
+
+  function tryMeleeAttack() {
+    if (!player || gameState !== "playing") return;
+    if (player.meleeCooldownTimer > 0) return;
+
+    const dx = mousePos.x - player.x;
+    const dy = mousePos.y - player.y;
+    const baseAngle = Math.atan2(dy, dx);
+    player.meleeAngle = baseAngle;
+    player.meleeSwingTimer = player.meleeSwingDuration;
+    player.meleeCooldownTimer = player.meleeCooldown;
+
+    const range = player.meleeRange;
+    const dmgBase = player.meleeDamage;
+
+    // melee slash particles
+    spawnParticles(
+      player.x + Math.cos(baseAngle) * range * 0.7,
+      player.y + Math.sin(baseAngle) * range * 0.7,
+      {
+        count: 14,
+        speedMin: 120,
+        speedMax: 260,
+        sizeMin: 2,
+        sizeMax: 4,
+        color: "rgba(255,200,160,1)"
+      }
+    );
+
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      const e = enemies[i];
+      const ex = e.x - player.x;
+      const ey = e.y - player.y;
+      const dist = Math.hypot(ex, ey);
+      if (dist > range + e.radius) continue;
+      const ang = Math.atan2(ey, ex);
+      const diff = Math.abs(angleDiff(ang, baseAngle));
+      if (diff <= player.meleeArc / 2) {
+        e.hp -= dmgBase;
+        const heal = player.meleeOnHitHeal;
+        if (heal > 0) player.hp = Math.min(player.maxHp, player.hp + heal);
+        if (e.hp <= 0) {
+          if (e.type === "bomber") triggerBomberExplosion(e);
+          enemies.splice(i, 1);
+        }
+      }
+    }
+  }
+
+  function shoot(dmgMult = 1, extraBullets = 0) {
+    const dx = mousePos.x - player.x;
+    const dy = mousePos.y - player.y;
+    const baseAngle = Math.atan2(dy, dx);
+    const count = player.bulletsPerShot + extraBullets;
+    const totalSpread = player.spread * (count - 1);
+    const dmg = player.damage * dmgMult;
+
+    for (let i = 0; i < count; i++) {
+      const angle = baseAngle - totalSpread / 2 + player.spread * i;
+      const vx = Math.cos(angle) * player.bulletSpeed;
+      const vy = Math.sin(angle) * player.bulletSpeed;
+      bullets.push({
+        x: player.x,
+        y: player.y,
+        vx,
+        vy,
+        radius: 5,
+        damage: dmg,
+        pierceLeft: player.pierce
+      });
+    }
+  }
+
+  function updatePlayer(dt) {
+    // cooldowns
+    if (player.dashCooldownTimer > 0) player.dashCooldownTimer = Math.max(0, player.dashCooldownTimer - dt);
+    if (player.dashActiveTimer > 0) {
+      player.dashActiveTimer -= dt;
+      if (player.dashActiveTimer <= 0) {
+        player.dashActiveTimer = 0;
+        player.isDashing = false;
+      }
+    }
+    if (player.meleeCooldownTimer > 0) player.meleeCooldownTimer = Math.max(0, player.meleeCooldownTimer - dt);
+    if (player.meleeSwingTimer > 0) player.meleeSwingTimer = Math.max(0, player.meleeSwingTimer - dt);
+
+    if (player.isDashing) {
+      player.x += player.dashVelX * dt;
+      player.y += player.dashVelY * dt;
+    } else {
+      let dirX = 0, dirY = 0;
+      if (keys["w"] || keys["arrowup"]) dirY -= 1;
+      if (keys["s"] || keys["arrowdown"]) dirY += 1;
+      if (keys["a"] || keys["arrowleft"]) dirX -= 1;
+      if (keys["d"] || keys["arrowright"]) dirX += 1;
+      const len = Math.hypot(dirX, dirY);
+      if (len > 0) {
+        dirX /= len; dirY /= len;
+        player.x += dirX * player.speed * dt;
+        player.y += dirY * player.speed * dt;
+      }
+    }
+    player.x = clamp(player.x, player.radius, canvas.width - player.radius);
+    player.y = clamp(player.y, player.radius, canvas.height - player.radius);
+
+    // shooting
+    player.shootTimer += dt;
+    if (mouseDown) {
+      const needed = 1 / player.fireRate;
+      if (player.shootTimer >= needed) {
+        shoot(1, 0);
+        player.shootTimer = 0;
       }
     }
 
-    function updateEnemies(dt) {
-      const slowFactor =
-        player && player.ultimateActiveTimer > 0 && player.ultimateType === ULT_TYPE.CYBER_SLOW
-          ? 0.45
-          : 1;
-      const enemyDt = dt * slowFactor;
+    if (player.hp <= 0) {
+      player.hp = 0;
+      gameOver();
+    }
+  }
 
-      for (let i = enemies.length - 1; i >= 0; i--) {
-        const e = enemies[i];
+  function updateBullets(dt) {
+    for (let i = bullets.length - 1; i >= 0; i--) {
+      const b = bullets[i];
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
 
-        if (e.isBoss) {
-          updateBoss(e, enemyDt);
-        } else {
-          const dx = player.x - e.x;
-          const dy = player.y - e.y;
-          const dist = Math.hypot(dx, dy) || 1;
-          const dirX = dx / dist;
-          const dirY = dy / dist;
+      if (b.x < -50 || b.x > canvas.width + 50 || b.y < -50 || b.y > canvas.height + 50) {
+        bullets.splice(i, 1);
+        continue;
+      }
 
-          if (e.type === "sniper") {
-            const preferredMin = 260;
-            const preferredMax = 360;
-            let moveX = 0;
-            let moveY = 0;
-
-            if (dist < preferredMin) {
-              moveX = -dirX;
-              moveY = -dirY;
-            } else if (dist > preferredMax) {
-              moveX = dirX;
-              moveY = dirY;
-            } else {
-              if (typeof e.strafeDir !== "number") {
-                e.strafeDir = Math.random() < 0.5 ? 1 : -1;
-              }
-              moveX = -dirY * e.strafeDir;
-              moveY = dirX * e.strafeDir;
-            }
-
-            const len2 = Math.hypot(moveX, moveY) || 1;
-            moveX /= len2;
-            moveY /= len2;
-
-            let nextX = e.x + moveX * e.speed * enemyDt;
-            let nextY = e.y + moveY * e.speed * enemyDt;
-
-            if (nextX < e.radius || nextX > canvas.width - e.radius) {
-              e.strafeDir = -e.strafeDir;
-              nextX = clamp(nextX, e.radius, canvas.width - e.radius);
-            }
-            if (nextY < e.radius || nextY > canvas.height - e.radius) {
-              e.strafeDir = -e.strafeDir;
-              nextY = clamp(nextY, e.radius, canvas.height - e.radius);
-            }
-
-            e.x = nextX;
-            e.y = nextY;
-
-            e.shotCooldown -= enemyDt;
-            if (e.shotCooldown <= 0) {
-              spawnBossShotAtPlayer(e, 260 + wave * 3);
-              e.shotCooldown = 2.4;
-            }
-          } else if (e.type === "dasher") {
-            e.dashCooldown -= enemyDt;
-            let moveSpeed = e.speed;
-            if (e.dashTime > 0) {
-              e.dashTime -= enemyDt;
-              moveSpeed = e.speed * 3.0;
-            } else if (e.dashCooldown <= 0) {
-              e.dashTime = 0.35;
-              e.dashCooldown = 2.0 + Math.random() * 0.5;
-            }
-            e.x += dirX * moveSpeed * enemyDt;
-            e.y += dirY * moveSpeed * enemyDt;
-          } else if (e.type === "curse") {
-            const moveSpeed = e.speed * 0.7;
-            e.x += dirX * moveSpeed * enemyDt;
-            e.y += dirY * moveSpeed * enemyDt;
-
-            e.curseShotCooldown -= enemyDt;
-            if (e.curseShotCooldown <= 0) {
-              const count = 6 + Math.floor(wave / 4);
-              spawnBossBulletsRing(e, count, 220 + wave * 3);
-              e.curseShotCooldown = 3.3;
-            }
-          } else {
-            e.x += dirX * e.speed * enemyDt;
-            e.y += dirY * e.speed * enemyDt;
+      let pierced = false;
+      for (let j = enemies.length - 1; j >= 0; j--) {
+        const e = enemies[j];
+        const dist = distance(b.x, b.y, e.x, e.y);
+        if (dist < b.radius + e.radius) {
+          e.hp -= b.damage;
+          if (player.onHitHeal > 0) {
+            player.hp = Math.min(player.maxHp, player.hp + player.onHitHeal);
           }
 
-          e.x = clamp(e.x, e.radius, canvas.width - e.radius);
-          e.y = clamp(e.y, e.radius, canvas.height - e.radius);
-
-          const distToPlayer = distance(e.x, e.y, player.x, player.y);
-          const minDist = e.radius + player.radius;
-          if (distToPlayer < minDist) {
-            const overlap = minDist - distToPlayer;
-            const pushX = (player.x - e.x) / (distToPlayer || 1);
-            const pushY = (player.y - e.y) / (distToPlayer || 1);
-            player.x += pushX * overlap * 0.5;
-            player.y += pushY * overlap * 0.5;
-            e.x -= pushX * overlap * 0.5;
-            e.y -= pushY * overlap * 0.5;
-
-            if (e.type === "bomber") {
-              triggerBomberExplosion(e);
-              enemies.splice(i, 1);
-              continue;
-            }
-
-            if (!player.isDashing) {
-              const dmg = e.contactDamage * enemyDt * (player.incomingDamageMult || 1);
-              player.hp -= dmg;
-              if (player.hp <= 0) {
-                player.hp = 0;
-                gameOver();
-                return;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    function updateEnemyBullets(dt) {
-      const slowFactor =
-        player && player.ultimateActiveTimer > 0 && player.ultimateType === ULT_TYPE.CYBER_SLOW
-          ? 0.45
-          : 1;
-      const bulletDt = dt * slowFactor;
-
-      for (let i = enemyBullets.length - 1; i >= 0; i--) {
-        const b = enemyBullets[i];
-        b.x += b.vx * bulletDt;
-        b.y += b.vy * bulletDt;
-
-        if (
-          b.x < -50 ||
-          b.x > canvas.width + 50 ||
-          b.y < -50 ||
-          b.y > canvas.height + 50
-        ) {
-          enemyBullets.splice(i, 1);
-          continue;
-        }
-
-        const distToPlayer = distance(b.x, b.y, player.x, player.y);
-        if (distToPlayer < b.radius + player.radius) {
-          if (!player.isDashing) {
-            const dmg = b.damage * (player.incomingDamageMult || 1);
-            player.hp -= dmg;
-            if (player.hp <= 0) {
-              player.hp = 0;
-              gameOver();
-            }
-          }
-          enemyBullets.splice(i, 1);
-        }
-      }
-    }
-
-    function spawnWaveEnemies() {
-      const isBossWave = wave % 5 === 0;
-      let baseCount = 4 + wave * 2;
-      baseCount = Math.max(1, Math.round(baseCount * enemyScale.countMult));
-
-      if (isBossWave) {
-        spawnEnemy(true);
-        const extra = Math.max(2, Math.floor(baseCount / 3));
-        for (let i = 0; i < extra; i++) {
-          spawnEnemy(false);
-        }
-      } else {
-        for (let i = 0; i < baseCount; i++) {
-          spawnEnemy(false);
-        }
-      }
-    }
-
-    function startNextWave() {
-      wave += 1;
-      enemies = [];
-      bullets = [];
-      enemyBullets = [];
-      playerBombs = [];
-      fireBursts = [];
-      hazards = [];
-      spawnWaveEnemies();
-      gameState = "playing";
-
-      if (wave % 5 === 0) {
-        showMessage(`Boss Wave ${wave}!`);
-      } else {
-        showMessage(`Wave ${wave}`);
-      }
-    }
-
-    function onWaveCleared() {
-      if (gameState !== "playing") return;
-      gameState = "choosingUpgrade";
-
-      player.hp = Math.min(player.maxHp, player.hp + player.healAfterWave);
-
-      const isBossWave = wave % 5 === 0;
-      pendingAbility = null;
-      pendingCategory = null;
-
-      if (isBossWave) {
-        const abilityOptions = getAbilityOptions(2, true);
-        const curseOptions = getCurseOptions(1);
-        const combined = abilityOptions.concat(curseOptions);
-        showUpgradePanel(combined);
-      } else {
-        const options = getAbilityOptions(3, false);
-        showUpgradePanel(options);
-      }
-    }
-
-    function gameOver() {
-      gameState = "gameOver";
-      showMessage("Game Over – Press R to restart", 999);
-    }
-
-    function checkWaveCleared() {
-      if (gameState !== "playing") return;
-      if (enemies.length === 0) {
-        onWaveCleared();
-      }
-    }
-
-    /* ========= PLAYER BOMBS & FIRE BURSTS ========= */
-
-    function updatePlayerBombs(dt) {
-      for (let i = playerBombs.length - 1; i >= 0; i--) {
-        const bomb = playerBombs[i];
-        bomb.fuse -= dt;
-        if (bomb.fuse <= 0) {
-          damageEnemiesInRadius(bomb.x, bomb.y, bomb.radius, bomb.damage);
-          fireBursts.push({
-            x: bomb.x,
-            y: bomb.y,
-            radius: bomb.radius,
-            life: 0.25,
-            maxLife: 0.25,
-            color: "#ffcf6b"
+          // hit particles
+          spawnParticles(e.x, e.y, {
+            count: 8,
+            speedMin: 80,
+            speedMax: 180,
+            sizeMin: 2,
+            sizeMax: 3,
+            color: "rgba(255,200,150,1)"
           });
-          playerBombs.splice(i, 1);
-        }
-      }
-    }
 
-    function updateFireBursts(dt) {
-      for (let i = fireBursts.length - 1; i >= 0; i--) {
-        const b = fireBursts[i];
-        b.life -= dt;
-        if (b.life <= 0) {
-          fireBursts.splice(i, 1);
-        }
-      }
-    }
-
-    /* ========= GAME UPDATE ========= */
-
-    function update(dt) {
-      if (gameState === "menu") return;
-
-      if (messageTimer > 0) {
-        messageTimer -= dt;
-        if (messageTimer <= 0) {
-          overlayMessageEl.textContent = "";
-        }
-      }
-
-      if (gameState === "choosingUpgrade" || gameState === "choosingReplace") {
-        updateHUD();
-        return;
-      }
-
-      if (gameState === "gameOver") {
-        updateHUD();
-        return;
-      }
-
-      updatePlayer(dt);
-      updateBullets(dt);
-      updateEnemies(dt);
-      updateEnemyBullets(dt);
-      updatePlayerBombs(dt);
-      updateFireBursts(dt);
-      updateHazards(dt);
-      checkWaveCleared();
-      updateHUD();
-    }
-
-    function updatePlayer(dt) {
-      if (player.dashCooldownTimer > 0) {
-        player.dashCooldownTimer -= dt;
-        if (player.dashCooldownTimer < 0) player.dashCooldownTimer = 0;
-      }
-      if (player.dashActiveTimer > 0) {
-        player.dashActiveTimer -= dt;
-        if (player.dashActiveTimer <= 0) {
-          player.dashActiveTimer = 0;
-          player.isDashing = false;
-        }
-      }
-
-      if (player.meleeCooldownTimer > 0) {
-        player.meleeCooldownTimer -= dt;
-        if (player.meleeCooldownTimer < 0) player.meleeCooldownTimer = 0;
-      }
-      if (player.meleeSwingTimer > 0) {
-        player.meleeSwingTimer -= dt;
-        if (player.meleeSwingTimer < 0) player.meleeSwingTimer = 0;
-      }
-
-      if (player.ultimateActiveTimer > 0) {
-        player.ultimateActiveTimer -= dt;
-        if (player.ultimateActiveTimer <= 0) {
-          player.ultimateActiveTimer = 0;
-          player.ultimateType = ULT_TYPE.NONE;
-          showMessage("Ultimate faded.", 1.5);
-        }
-      }
-
-      if (player.ultimateActiveTimer > 0 && player.ultimateType === ULT_TYPE.JJK_DOMAIN && gameState === "playing") {
-        applyJjkDomainDamage(dt);
-      }
-
-      if (player.isDashing) {
-        player.x += player.dashVelX * dt;
-        player.y += player.dashVelY * dt;
-      } else {
-        let dirX = 0;
-        let dirY = 0;
-        if (keys["w"] || keys["arrowup"]) dirY -= 1;
-        if (keys["s"] || keys["arrowdown"]) dirY += 1;
-        if (keys["a"] || keys["arrowleft"]) dirX -= 1;
-        if (keys["d"] || keys["arrowright"]) dirX += 1;
-
-        const len = Math.hypot(dirX, dirY);
-        if (len > 0) {
-          dirX /= len;
-          dirY /= len;
-          let moveSpeed = player.speed;
-          if (player.ultimateActiveTimer > 0) {
-            if (player.ultimateType === ULT_TYPE.MHA_100 || player.ultimateType === ULT_TYPE.AOT_RUSH) {
-              moveSpeed *= 1.4;
-            } else if (player.ultimateType === ULT_TYPE.CYBER_SLOW) {
-              moveSpeed *= 1.2;
+          if (e.hp <= 0) {
+            spawnParticles(e.x, e.y, {
+              count: 18,
+              speedMin: 120,
+              speedMax: 260,
+              sizeMin: 2,
+              sizeMax: 4,
+              color: "rgba(255,140,140,1)"
+            });
+            if (e.isBoss) {
+              addScreenShake(11, 0.5);
             }
+            if (e.type === "bomber") triggerBomberExplosion(e);
+            enemies.splice(j, 1);
           }
-          player.x += dirX * moveSpeed * dt;
-          player.y += dirY * moveSpeed * dt;
-        }
-      }
 
-      player.x = clamp(player.x, player.radius, canvas.width - player.radius);
-      player.y = clamp(player.y, player.radius, canvas.height - player.radius);
-
-      player.shootTimer += dt;
-      if (mouseDown) {
-        let fireRateMult = 1;
-        let dmgMult = 1;
-        let extraBullets = 0;
-
-        if (player.ultimateActiveTimer > 0) {
-          const t = player.ultimateType;
-          if (t === ULT_TYPE.RANGED_STORM) {
-            fireRateMult = 1.7;
-            dmgMult = 1.8;
-            extraBullets = 1;
-          } else if (t === ULT_TYPE.JJK_DOMAIN) {
-            fireRateMult = 1.45;
-            dmgMult = 1.5;
-          } else if (t === ULT_TYPE.MHA_100) {
-            fireRateMult = 2.1;
-            dmgMult = 2.0;
-            extraBullets = 1;
-          } else if (t === ULT_TYPE.AOT_RUSH) {
-            fireRateMult = 1.6;
-            dmgMult = 1.5;
-          } else if (t === ULT_TYPE.GHOUL_RAMPAGE) {
-            fireRateMult = 1.5;
-            dmgMult = 1.7;
-          } else if (t === ULT_TYPE.CYBER_SLOW) {
-            fireRateMult = 1.9;
-            dmgMult = 1.4;
-          } else if (t === ULT_TYPE.MELEE_FRENZY) {
-            fireRateMult = 1.25;
-            dmgMult = 1.3;
+          if (b.pierceLeft <= 0) {
+            bullets.splice(i, 1);
+            pierced = true;
+          } else {
+            b.pierceLeft -= 1;
           }
-        }
-
-        const effectiveFireRate = player.fireRate * fireRateMult;
-        const needed = 1 / effectiveFireRate;
-        if (player.shootTimer >= needed) {
-          shoot(dmgMult, extraBullets);
-          player.shootTimer = 0;
+          break;
         }
       }
+      if (pierced) continue;
+    }
+  }
 
-      const abyss = getCurseById("abyss_pact");
-      if (abyss && hasCurse("abyss_pact") && abyss.special && abyss.special.hpDrainPerSecond && gameState === "playing") {
-        const drain = abyss.special.hpDrainPerSecond * dt * (player.incomingDamageMult || 1);
-        player.hp -= drain;
-      }
-
-      // Gear Second HP drain while firing
-      if (playerHasAbility("op_gear_second") && mouseDown && gameState === "playing") {
-        const drain = 2 * dt * (player.incomingDamageMult || 1);
-        player.hp -= drain;
-      }
-
-      if (player.hp <= 0) {
-        player.hp = 0;
-        gameOver();
+  function updateBombs(dt) {
+    for (let i = playerBombs.length - 1; i >= 0; i--) {
+      const bomb = playerBombs[i];
+      bomb.fuse -= dt;
+      if (bomb.fuse <= 0) {
+        damageEnemiesInRadius(bomb.x, bomb.y, bomb.radius, bomb.damage);
+        fireBursts.push({
+          x: bomb.x,
+          y: bomb.y,
+          radius: bomb.radius,
+          life: 0.25,
+          maxLife: 0.25,
+          color: "#ffd56b"
+        });
+        playerBombs.splice(i, 1);
       }
     }
+  }
 
-    function shoot(damageMultiplier = 1, extraBullets = 0) {
+  function updateFireBursts(dt) {
+    for (let i = fireBursts.length - 1; i >= 0; i--) {
+      const f = fireBursts[i];
+      f.life -= dt;
+      if (f.life <= 0) {
+        fireBursts.splice(i, 1);
+      }
+    }
+  }
+
+  /* ==================== HUD & GAME STATE ==================== */
+
+  function updateHUD() {
+    hudWave.textContent = `Wave ${wave}`;
+    hudHP.textContent = `HP: ${Math.round(player.hp)} / ${Math.round(player.maxHp)}`;
+
+    const ratio = player.hp / player.maxHp;
+    if (ratio <= 0.3) hudHP.classList.add("low");
+    else hudHP.classList.remove("low");
+
+    const dashLabel = player.dashCooldownTimer <= 0 ? "Dash: Ready" : `Dash: ${player.dashCooldownTimer.toFixed(1)}s`;
+    const meleeLabel = player.meleeCooldownTimer <= 0 ? "Melee: Ready" : `Melee: ${player.meleeCooldownTimer.toFixed(1)}s`;
+
+    const noLimitText = noLimitMode ? "Slots: ∞ (halved)" : "Slots: 5 normal / 2 boss";
+
+    hudStats.textContent =
+      `DMG ${Math.round(player.damage)} | Fire ${player.fireRate.toFixed(1)}/s | Bullets ${player.bulletsPerShot} | ` +
+      `Pierce ${player.pierce} | ${meleeLabel} | ${dashLabel} | ${noLimitText}`;
+  }
+
+  function gameOver() {
+    gameState = "gameover";
+    addScreenShake(12, 0.6);
+    addWhiteFlash(0.5);
+    spawnParticles(player.x, player.y, {
+      count: 40,
+      speedMin: 150,
+      speedMax: 340,
+      sizeMin: 3,
+      sizeMax: 6,
+      color: "rgba(255,120,120,1)"
+    });
+    showMessage("Game Over – press R to restart", 999);
+  }
+
+  /* ==================== UPDATE & DRAW LOOP ==================== */
+
+  function update(dt) {
+    if (gameState === "menu") return;
+
+    if (messageTimer > 0) {
+      messageTimer -= dt;
+      if (messageTimer <= 0) overlayMessageEl.textContent = "";
+    }
+
+    // shake timers
+    if (screenShakeTimer > 0) {
+      screenShakeTimer -= dt;
+      if (screenShakeTimer <= 0) {
+        screenShakeTimer = 0;
+        screenShakeIntensity = 0;
+        screenShakeDuration = 0;
+      }
+    }
+    if (whiteFlashAlpha > 0) {
+      whiteFlashAlpha -= dt * 1.5;
+      if (whiteFlashAlpha < 0) whiteFlashAlpha = 0;
+    }
+
+    updateBackground(dt);
+    updateParticles(dt);
+
+    if (gameState === "upgrade" || gameState === "chooseReplace" || gameState === "gameover") {
+      updateHUD();
+      return;
+    }
+
+    updatePlayer(dt);
+    updateBullets(dt);
+    updateEnemies(dt);
+    updateEnemyBullets(dt);
+    updateBombs(dt);
+    updateFireBursts(dt);
+    checkWaveCleared();
+    updateHUD();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBackground();
+
+    let shakeX = 0, shakeY = 0;
+    if (screenShakeTimer > 0 && screenShakeDuration > 0 && screenShakeIntensity > 0) {
+      const t = screenShakeTimer / screenShakeDuration;
+      const power = t * t;
+      const maxOffset = screenShakeIntensity * power;
+      shakeX = (Math.random() * 2 - 1) * maxOffset;
+      shakeY = (Math.random() * 2 - 1) * maxOffset;
+    }
+
+    ctx.save();
+    ctx.translate(shakeX, shakeY);
+
+    // fire bursts
+    for (const f of fireBursts) {
+      const t = f.life / f.maxLife;
+      ctx.save();
+      ctx.globalAlpha = 0.5 * t;
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, f.radius * (1 + (1 - t) * 0.3), 0, Math.PI * 2);
+      ctx.fillStyle = f.color;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // bombs telegraph
+    for (const bomb of playerBombs) {
+      const t = bomb.fuse / bomb.maxFuse;
+      ctx.save();
+      ctx.globalAlpha = 0.25 + (1 - t) * 0.3;
+      ctx.beginPath();
+      ctx.arc(bomb.x, bomb.y, bomb.radius * (0.4 + 0.2 * (1 - t)), 0, Math.PI * 2);
+      ctx.fillStyle = "#ffdd55";
+      ctx.fill();
+      ctx.restore();
+    }
+
+    drawParticles();
+
+    // enemy bullets
+    for (const b of enemyBullets) {
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "#ff5555";
+      ctx.fill();
+    }
+
+    // enemies
+    for (const e of enemies) {
+      if (e.isBoss) {
+        // aura
+        const auraR = e.phase === 1 ? 130 : e.phase === 2 ? 150 : 180;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, auraR, 0, Math.PI * 2);
+        ctx.globalAlpha = 0.15;
+        ctx.fillStyle = "#9a6bff";
+        ctx.fill();
+        ctx.restore();
+      }
+
+      const ratio = e.hp / e.maxHp;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+      ctx.fillStyle = e.isBoss ? "#ff3b3b" : (e.type === "sniper" ? "#87c7ff" : e.type === "bomber" ? "#ffb86c" : "#ffae00");
+      ctx.fill();
+
+      const barW = e.radius * 2;
+      const barH = 4;
+      ctx.fillStyle = "#000";
+      ctx.fillRect(e.x - e.radius, e.y - e.radius - 8, barW, barH);
+      ctx.fillStyle = "#00ff4b";
+      ctx.fillRect(e.x - e.radius, e.y - e.radius - 8, barW * ratio, barH);
+    }
+
+    // bullets
+    for (const b of bullets) {
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "#f5f5f5";
+      ctx.fill();
+    }
+
+    // player + melee arc
+    if (player) {
+      if (player.meleeSwingTimer > 0) {
+        const t = player.meleeSwingTimer / player.meleeSwingDuration;
+        ctx.save();
+        ctx.translate(player.x, player.y);
+        ctx.rotate(player.meleeAngle);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, player.meleeRange, -player.meleeArc / 2, player.meleeArc / 2);
+        ctx.closePath();
+        ctx.globalAlpha = 0.2 + 0.2 * t;
+        ctx.fillStyle = "#ffcc88";
+        ctx.fill();
+        ctx.restore();
+      }
+
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+      ctx.fillStyle = player.isDashing ? "#9ff6ff" : "#39c5ff";
+      ctx.fill();
+
       const dx = mousePos.x - player.x;
       const dy = mousePos.y - player.y;
-      const baseAngle = Math.atan2(dy, dx);
-      const count = player.bulletsPerShot + extraBullets;
-      const totalSpread = player.spread * (count - 1);
-
-      const bulletDamage = player.damage * damageMultiplier;
-
-      for (let i = 0; i < count; i++) {
-        const angle = baseAngle - totalSpread / 2 + player.spread * i;
-        const vx = Math.cos(angle) * player.bulletSpeed;
-        const vy = Math.sin(angle) * player.bulletSpeed;
-        bullets.push({
-          x: player.x,
-          y: player.y,
-          vx,
-          vy,
-          radius: 5,
-          damage: bulletDamage,
-          pierceLeft: player.pierce
-        });
-      }
-    }
-
-    function spawnMeleeSlashes(angle) {
-      if (!player) return;
-      const count = 2;
-      const spread = 0.25;
-      const speed = player.bulletSpeed * 0.9;
-      const damage = player.damage * 0.6;
-      for (let i = 0; i < count; i++) {
-        const t = count === 1 ? 0.5 : i / (count - 1);
-        const ang = angle - spread / 2 + spread * t;
-        const vx = Math.cos(ang) * speed;
-        const vy = Math.sin(ang) * speed;
-        bullets.push({
-          x: player.x,
-          y: player.y,
-          vx,
-          vy,
-          radius: 4,
-          damage,
-          pierceLeft: 0
-        });
-      }
-    }
-
-    function updateBullets(dt) {
-      const hasFlameFruit = playerHasAbility("op_flame_fruit");
-
-      for (let i = bullets.length - 1; i >= 0; i--) {
-        const b = bullets[i];
-        b.x += b.vx * dt;
-        b.y += b.vy * dt;
-
-        if (
-          b.x < -50 ||
-          b.x > canvas.width + 50 ||
-          b.y < -50 ||
-          b.y > canvas.height + 50
-        ) {
-          bullets.splice(i, 1);
-          continue;
-        }
-
-        let bulletRemoved = false;
-        for (let j = enemies.length - 1; j >= 0; j--) {
-          const e = enemies[j];
-          const dist = distance(b.x, b.y, e.x, e.y);
-          if (dist < b.radius + e.radius) {
-            const damage = b.damage;
-            e.hp -= damage;
-            if (player.onHitHeal > 0) {
-              player.hp = Math.min(player.maxHp, player.hp + player.onHitHeal);
-            }
-
-            // Flame-Flame explosion
-            if (hasFlameFruit && !b.flameExploded) {
-              b.flameExploded = true;
-              const radius = 80;
-              const aoeDamage = b.damage * 0.7;
-              damageEnemiesInRadius(b.x, b.y, radius, aoeDamage);
-              fireBursts.push({
-                x: b.x,
-                y: b.y,
-                radius,
-                life: 0.22,
-                maxLife: 0.22,
-                color: "#ff8844"
-              });
-            }
-
-            let died = false;
-            if (e.hp <= 0) {
-              died = true;
-              if (e.type === "bomber") {
-                triggerBomberExplosion(e);
-              }
-              enemies.splice(j, 1);
-            }
-            gainUltimateCharge(damage, died);
-
-            if (b.pierceLeft <= 0) {
-              bullets.splice(i, 1);
-              bulletRemoved = true;
-              break;
-            } else {
-              b.pierceLeft -= 1;
-            }
-          }
-        }
-        if (bulletRemoved) continue;
-      }
-    }
-
-    function updateHUD() {
-      const dashReady = player.dashCooldownTimer <= 0 ? "Ready" : player.dashCooldownTimer.toFixed(1) + "s";
-      const meleeReady = player.meleeCooldownTimer <= 0 ? "Ready" : player.meleeCooldownTimer.toFixed(1) + "s";
-      const noLimitText = noLimitMode ? "∞ slots (halved powers)" : "5/2 slots";
-      const ultText = "Ult: " + getUltimateLabel();
-
-      const dashModeLabel =
-        player.dashMode === "bomb" ? "Bomb dash" :
-        player.dashMode === "flame" ? "Flame dash" :
-        player.dashMode === "blink" ? "Blink dash" :
-        "Dash";
-
-      hudWave.textContent = `Wave: ${wave} | Arc: ${arcLabel()}`;
-      hudHP.textContent = `HP: ${Math.round(player.hp)} / ${player.maxHp}`;
-      hudStats.textContent =
-        `DMG: ${Math.round(player.damage)} | ` +
-        `Fire: ${player.fireRate.toFixed(1)}/s | ` +
-        `Bullets: ${player.bulletsPerShot} | ` +
-        `Pierce: ${player.pierce} | ` +
-        `Melee: ${Math.round(player.meleeDamage)} / ${meleeReady} | ` +
-        `${dashModeLabel}: ${dashReady} | ` +
-        `${ultText} | ` +
-        noLimitText;
-    }
-
-    /* ========= DRAW ========= */
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      ctx.globalAlpha = 0.1;
-      ctx.strokeStyle = "#444";
-      const gridSize = 40;
+      const ang = Math.atan2(dy, dx);
+      const gunLen = player.radius + 6;
       ctx.beginPath();
-      for (let x = 0; x < canvas.width; x += gridSize) {
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-      }
-      for (let y = 0; y < canvas.height; y += gridSize) {
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-      }
+      ctx.moveTo(player.x, player.y);
+      ctx.lineTo(player.x + Math.cos(ang) * gunLen, player.y + Math.sin(ang) * gunLen);
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 3;
       ctx.stroke();
-      ctx.globalAlpha = 1;
-
-      // Hazards
-      for (const h of hazards) {
-        const t = h.life / h.maxLife;
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(h.x, h.y, h.radius, 0, Math.PI * 2);
-        if (h.type === "lava") {
-          ctx.globalAlpha = 0.35 * t;
-          ctx.fillStyle = "#ff7b31";
-        } else if (h.type === "curse") {
-          ctx.globalAlpha = 0.32 * t;
-          ctx.fillStyle = "#b26bff";
-        } else if (h.type === "flame") {
-          ctx.globalAlpha = 0.35 * t;
-          ctx.fillStyle = "#ff5533";
-        } else {
-          ctx.globalAlpha = 0.3 * t;
-          ctx.fillStyle = "#ffdd55";
-        }
-        ctx.fill();
-        ctx.restore();
-      }
-
-      // JJK Domain visual
-      if (player && player.ultimateActiveTimer > 0 && player.ultimateType === ULT_TYPE.JJK_DOMAIN) {
-        const radius = 260;
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, radius, 0, Math.PI * 2);
-        ctx.globalAlpha = 0.18;
-        ctx.fillStyle = "#5f7cff";
-        ctx.fill();
-        ctx.globalAlpha = 0.5;
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "#c7d5ff";
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      // Bomb telegraphs
-      for (const bomb of playerBombs) {
-        const t = bomb.fuse / bomb.maxFuse;
-        ctx.save();
-        ctx.globalAlpha = 0.25 + (1 - t) * 0.35;
-        ctx.beginPath();
-        ctx.arc(bomb.x, bomb.y, bomb.radius * (0.4 + 0.2 * (1 - t)), 0, Math.PI * 2);
-        ctx.fillStyle = "#ffdd55";
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        ctx.beginPath();
-        ctx.arc(bomb.x, bomb.y, 8, 0, Math.PI * 2);
-        ctx.fillStyle = "#ff9444";
-        ctx.fill();
-        ctx.restore();
-      }
-
-      // Fire bursts
-      for (const burst of fireBursts) {
-        const t = burst.life / burst.maxLife;
-        ctx.save();
-        ctx.globalAlpha = 0.5 * t;
-        ctx.beginPath();
-        ctx.arc(burst.x, burst.y, burst.radius * (1 + (1 - t) * 0.3), 0, Math.PI * 2);
-        ctx.fillStyle = burst.color;
-        ctx.fill();
-        ctx.restore();
-      }
-
-      for (const b of bullets) {
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-        ctx.fillStyle = "#f5f5f5";
-        ctx.fill();
-      }
-
-      for (const b of enemyBullets) {
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-        ctx.fillStyle = "#ff5555";
-        ctx.fill();
-      }
-
-      for (const e of enemies) {
-        if (e.isBoss && e.patternType === "domain") {
-          const auraRadius = e.phase === 1 ? 170 : e.phase === 2 ? 200 : 230;
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(e.x, e.y, auraRadius, 0, Math.PI * 2);
-          ctx.globalAlpha = 0.18;
-          ctx.fillStyle = "#8b7bff";
-          ctx.fill();
-          ctx.globalAlpha = 0.45;
-          ctx.lineWidth = 1.5;
-          ctx.strokeStyle = "#d0c7ff";
-          ctx.stroke();
-          ctx.restore();
-        }
-
-        const ratio = e.hp / e.maxHp;
-        const baseColor = e.isBoss
-          ? (e.phase === 1 ? "#ff3b3b" : e.phase === 2 ? "#ff6f3b" : "#ffdd3b")
-          : (e.type === "sniper" ? "#ff79c6" : e.type === "bomber" ? "#ffb86c" : e.type === "dasher" ? "#8be9fd" : e.type === "curse" ? "#bd93f9" : "#ffae00");
-
-        ctx.beginPath();
-        ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
-        ctx.fillStyle = baseColor;
-        ctx.fill();
-
-        // Boss name + phase
-        if (e.isBoss && e.displayName) {
-          ctx.font = "14px system-ui";
-          ctx.textAlign = "center";
-          ctx.fillStyle = "rgba(255,255,255,0.9)";
-          ctx.fillText(e.displayName + " (Phase " + e.phase + ")", e.x, e.y - e.radius - 16);
-        }
-
-        const barWidth = e.radius * 2;
-        const barHeight = 4;
-        ctx.fillStyle = "#000";
-        ctx.fillRect(e.x - e.radius, e.y - e.radius - 8, barWidth, barHeight);
-        ctx.fillStyle = "#0f0";
-        ctx.fillRect(
-          e.x - e.radius,
-          e.y - e.radius - 8,
-          barWidth * ratio,
-          barHeight
-        );
-      }
-
-      if (player) {
-        if (player.meleeSwingTimer > 0) {
-          const t = player.meleeSwingTimer / player.meleeSwingDuration;
-          ctx.save();
-          ctx.translate(player.x, player.y);
-          ctx.rotate(player.meleeAngle);
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.arc(0, 0, player.meleeRange, -player.meleeArc / 2, player.meleeArc / 2);
-          ctx.closePath();
-          ctx.globalAlpha = 0.18 + 0.2 * t;
-          ctx.fillStyle =
-            player.ultimateActiveTimer > 0 &&
-            (player.ultimateType === ULT_TYPE.MELEE_FRENZY || player.ultimateType === ULT_TYPE.GHOUL_RAMPAGE)
-              ? "#ffd27f"
-              : "#ff66aa";
-          ctx.fill();
-          ctx.globalAlpha = 1;
-          ctx.restore();
-        }
-
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-        let playerColor = player.isDashing ? "#9ff6ff" : "#39c5ff";
-        if (player.ultimateActiveTimer > 0) {
-          if (player.ultimateType === ULT_TYPE.RANGED_STORM || player.ultimateType === ULT_TYPE.JJK_DOMAIN) {
-            playerColor = "#ff5fe0";
-          } else if (player.ultimateType === ULT_TYPE.MELEE_FRENZY || player.ultimateType === ULT_TYPE.GHOUL_RAMPAGE) {
-            playerColor = "#ffb347";
-          } else if (player.ultimateType === ULT_TYPE.CYBER_SLOW) {
-            playerColor = "#3fe6ff";
-          } else if (player.ultimateType === ULT_TYPE.MHA_100 || player.ultimateType === ULT_TYPE.AOT_RUSH) {
-            playerColor = "#7bff7b";
-          }
-        }
-        ctx.fillStyle = playerColor;
-        ctx.fill();
-
-        const dx = mousePos.x - player.x;
-        const dy = mousePos.y - player.y;
-        const angle = Math.atan2(dy, dx);
-        const gunLen = player.radius + 6;
-        ctx.beginPath();
-        ctx.moveTo(player.x, player.y);
-        ctx.lineTo(
-          player.x + Math.cos(angle) * gunLen,
-          player.y + Math.sin(angle) * gunLen
-        );
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 3;
-        ctx.stroke();
-
-        ctx.font = "14px system-ui";
-        ctx.fillStyle = "rgba(255,255,255,0.8)";
-        ctx.textAlign = "left";
-        ctx.fillText(`Wave ${wave}`, 8, 18);
-        ctx.fillText(`Enemies: ${enemies.length}`, 8, 34);
-        ctx.textAlign = "right";
-        ctx.fillText(`DMG ${Math.round(player.damage)}`, canvas.width - 8, 18);
-        ctx.fillText(`${player.fireRate.toFixed(1)}/s`, canvas.width - 8, 34);
-      }
     }
 
-    /* ========= LOOP & RESET ========= */
+    ctx.restore(); // end shake
 
-    function loop(timestamp) {
-      if (!lastTime) lastTime = timestamp;
-      const dt = (timestamp - lastTime) / 1000;
-      lastTime = timestamp;
+    // white flash overlay
+    if (whiteFlashAlpha > 0) {
+      ctx.save();
+      ctx.globalAlpha = whiteFlashAlpha;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+    }
+  }
 
-      update(dt);
-      draw();
+  function loop(timestamp) {
+    if (!lastTime) lastTime = timestamp;
+    const dt = (timestamp - lastTime) / 1000;
+    lastTime = timestamp;
 
-      requestAnimationFrame(loop);
+    update(dt);
+    draw();
+
+    requestAnimationFrame(loop);
+  }
+
+  /* ==================== GAME INIT & MENU ==================== */
+
+  function resetGame() {
+    bullets = [];
+    enemies = [];
+    enemyBullets = [];
+    playerBombs = [];
+    fireBursts = [];
+    particles.length = 0;
+    activeCurses = [];
+    recomputeEnemyScale();
+    wave = 0;
+    pendingAbility = null;
+    pendingCategory = null;
+    gameState = "playing";
+    lastTime = 0;
+    hideUpgradePanel();
+    player = createPlayer();
+
+    // starting ability based on combat style
+    if (combatStyle === "melee") {
+      player.normalAbilities.push("water_breathing");
+    } else {
+      player.normalAbilities.push("quirk_booster");
     }
 
-    function resetGame() {
-      bullets = [];
-      enemies = [];
-      enemyBullets = [];
-      playerBombs = [];
-      fireBursts = [];
-      hazards = [];
-      wave = 0;
-      pendingAbility = null;
-      pendingCategory = null;
-      gameState = "playing";
-      messageTimer = 0;
-      lastTime = 0;
-      hideUpgradePanel();
-      resetCursesAndEnemyScale();
-      noLimitMode = false;
+    recomputePlayerStats(false);
+    renderAbilitiesBar();
+    initBackground();
+    startNextWave();
+  }
 
-      player = createPlayer();
-      applySelectedTrialsToActiveCurses();
-
-      const mapped = mapSelectedKeyToUltType(selectedUltimateKey);
-      player.selectedUltType = mapped || (combatStyle === "ranged" ? ULT_TYPE.RANGED_STORM : ULT_TYPE.MELEE_FRENZY);
-
-      // starting ability based on style
-      if (combatStyle === "melee") {
-        player.normalAbilities.push("anime_blade_training");
-      } else {
-        player.normalAbilities.push("anime_quirk_booster");
-      }
-
-      recomputePlayerStats(false);
-      renderAbilitiesBar();
-      startNextWave();
-    }
-
-    /* ========= MENU & BUTTONS ========= */
-
-    document.querySelectorAll(".menuButton[data-style]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const style = btn.getAttribute("data-style");
-        startGame(style);
-      });
-    });
-
-    document.querySelectorAll(".trialButton").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const id = btn.getAttribute("data-trial");
-        if (!id) return;
-        const idx = selectedTrialCurseIds.indexOf(id);
-        if (idx === -1) {
-          selectedTrialCurseIds.push(id);
-          btn.classList.add("trialActive");
-        } else {
-          selectedTrialCurseIds.splice(idx, 1);
-          btn.classList.remove("trialActive");
-        }
-      });
-    });
-
-    document.querySelectorAll(".ultButton").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const key = btn.getAttribute("data-ult");
-        selectedUltimateKey = key;
-        document.querySelectorAll(".ultButton").forEach(b => b.classList.remove("ultActive"));
-        btn.classList.add("ultActive");
-      });
-    });
-
-    document.querySelectorAll(".arcButton").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const arc = btn.getAttribute("data-arc");
-        if (!arc) return;
-        currentArc = arc;
-        document.querySelectorAll(".arcButton").forEach(b => b.classList.remove("arcActive"));
-        btn.classList.add("arcActive");
-      });
-    });
-
-    function startGame(style) {
-      if (loopStarted) return;
+  document.querySelectorAll(".menuButton[data-style]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const style = btn.getAttribute("data-style");
       combatStyle = style;
-      mainMenu.style.display = "none";
-
-      initAnimeAbilities();
-      initCurses();
-      resetGame();
-
-      showMessage(
-        combatStyle === "melee"
-          ? "Melee Focus – anime-only run."
-          : "Ranged Focus – anime-only run.",
-        3
-      );
-
-      loopStarted = true;
-      requestAnimationFrame(loop);
-    }
-
-    skipButton.addEventListener("click", () => {
-      if (gameState !== "choosingUpgrade") return;
-      pendingAbility = null;
-      pendingCategory = null;
-      hideUpgradePanel();
-      gameState = "playing";
-      startNextWave();
+      document.querySelectorAll(".menuButton[data-style]").forEach(b => b.classList.remove("styleActive"));
+      btn.classList.add("styleActive");
+      if (!player) {
+        mainMenu.style.display = "none";
+        gameState = "playing";
+        initAbilities();
+        resetGame();
+        requestAnimationFrame(loop);
+      } else {
+        resetGame();
+      }
     });
+  });
+
+  skipButton.addEventListener("click", () => {
+    if (gameState !== "upgrade") return;
+    pendingAbility = null;
+    pendingCategory = null;
+    hideUpgradePanel();
+    gameState = "playing";
+    startNextWave();
+  });
   </script>
 </body>
 </html>
