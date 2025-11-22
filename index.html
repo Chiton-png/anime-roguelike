@@ -271,6 +271,15 @@
       border-color:#7bd0ff;
       box-shadow:0 0 12px rgba(123,208,255,.8);
     }
+    .menuButton.cosmeticLocked{
+      opacity:0.35;
+      border-style:dashed;
+      cursor:not-allowed;
+      box-shadow:none;
+    }
+    .menuButton.cosmeticSelected{
+      box-shadow:0 0 12px rgba(255,255,255,0.5);
+    }
   </style>
 </head>
 <body>
@@ -310,6 +319,33 @@
         <button class="menuButton ultButton" data-ult="bankai_field">Bankai Field</button>
         <button class="menuButton ultButton" data-ult="haki_burst">Haki Burst</button>
       </div>
+
+      <p style="margin-top:4px;font-weight:600">Cosmetics – Player Skin</p>
+      <div class="menuButtons" id="skinMenu">
+        <button class="menuButton skinButton" data-skin="skin_default" title="Always unlocked.">Default Hunter</button>
+        <button class="menuButton skinButton" data-skin="skin_hashira" title="Reach Wave 10 to unlock.">Hashira Cloak</button>
+        <button class="menuButton skinButton" data-skin="skin_domain_freak" title="Use a Domain-style ult 3 times total to unlock.">Domain Freak</button>
+        <button class="menuButton skinButton" data-skin="skin_shadow_monarch" title="Defeat a boss while using Shadow Army Commander to unlock.">Shadow Monarch</button>
+      </div>
+
+      <p style="margin-top:4px;font-weight:600">Cosmetics – Bullet Trail</p>
+      <div class="menuButtons" id="trailMenu">
+        <button class="menuButton trailButton" data-trail="trail_default" title="Always unlocked.">Default Trail</button>
+        <button class="menuButton trailButton" data-trail="trail_flame" title="Beat any boss to unlock.">Flame Rounds</button>
+        <button class="menuButton trailButton" data-trail="trail_cursed" title="Take any Curse to unlock.">Cursed Sparks</button>
+        <button class="menuButton trailButton" data-trail="trail_lightning" title="Reach Style rank S to unlock.">Lightning Shots</button>
+      </div>
+
+      <p style="margin-top:4px;font-weight:600">Cosmetics – Dash Trail</p>
+      <div class="menuButtons" id="dashMenu">
+        <button class="menuButton dashButton" data-dash="dash_default" title="Always unlocked.">Default Dash</button>
+        <button class="menuButton dashButton" data-dash="dash_afterimage" title="Dash 50 times total to unlock.">Afterimage Step</button>
+        <button class="menuButton dashButton" data-dash="dash_void" title="Reach Wave 15 to unlock.">Void Step</button>
+      </div>
+
+      <p style="margin-top:4px;font-size:10px;opacity:.7">
+        Locked cosmetics are greyed out – unlock them by hitting milestones in your runs.
+      </p>
 
       <p style="margin-top:4px;font-size:11px;opacity:.75">
         Powers every wave with drawbacks. Boss &amp; curses every 5 waves, mini-bosses in between, event waves like Blood Moon &amp; Curse Storm.
@@ -352,7 +388,6 @@
       <div id="bossAbilitiesList" class="abilitiesList"></div>
     </div>
   </div>
-
   <script>
     const canvas=document.getElementById("game");
     const ctx=canvas.getContext("2d");
@@ -372,31 +407,33 @@
     const keys={};
     let mousePos={x:canvas.width/2,y:canvas.height/2};
     let mouseDown=false;
-    let combatStyle=null; // "melee" or "ranged"
+    let combatStyle=null;
     let selectedUltId="jjk_domain";
-    let selectedArchetype="sorcerer"; // default if player doesn't pick
-    let gameState="menu"; // "menu","playing","upgrade","chooseReplace","gameover"
+    let selectedArchetype="sorcerer";
+    let gameState="menu";
     let lastTime=0;
     let messageTimer=0;
 
-    // Background orbs
+    // Background
     const bgOrbs=[];
     const MAX_BG_ORBS=40;
     let bgTime=0;
 
-    // Particles / FX
+    // FX
     const particles=[];
     const fireBursts=[];
     const playerBombs=[];
     const slowFields=[];
+    let summons=[];
+    let titanSummon=null;
 
-    // Screen shake / flash
+    // Shake / flash
     let screenShakeTimer=0;
     let screenShakeDuration=0;
     let screenShakeIntensity=0;
     let whiteFlashAlpha=0;
 
-    // Domain field (for domain-style ults)
+    // Domain field
     let domainField={
       active:false,
       x:0,y:0,
@@ -407,7 +444,6 @@
       dpsMult:0
     };
 
-    // Itachi genjutsu (Tsukuyomi) status
     const GENJUTSU_DURATION=3.2;
     let bossGenjutsuTimer=0;
 
@@ -416,6 +452,7 @@
     let bullets=[];
     let enemies=[];
     let enemyBullets=[];
+    let enemyIdCounter=1;
 
     // Abilities / curses / waves
     let wave=0;
@@ -427,7 +464,6 @@
     let pendingAbility=null;
     let pendingCategory=null;
 
-    // Enemy modifiers from curses / boss powers
     let enemyScale={
       hpMult:1,
       speedMult:1,
@@ -437,10 +473,9 @@
       bulletDamageMult:1
     };
 
-    // Wave event: null | "curse_storm" | "blood_moon" | "hunt_night"
     let currentWaveEvent=null;
 
-    // Named bosses
+    // Boss templates
     const BOSS_TEMPLATES=[
       {id:"mahito",name:"Mahito",color:"#b88cff"},
       {id:"itachi",name:"Itachi",color:"#ff6666"},
@@ -448,35 +483,54 @@
       {id:"luffy",name:"Gear Fifth Luffy",color:"#ffd480"}
     ];
 
-    // Mini-boss templates
     const MINI_BOSS_TEMPLATES=[
       {id:"upper_moon_demon",name:"Upper Moon Demon",color:"#ff9966",pattern:"cone"},
       {id:"high_end_nomu",name:"High-End Nomu",color:"#c84cff",pattern:"rush"},
       {id:"armored_titan",name:"Armored Titan",color:"#d8aa6a",pattern:"spin"}
     ];
 
-    // Archetypes
     const ARCHETYPES={
-      swordsman:{
-        id:"swordsman",
-        name:"Sharp Swordsman",
-        startAbilities:["water_breathing","blood_edge"]
-      },
-      sorcerer:{
-        id:"sorcerer",
-        name:"Cursed Sorcerer",
-        startAbilities:["shadow_garden","black_flash_rhythm"]
-      },
-      titan:{
-        id:"titan",
-        name:"Titan Slayer",
-        startAbilities:["survey_maneuvers","shadow_army_commander"]
-      },
-      hero:{
-        id:"hero",
-        name:"Quirked Hero",
-        startAbilities:["quirk_booster","fire_force_spark"]
-      }
+      swordsman:{id:"swordsman",name:"Sharp Swordsman",startAbilities:["water_breathing","blood_edge"]},
+      sorcerer:{id:"sorcerer",name:"Cursed Sorcerer",startAbilities:["shadow_garden","black_flash_rhythm"]},
+      titan:{id:"titan",name:"Titan Slayer",startAbilities:["survey_maneuvers","shadow_army_commander"]},
+      hero:{id:"hero",name:"Quirked Hero",startAbilities:["quirk_booster","fire_force_spark"]}
+    };
+
+    // COSMETICS
+    const COSMETICS={
+      skins:[
+        {id:"skin_default",name:"Default Hunter",unlockCheck:(s)=>true},
+        {id:"skin_hashira",name:"Hashira Cloak",unlockCheck:(s)=>s.maxWaveEver>=10},
+        {id:"skin_domain_freak",name:"Domain Freak",unlockCheck:(s)=>s.totalDomainsCast>=3},
+        {id:"skin_shadow_monarch",name:"Shadow Monarch",unlockCheck:(s)=>s.defeatedBossWithShadowCommanderOnce}
+      ],
+      bulletTrails:[
+        {id:"trail_default",name:"Default Trail",unlockCheck:(s)=>true},
+        {id:"trail_flame",name:"Flame Rounds",unlockCheck:(s)=>s.bossesKilled>=1},
+        {id:"trail_cursed",name:"Cursed Sparks",unlockCheck:(s)=>s.cursesTaken>=1},
+        {id:"trail_lightning",name:"Lightning Shots",unlockCheck:(s)=>s.reachedStyleSOnce}
+      ],
+      dashTrails:[
+        {id:"dash_default",name:"Default Dash",unlockCheck:(s)=>true},
+        {id:"dash_afterimage",name:"Afterimage Step",unlockCheck:(s)=>s.totalDashes>=50},
+        {id:"dash_void",name:"Void Step",unlockCheck:(s)=>s.maxWaveEver>=15}
+      ]
+    };
+
+    let cosmeticUnlocks={};
+    let cosmeticSelection={
+      skin:"skin_default",
+      bulletTrail:"trail_default",
+      dashTrail:"dash_default"
+    };
+    let cosmeticStats={
+      maxWaveEver:0,
+      totalDashes:0,
+      totalDomainsCast:0,
+      bossesKilled:0,
+      cursesTaken:0,
+      reachedStyleSOnce:false,
+      defeatedBossWithShadowCommanderOnce:false
     };
 
     /* ================= INPUT ================= */
@@ -507,13 +561,151 @@
     function shuffled(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
     function angleDiff(a,b){let d=a-b;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;return d;}
     function showMessage(msg,t=2){overlayMessageEl.textContent=msg;messageTimer=t;}
-
     function addScreenShake(intensity,duration){
       screenShakeIntensity=Math.max(screenShakeIntensity,intensity);
       screenShakeDuration=Math.max(screenShakeDuration,duration);
       screenShakeTimer=Math.max(screenShakeTimer,duration);
     }
     function addWhiteFlash(strength){whiteFlashAlpha=Math.min(1,whiteFlashAlpha+strength);}
+
+    /* ============== COSMETICS STORAGE/UI ============== */
+    function ensureBaseCosmeticsUnlocked(){
+      ["skin_default","trail_default","dash_default"].forEach(id=>{cosmeticUnlocks[id]=true;});
+    }
+    function loadCosmeticsFromStorage(){
+      try{
+        const u=localStorage.getItem("animeRogue_cosmeticUnlocks");
+        if(u)cosmeticUnlocks=JSON.parse(u)||{};
+        const s=localStorage.getItem("animeRogue_cosmeticStats");
+        if(s)cosmeticStats={...cosmeticStats,...JSON.parse(s)};
+        const sel=localStorage.getItem("animeRogue_cosmeticSelection");
+        if(sel)cosmeticSelection={...cosmeticSelection,...JSON.parse(sel)};
+      }catch(e){cosmeticUnlocks={};}
+      ensureBaseCosmeticsUnlocked();
+    }
+    function saveCosmeticUnlocks(){try{localStorage.setItem("animeRogue_cosmeticUnlocks",JSON.stringify(cosmeticUnlocks));}catch(e){}}
+    function saveCosmeticStats(){try{localStorage.setItem("animeRogue_cosmeticStats",JSON.stringify(cosmeticStats));}catch(e){}}
+    function saveCosmeticSelection(){try{localStorage.setItem("animeRogue_cosmeticSelection",JSON.stringify(cosmeticSelection));}catch(e){}}
+    function checkCosmeticUnlocks(){
+      ensureBaseCosmeticsUnlocked();
+      const s=cosmeticStats;
+      const checkGroup=(list)=>{
+        for(const c of list){
+          if(cosmeticUnlocks[c.id])continue;
+          let unlocked=false;
+          if(!c.unlockCheck)unlocked=true;
+          else unlocked=!!c.unlockCheck(s);
+          if(unlocked)cosmeticUnlocks[c.id]=true;
+        }
+      };
+      checkGroup(COSMETICS.skins);
+      checkGroup(COSMETICS.bulletTrails);
+      checkGroup(COSMETICS.dashTrails);
+      saveCosmeticUnlocks();
+      refreshCosmeticButtons();
+    }
+    function refreshCosmeticButtons(){
+      const skinButtons=document.querySelectorAll(".skinButton");
+      skinButtons.forEach(btn=>{
+        const id=btn.getAttribute("data-skin");
+        const unlocked=!!cosmeticUnlocks[id];
+        btn.classList.remove("cosmeticLocked","styleActive","cosmeticSelected");
+        if(!unlocked && id!=="skin_default")btn.classList.add("cosmeticLocked");
+        if(cosmeticSelection.skin===id && unlocked)btn.classList.add("styleActive","cosmeticSelected");
+      });
+      const trailButtons=document.querySelectorAll(".trailButton");
+      trailButtons.forEach(btn=>{
+        const id=btn.getAttribute("data-trail");
+        const unlocked=!!cosmeticUnlocks[id];
+        btn.classList.remove("cosmeticLocked","styleActive","cosmeticSelected");
+        if(!unlocked && id!=="trail_default")btn.classList.add("cosmeticLocked");
+        if(cosmeticSelection.bulletTrail===id && unlocked)btn.classList.add("styleActive","cosmeticSelected");
+      });
+      const dashButtons=document.querySelectorAll(".dashButton");
+      dashButtons.forEach(btn=>{
+        const id=btn.getAttribute("data-dash");
+        const unlocked=!!cosmeticUnlocks[id];
+        btn.classList.remove("cosmeticLocked","styleActive","cosmeticSelected");
+        if(!unlocked && id!=="dash_default")btn.classList.add("cosmeticLocked");
+        if(cosmeticSelection.dashTrail===id && unlocked)btn.classList.add("styleActive","cosmeticSelected");
+      });
+    }
+    function initCosmeticsSystem(){
+      loadCosmeticsFromStorage();
+      checkCosmeticUnlocks();
+      document.querySelectorAll(".skinButton").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+          const id=btn.getAttribute("data-skin");
+          const unlocked=!!cosmeticUnlocks[id];
+          if(!unlocked){showMessage("Skin locked – keep playing to unlock it!",2.2);return;}
+          cosmeticSelection.skin=id;
+          saveCosmeticSelection();
+          refreshCosmeticButtons();
+        });
+      });
+      document.querySelectorAll(".trailButton").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+          const id=btn.getAttribute("data-trail");
+          const unlocked=!!cosmeticUnlocks[id];
+          if(!unlocked){showMessage("Bullet trail locked – keep playing to unlock it!",2.2);return;}
+          cosmeticSelection.bulletTrail=id;
+          saveCosmeticSelection();
+          refreshCosmeticButtons();
+        });
+      });
+      document.querySelectorAll(".dashButton").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+          const id=btn.getAttribute("data-dash");
+          const unlocked=!!cosmeticUnlocks[id];
+          if(!unlocked){showMessage("Dash trail locked – keep playing to unlock it!",2.2);return;}
+          cosmeticSelection.dashTrail=id;
+          saveCosmeticSelection();
+          refreshCosmeticButtons();
+        });
+      });
+    }
+
+    function getPlayerSkinTheme(){
+      switch(cosmeticSelection.skin){
+        case "skin_hashira":
+          return {bodyColor:"#1c2733",outlineColor:"#7cf0c1",auraColor:"rgba(124,240,193,0.35)",dashGlowColor:"#7cf0c1",weaponColor:"#c8fff3"};
+        case "skin_domain_freak":
+          return {bodyColor:"#33204f",outlineColor:"#d2b3ff",auraColor:"rgba(164,118,255,0.35)",dashGlowColor:"#e6d2ff",weaponColor:"#f5e6ff"};
+        case "skin_shadow_monarch":
+          return {bodyColor:"#101018",outlineColor:"#b68bff",auraColor:"rgba(94,70,140,0.45)",dashGlowColor:"#b68bff",weaponColor:"#f0e6ff"};
+        default:
+          return {bodyColor:"#39c5ff",outlineColor:"#9ff6ff",auraColor:"rgba(120,200,255,0.3)",dashGlowColor:"#9ff6ff",weaponColor:"#ffffff"};
+      }
+    }
+    function getBulletColor(){
+      switch(cosmeticSelection.bulletTrail){
+        case "trail_flame":return "#ffb35c";
+        case "trail_cursed":return "#c68cff";
+        case "trail_lightning":return "#e7f6ff";
+        default:return "#f5f5f5";
+      }
+    }
+    function getBulletTrailParticleColor(){
+      switch(cosmeticSelection.bulletTrail){
+        case "trail_flame":return "rgba(255,180,120,1)";
+        case "trail_cursed":return "rgba(200,140,255,1)";
+        case "trail_lightning":return "rgba(230,250,255,1)";
+        default:return null;
+      }
+    }
+    function getDashParticleColor(){
+      switch(cosmeticSelection.dashTrail){
+        case "dash_afterimage":return "rgba(255,255,255,0.9)";
+        case "dash_void":return "rgba(110,90,180,1)";
+        default:return "rgba(160,220,255,1)";
+      }
+    }
+    function addBulletTrailFX(b){
+      const color=getBulletTrailParticleColor();
+      if(!color)return;
+      if(Math.random()>0.5)return;
+      spawnParticles(b.x,b.y,{count:1,speedMin:10,speedMax:40,lifeMin:0.2,lifeMax:0.5,sizeMin:1.2,sizeMax:2.4,color});
+    }
 
     /* ============== BACKGROUND & PARTICLES ============== */
     function initBackground(){
@@ -541,10 +733,7 @@
       }
     }
     function drawBackground(){
-      const g=ctx.createRadialGradient(
-        canvas.width*.5,canvas.height*.35,0,
-        canvas.width*.5,canvas.height*.5,canvas.width*.9
-      );
+      const g=ctx.createRadialGradient(canvas.width*.5,canvas.height*.35,0,canvas.width*.5,canvas.height*.5,canvas.width*.9);
       g.addColorStop(0,"#22263a");
       g.addColorStop(1,"#050509");
       ctx.fillStyle=g;
@@ -567,10 +756,7 @@
       ctx.stroke();
       ctx.restore();
 
-      const vg=ctx.createRadialGradient(
-        canvas.width/2,canvas.height/2,canvas.width*.2,
-        canvas.width/2,canvas.height/2,canvas.width*.7
-      );
+      const vg=ctx.createRadialGradient(canvas.width/2,canvas.height/2,canvas.width*.2,canvas.width/2,canvas.height/2,canvas.width*.7);
       vg.addColorStop(0,"rgba(0,0,0,0)");
       vg.addColorStop(1,"rgba(0,0,0,0.7)");
       ctx.fillStyle=vg;
@@ -620,7 +806,6 @@
         ctx.fill();
       }
     }
-
     function updateSlowFields(dt){
       for(let i=slowFields.length-1;i>=0;i--){
         const f=slowFields[i];
@@ -683,7 +868,6 @@
         incomingDamageMult:1,
         normalAbilities:[],
         bossAbilities:[],
-        // ult & style
         ultId:null,
         ultCooldownTimer:0,
         ultActiveTimer:0,
@@ -712,8 +896,7 @@
 
     function hasBrokenLimit(){
       if(!player)return false;
-      return player.normalAbilities.includes("broken_limit")||
-             player.bossAbilities.includes("broken_limit");
+      return player.normalAbilities.includes("broken_limit")||player.bossAbilities.includes("broken_limit");
     }
 
     function recomputeEnemyScale(){
@@ -780,12 +963,8 @@
         mul("meleeCooldown","meleeCooldownMult");add("meleeCooldown","meleeCooldownAdd");
         add("meleeOnHitHeal","meleeOnHitHealAdd");
 
-        if(m.incomingDamageMult){
-          incomingDamageMult*=1+(m.incomingDamageMult-1)*f;
-        }
-        if(m.styleGainMult){
-          styleGainMult*=1+(m.styleGainMult-1)*f;
-        }
+        if(m.incomingDamageMult)incomingDamageMult*=1+(m.incomingDamageMult-1)*f;
+        if(m.styleGainMult)styleGainMult*=1+(m.styleGainMult-1)*f;
       }
 
       for(const id of allIds){
@@ -850,122 +1029,22 @@
       if(allAbilityIds.includes("blink_step"))dashMode="blink";
       player.dashMode=dashMode;
       player.lastStandActive=false;
+
+      rebuildSummons();
     }
 
     /* ============== ULT & STYLE ============== */
     const ULT_DEFS={
-      jjk_domain:{
-        id:"jjk_domain",
-        name:"Domain Expansion",
-        cooldown:24,
-        duration:6,
-        damageMult:1.8,
-        fireRateMult:1.1,
-        pierceBonus:2,
-        bulletSpeedMult:1.25,
-        spawnsDomain:true,
-        domainRadius:240,
-        domainDpsMult:1.4,
-        domainColor:"rgba(90,60,200,0.20)",
-        domainEdgeColor:"rgba(210,180,255,0.95)"
-      },
-      ofa_100:{
-        id:"ofa_100",
-        name:"OFA 100%",
-        cooldown:22,
-        duration:5.5,
-        damageMult:1.2,
-        fireRateMult:1.5,
-        speedMult:1.6
-      },
-      demon_mark:{
-        id:"demon_mark",
-        name:"Demon Mark",
-        cooldown:26,
-        duration:7,
-        meleeDamageMult:2.3,
-        meleeRangeMult:1.3,
-        meleeHealBonus:1.2
-      },
-      gear_fifth:{
-        id:"gear_fifth",
-        name:"Gear Fifth",
-        cooldown:28,
-        duration:6,
-        damageMult:1.5,
-        fireRateMult:1.2,
-        speedMult:1.3,
-        bulletSpeedMult:1.2
-      },
-      susanoo_guardian:{
-        id:"susanoo_guardian",
-        name:"Susanoo Guardian",
-        cooldown:28,
-        duration:7,
-        damageMult:1.25,
-        speedMult:0.8,
-        incomingDamageMult:0.5
-      },
-      cyber_sandevistan:{
-        id:"cyber_sandevistan",
-        name:"Cyber Sandevistan",
-        cooldown:24,
-        duration:5,
-        speedMult:1.8,
-        fireRateMult:1.3,
-        incomingDamageMult:1.25
-      },
-      ghoul_rampage:{
-        id:"ghoul_rampage",
-        name:"Ghoul Rampage",
-        cooldown:27,
-        duration:6,
-        meleeDamageMult:2.2,
-        meleeRangeMult:1.3,
-        meleeHealBonus:3
-      },
-      flame_domain:{
-        id:"flame_domain",
-        name:"Blazing Flame Ring",
-        cooldown:26,
-        duration:6,
-        damageMult:1.2,
-        fireRateMult:1.1,
-        speedMult:1.05,
-        spawnsDomain:true,
-        domainRadius:230,
-        domainDpsMult:1.3,
-        domainColor:"rgba(255,140,80,0.24)",
-        domainEdgeColor:"rgba(255,230,170,0.96)"
-      },
-      bankai_field:{
-        id:"bankai_field",
-        name:"Bankai Field",
-        cooldown:28,
-        duration:7,
-        meleeDamageMult:1.8,
-        meleeRangeMult:1.3,
-        damageMult:1.15,
-        fireRateMult:0.85,
-        spawnsDomain:true,
-        domainRadius:220,
-        domainDpsMult:0,
-        domainColor:"rgba(150,180,255,0.18)",
-        domainEdgeColor:"rgba(220,230,255,0.96)"
-      },
-      haki_burst:{
-        id:"haki_burst",
-        name:"Conqueror's Haki Burst",
-        cooldown:24,
-        duration:4.5,
-        damageMult:1.35,
-        fireRateMult:1.15,
-        spawnsDomain:true,
-        domainRadius:260,
-        domainDpsMult:0,
-        domainColor:"rgba(255,245,180,0.24)",
-        domainEdgeColor:"rgba(255,240,200,0.96)"
-      }
+      jjk_domain:{id:"jjk_domain",name:"Domain Expansion",cooldown:24,duration:6,damageMult:1.8,fireRateMult:1.1,pierceBonus:2,bulletSpeedMult:1.25,spawnsDomain:true,domainRadius:240,domainDpsMult:1.4,domainColor:"rgba(90,60,200,0.20)",domainEdgeColor:"rgba(210,180,255,0.95)"},
+      ofa_100:{id:"ofa_100",name:"OFA 100%",cooldown:22,duration:5.5,damageMult:1.2,fireRateMult:1.5,speedMult:1.6},
+      demon_mark:{id:"demon_mark",name:"Demon Mark",cooldown:26,duration:7,meleeDamageMult:2.3,meleeRangeMult:1.3,meleeHealBonus:1.2},
+      gear_fifth:{id:"gear_fifth",name:"Gear Fifth",cooldown:28,duration:6,damageMult:1.5,fireRateMult:1.2,speedMult:1.3,bulletSpeedMult:1.2},
+      susanoo_guardian:{id:"susanoo_guardian",name:"Susanoo Guardian",cooldown:28,duration:7,damageMult:1.25,speedMult:0.8,incomingDamageMult:0.5},
+      cyber_sandevistan:{id:"cyber_sandevistan",name:"Cyber Sandevistan",cooldown:24,duration:5,speedMult:1.8,fireRateMult:1.3,incomingDamageMult:1.25},
+      ghoul_rampage:{id:"ghoul_rampage",name:"Ghoul Rampage",cooldown:27,duration:6,meleeDamageMult:2.2,meleeRangeMult:1.3,meleeHealBonus:3},
+      flame_domain:{id:"flame_domain",name:"Blazing Flame Ring",cooldown:26,duration:6,damageMult:1.2,fireRateMult:1.1,speedMult:1.05,spawnsDomain:true,domainRadius:230,domainDpsMult:1.3,domainColor:"rgba(255,140,80,0.24)",domainEdgeColor:"rgba(255,230,170,0.96)"},
+      bankai_field:{id:"bankai_field",name:"Bankai Field",cooldown:28,duration:7,meleeDamageMult:1.8,meleeRangeMult:1.3,damageMult:1.15,fireRateMult:0.85,spawnsDomain:true,domainRadius:220,domainDpsMult:0,domainColor:"rgba(150,180,255,0.18)",domainEdgeColor:"rgba(220,230,255,0.96)"},
+      haki_burst:{id:"haki_burst",name:"Conqueror's Haki Burst",cooldown:24,duration:4.5,damageMult:1.35,fireRateMult:1.15,spawnsDomain:true,domainRadius:260,domainDpsMult:0,domainColor:"rgba(255,245,180,0.24)",domainEdgeColor:"rgba(255,240,200,0.96)"}
     };
 
     function resetUltMultipliers(){
@@ -990,22 +1069,25 @@
       player.styleMeter=clamp(player.styleMeter+amount*mult*bonus,0,player.styleMax);
     }
 
-    function onPlayerDamaged(){
-      gainStyle(-25);
-    }
+    function onPlayerDamaged(){gainStyle(-25);}
 
     function updateStyle(dt){
       if(!player)return;
       if(player.styleMeter>0){
         player.styleMeter=Math.max(0,player.styleMeter-player.styleDecayRate*dt);
       }
+      const sp=player.styleMeter/player.styleMax*100;
+      if(!cosmeticStats.reachedStyleSOnce && sp>=80){
+        cosmeticStats.reachedStyleSOnce=true;
+        saveCosmeticStats();
+        checkCosmeticUnlocks();
+      }
     }
 
     function tryUseUlt(){
       if(!player||gameState!=="playing")return;
       if(!player.ultId)return;
-      if(player.ultActiveTimer>0)return;
-      if(player.ultCooldownTimer>0)return;
+      if(player.ultActiveTimer>0||player.ultCooldownTimer>0)return;
 
       const def=ULT_DEFS[player.ultId];
       if(!def)return;
@@ -1020,9 +1102,9 @@
       if(def.meleeDamageMult)player.ultMeleeDamageMult=def.meleeDamageMult;
       if(def.meleeRangeMult)player.ultMeleeRangeMult=def.meleeRangeMult;
       if(def.pierceBonus)player.ultPierceBonus=def.pierceBonus;
-      if(def.bulletSpeedMult)player.ultBulletSpeedMult=def.bulletSpeedMult; else player.ultBulletSpeedMult=1;
+      player.ultBulletSpeedMult=def.bulletSpeedMult||1;
       player.ultMeleeHealBonus=def.meleeHealBonus||0;
-      if(def.incomingDamageMult)player.ultIncomingDamageMult=def.incomingDamageMult; else player.ultIncomingDamageMult=1;
+      player.ultIncomingDamageMult=def.incomingDamageMult||1;
 
       if(def.spawnsDomain){
         domainField.active=true;
@@ -1033,6 +1115,10 @@
         domainField.color=def.domainColor||"rgba(90,60,200,0.20)";
         domainField.edgeColor=def.domainEdgeColor||"rgba(210,180,255,0.95)";
         domainField.dpsMult=def.domainDpsMult||0;
+
+        cosmeticStats.totalDomainsCast++;
+        saveCosmeticStats();
+        checkCosmeticUnlocks();
       }
 
       addScreenShake(10,.4);
@@ -1064,9 +1150,7 @@
           const drain=player.maxHp*0.03*dt;
           player.hp=Math.max(1,player.hp-drain);
         }
-        if(player.ultActiveTimer<=0){
-          endUlt();
-        }
+        if(player.ultActiveTimer<=0)endUlt();
       }else{
         if(player.ultCooldownTimer>0){
           let styleFactor=1+(player.styleMeter/player.styleMax)*0.75;
@@ -1098,366 +1182,334 @@
       normalAbilities.length=0;bossAbilities.length=0;curses.length=0;
 
       // Core normal abilities
-      addNormalAbility(
-        "cursed_overflow","Cursed Overflow","Rare",
-        "DMG +25%, on-hit heal +0.7, max HP -15%, wave heal -5.",
-        {damageMult:1.25,onHitHealAdd:.7,maxHpMult:.85,healAfterWaveAdd:-5}
-      );
-      addNormalAbility(
-        "quirk_booster","Quirk Booster","Common",
-        "Fire rate +25%, speed +10%, DMG -10%, spread +15%.",
-        {fireRateMult:1.25,speedMult:1.1,damageMult:.9,spreadMult:1.15}
-      );
-      addNormalAbility(
-        "survey_maneuvers","Survey Maneuvers","Rare",
-        "Speed +35%, dash CD -25%, max HP -10%, wave heal -5.",
-        {speedMult:1.35,dashCooldownMult:.75,maxHpMult:.9,healAfterWaveAdd:-5}
-      );
-      addNormalAbility(
-        "kaiju_instinct","Kaiju Instinct","Rare",
-        "Max HP +50, DMG +15%, fire rate -10%, spread +10%.",
-        {maxHpAdd:50,damageMult:1.15,fireRateMult:.9,spreadMult:1.1}
-      );
-      addNormalAbility(
-        "shadow_garden","Shadow Garden Arts","Rare",
-        "DMG +20%, spread -20%, fire rate -10%, speed -10%.",
-        {damageMult:1.2,spreadMult:.8,fireRateMult:.9,speedMult:.9}
-      );
-      addNormalAbility(
-        "edgerunner_core","Edgerunner Overclock","Epic",
-        "Fire rate +35%, speed +20%, dash CD -20%, max HP -25%, wave heal -20.",
-        {fireRateMult:1.35,speedMult:1.2,dashCooldownMult:.8,maxHpMult:.75,healAfterWaveAdd:-20}
-      );
+      addNormalAbility("cursed_overflow","Cursed Overflow","Rare","DMG +25%, on-hit heal +0.7, max HP -15%, wave heal -5.",{damageMult:1.25,onHitHealAdd:.7,maxHpMult:.85,healAfterWaveAdd:-5});
+      addNormalAbility("quirk_booster","Quirk Booster","Common","Fire rate +25%, speed +10%, DMG -10%, spread +15%.",{fireRateMult:1.25,speedMult:1.1,damageMult:.9,spreadMult:1.15});
+      addNormalAbility("survey_maneuvers","Survey Maneuvers","Rare","Speed +35%, dash CD -25%, max HP -10%, wave heal -5.",{speedMult:1.35,dashCooldownMult:.75,maxHpMult:.9,healAfterWaveAdd:-5});
+      addNormalAbility("kaiju_instinct","Kaiju Instinct","Rare","Max HP +50, DMG +15%, fire rate -10%, spread +10%.",{maxHpAdd:50,damageMult:1.15,fireRateMult:.9,spreadMult:1.1});
+      addNormalAbility("shadow_garden","Shadow Garden Arts","Rare","DMG +20%, spread -20%, fire rate -10%, speed -10%.",{damageMult:1.2,spreadMult:.8,fireRateMult:.9,speedMult:.9});
+      addNormalAbility("edgerunner_core","Edgerunner Overclock","Epic","Fire rate +35%, speed +20%, dash CD -20%, max HP -25%, wave heal -20.",{fireRateMult:1.35,speedMult:1.2,dashCooldownMult:.8,maxHpMult:.75,healAfterWaveAdd:-20});
 
-      // Black Flash
-      addNormalAbility(
-        "black_flash_rhythm","Black Flash Rhythm","Epic",
-        "DMG +35%, fire rate +10%, on-hit heal +0.5, max HP -15%, spread +15%.",
-        {damageMult:1.35,fireRateMult:1.1,onHitHealAdd:0.5,maxHpMult:0.85,spreadMult:1.15}
-      );
+      addNormalAbility("black_flash_rhythm","Black Flash Rhythm","Epic","DMG +35%, fire rate +10%, on-hit heal +0.5, max HP -15%, spread +15%.",{damageMult:1.35,fireRateMult:1.1,onHitHealAdd:0.5,maxHpMult:0.85,spreadMult:1.15});
 
-      // Demon Slayer melee
-      addNormalAbility(
-        "water_breathing","Water Breathing","Rare",
-        "Melee range +25%, melee CD -15%, bullet DMG -10%, wave heal -5.",
-        {meleeRangeMult:1.25,meleeCooldownMult:.85,damageMult:.9,healAfterWaveAdd:-5}
-      );
-      addNormalAbility(
-        "blood_edge","Blood-Edge Style","Rare",
-        "Melee DMG +45%, melee lifesteal +0.8, melee CD +20%, max HP -10%.",
-        {meleeDamageMult:1.45,meleeOnHitHealAdd:.8,meleeCooldownMult:1.2,maxHpMult:.9}
-      );
+      addNormalAbility("water_breathing","Water Breathing","Rare","Melee range +25%, melee CD -15%, bullet DMG -10%, wave heal -5.",{meleeRangeMult:1.25,meleeCooldownMult:.85,damageMult:.9,healAfterWaveAdd:-5});
+      addNormalAbility("blood_edge","Blood-Edge Style","Rare","Melee DMG +45%, melee lifesteal +0.8, melee CD +20%, max HP -10%.",{meleeDamageMult:1.45,meleeOnHitHealAdd:.8,meleeCooldownMult:1.2,maxHpMult:.9});
 
-      // Thunder Breathing
-      addNormalAbility(
-        "thunder_breathing","Thunder Breathing – First Form","Rare",
-        "Speed +30%, dash CD -25%, dash duration -20%, max HP -10%.",
-        {speedMult:1.3,dashCooldownMult:0.75,dashDurationMult:0.8,maxHpMult:0.9}
-      );
+      addNormalAbility("thunder_breathing","Thunder Breathing – First Form","Rare","Speed +30%, dash CD -25%, dash duration -20%, max HP -10%.",{speedMult:1.3,dashCooldownMult:0.75,dashDurationMult:0.8,maxHpMult:0.9});
 
-      // Six Eyes precision
-      addNormalAbility(
-        "six_eyes","Six Eyes Focus","Epic",
-        "Bullet speed +45%, spread -25%, DMG +20%, max HP -15%, wave heal -15.",
-        {bulletSpeedMult:1.45,spreadMult:.75,damageMult:1.2,maxHpMult:.85,healAfterWaveAdd:-15}
-      );
-      addNormalAbility(
-        "gear_shift","Gear Shift","Epic",
-        "Fire rate +20%, DMG +15%, speed -10%, max HP -10%.",
-        {fireRateMult:1.2,damageMult:1.15,speedMult:.9,maxHpMult:.9}
-      );
+      addNormalAbility("six_eyes","Six Eyes Focus","Epic","Bullet speed +45%, spread -25%, DMG +20%, max HP -15%, wave heal -15.",{bulletSpeedMult:1.45,spreadMult:.75,damageMult:1.2,maxHpMult:.85,healAfterWaveAdd:-15});
+      addNormalAbility("gear_shift","Gear Shift","Epic","Fire rate +20%, DMG +15%, speed -10%, max HP -10%.",{fireRateMult:1.2,damageMult:1.15,speedMult:.9,maxHpMult:.9});
 
-      // "I Am Atomic"
-      addNormalAbility(
-        "i_am_atomic","\"I Am Atomic\" Focus","Epic",
-        "DMG +45%, +1 bullet, spread +25%, max HP -25%, wave heal -20.",
-        {damageMult:1.45,bulletsPerShotAdd:1,spreadMult:1.25,maxHpMult:0.75,healAfterWaveAdd:-20}
-      );
+      addNormalAbility("i_am_atomic","\"I Am Atomic\" Focus","Epic","DMG +45%, +1 bullet, spread +25%, max HP -25%, wave heal -20.",{damageMult:1.45,bulletsPerShotAdd:1,spreadMult:1.25,maxHpMult:0.75,healAfterWaveAdd:-20});
 
       // Dash mods
-      addNormalAbility(
-        "cursed_dash_bomb","Cursed Dash Bomb","Rare",
-        "Dash drops a bomb (big AOE DMG). Dash CD +15%, max HP -10%.",
-        {dashCooldownMult:1.15,maxHpMult:.9}
-      );
-      addNormalAbility(
-        "flame_step","Flame Step","Rare",
-        "Dash burns around you. Dash duration -10%, wave heal -5.",
-        {dashDurationMult:.9,healAfterWaveAdd:-5}
-      );
-      addNormalAbility(
-        "blink_step","Blink Step","Epic",
-        "Dash becomes short teleport with brief invuln. Dash CD -10%, max HP -10%.",
-        {dashCooldownMult:.9,maxHpMult:.9}
-      );
-      addNormalAbility(
-        "explosion_dash","Explosion Dash","Rare",
-        "Dash leaves extra small explosions. Dash CD +15%, wave heal -5.",
-        {dashCooldownMult:1.15,healAfterWaveAdd:-5}
-      );
-      // New dash abilities
-      addNormalAbility(
-        "thunder_flash_step","Thunder Flash Step","Epic",
-        "Dash auto-slashes the first enemy in front for huge damage. Dash CD +20%, max HP -10%.",
-        {dashCooldownMult:1.2,maxHpMult:0.9}
-      );
-      addNormalAbility(
-        "blue_lock_slide","Blue Lock Slide","Rare",
-        "Dash leaves lingering zones that slow enemies but dash distance -15%.",
-        {dashDurationMult:0.85}
-      );
-      addNormalAbility(
-        "blink_clone","Blink Clone Assault","Epic",
-        "Requires Blink Step. When you blink, you leave a clone that slashes around your old spot. Dash CD +10%, wave heal -10.",
-        {dashCooldownMult:1.1,healAfterWaveAdd:-10},
-        null,
-        ["blink_step"]
-      );
+      addNormalAbility("cursed_dash_bomb","Cursed Dash Bomb","Rare","Dash drops a bomb (big AOE DMG). Dash CD +15%, max HP -10%.",{dashCooldownMult:1.15,maxHpMult:.9});
+      addNormalAbility("flame_step","Flame Step","Rare","Dash burns around you. Dash duration -10%, wave heal -5.",{dashDurationMult:.9,healAfterWaveAdd:-5});
+      addNormalAbility("blink_step","Blink Step","Epic","Dash becomes short teleport with brief invuln. Dash CD -10%, max HP -10%.",{dashCooldownMult:.9,maxHpMult:.9});
+      addNormalAbility("explosion_dash","Explosion Dash","Rare","Dash leaves extra small explosions. Dash CD +15%, wave heal -5.",{dashCooldownMult:1.15,healAfterWaveAdd:-5});
 
-      // Conqueror's Haki
-      addNormalAbility(
-        "conquerors_haki","Conqueror's Haki Pulse","Epic",
-        "Nearby enemies are slowed. DMG +10%, you take +10% damage, wave heal -5.",
-        {damageMult:1.1,incomingDamageMult:1.1,healAfterWaveAdd:-5}
-      );
+      addNormalAbility("thunder_flash_step","Thunder Flash Step","Epic","Dash auto-slashes the first enemy in front for huge damage. Dash CD +20%, max HP -10%.",{dashCooldownMult:1.2,maxHpMult:0.9});
+      addNormalAbility("blue_lock_slide","Blue Lock Slide","Rare","Dash leaves lingering zones that slow enemies but dash distance -15%.",{dashDurationMult:0.85});
+      addNormalAbility("blink_clone","Blink Clone Assault","Epic","Requires Blink Step. When you blink, you leave a clone that slashes around your old spot. Dash CD +10%, wave heal -10.",{dashCooldownMult:1.1,healAfterWaveAdd:-10},null,["blink_step"]);
+
+      addNormalAbility("conquerors_haki","Conqueror's Haki Pulse","Epic","Nearby enemies are slowed. DMG +10%, you take +10% damage, wave heal -5.",{damageMult:1.1,incomingDamageMult:1.1,healAfterWaveAdd:-5});
 
       // Fusions
-      addNormalAbility(
-        "limit_break","Limit Break State","Epic",
-        "FUSION: Cursed Overflow + Quirk Booster. Huge DPS, max HP -25%, spread +25%.",
-        {damageMult:1.35,fireRateMult:1.25,onHitHealAdd:1,maxHpMult:.75,spreadMult:1.25},
-        null,["cursed_overflow","quirk_booster"]
-      );
-      addNormalAbility(
-        "sky_ripper","Sky Ripper Maneuvers","Epic",
-        "FUSION: Survey + Kaiju. Crazy mobility, max HP -15%, wave heal -15.",
-        {speedMult:1.45,dashCooldownMult:.6,bulletSpeedMult:1.3,maxHpMult:.85,healAfterWaveAdd:-15},
-        null,["survey_maneuvers","kaiju_instinct"]
-      );
-      addNormalAbility(
-        "neon_ghoul","Neon Ghoul","Epic",
-        "FUSION: Shadow Garden + Edgerunner. High risk, high sustain.",
-        {damageMult:1.35,fireRateMult:1.25,onHitHealAdd:1.2,maxHpMult:.8,healAfterWaveAdd:-20},
-        null,["shadow_garden","edgerunner_core"]
-      );
-      addNormalAbility(
-        "rumbling_slayer","Rumbling Slayer","Epic",
-        "FUSION: Survey Maneuvers + Thunder Breathing. Massive mobility, HP & heal hit.",
-        {speedMult:1.45,dashCooldownMult:0.65,maxHpMult:0.8,healAfterWaveAdd:-15},
-        null,["survey_maneuvers","thunder_breathing"]
-      );
+      addNormalAbility("limit_break","Limit Break State","Epic","FUSION: Cursed Overflow + Quirk Booster. Huge DPS, max HP -25%, spread +25%.",{damageMult:1.35,fireRateMult:1.25,onHitHealAdd:1,maxHpMult:.75,spreadMult:1.25},null,["cursed_overflow","quirk_booster"]);
+      addNormalAbility("sky_ripper","Sky Ripper Maneuvers","Epic","FUSION: Survey + Kaiju. Crazy mobility, max HP -15%, wave heal -15.",{speedMult:1.45,dashCooldownMult:.6,bulletSpeedMult:1.3,maxHpMult:.85,healAfterWaveAdd:-15},null,["survey_maneuvers","kaiju_instinct"]);
+      addNormalAbility("neon_ghoul","Neon Ghoul","Epic","FUSION: Shadow Garden + Edgerunner. High risk, high sustain.",{damageMult:1.35,fireRateMult:1.25,onHitHealAdd:1.2,maxHpMult:.8,healAfterWaveAdd:-20},null,["shadow_garden","edgerunner_core"]);
+      addNormalAbility("rumbling_slayer","Rumbling Slayer","Epic","FUSION: Survey Maneuvers + Thunder Breathing. Massive mobility, HP & heal hit.",{speedMult:1.45,dashCooldownMult:0.65,maxHpMult:0.8,healAfterWaveAdd:-15},null,["survey_maneuvers","thunder_breathing"]);
 
-      // Broken limit
-      addNormalAbility(
-        "broken_limit","Broken Limit","Rare",
-        "Removes cap on powers but halves all ability effects. Curses unaffected.",{}
-      );
+      addNormalAbility("broken_limit","Broken Limit","Rare","Removes cap on powers but halves all ability effects. Curses unaffected.",{});
 
       // Solo Leveling / DB / Bleach / DMC
-      addNormalAbility(
-        "shadow_army_commander","Shadow Army Commander","Epic",
-        "Pierce +1, each kill triggers a small shadow explosion. Max HP -10%.",
-        {pierceAdd:1,maxHpMult:0.9}
-      );
-      addNormalAbility(
-        "dagger_assassin","Dagger Assassin","Rare",
-        "Melee DMG +30%, melee CD -20%, melee range -15%, max HP -10%.",
-        {meleeDamageMult:1.3,meleeCooldownMult:0.8,meleeRangeMult:0.85,maxHpMult:0.9}
-      );
-      addNormalAbility(
-        "kaioken_strain","Kaioken Strain","Epic",
-        "DMG +30%, fire rate +20%. While firing, your HP slowly drains. Max HP -15%, wave heal -10.",
-        {damageMult:1.3,fireRateMult:1.2,maxHpMult:0.85,healAfterWaveAdd:-10}
-      );
-      addNormalAbility(
-        "ki_blast_overload","Ki Blast Overload","Rare",
-        "+2 bullets per shot, DMG -20%, spread +25%, bullet speed -10%.",
-        {bulletsPerShotAdd:2,damageMult:0.8,spreadMult:1.25,bulletSpeedMult:0.9}
-      );
-      addNormalAbility(
-        "super_saiyan_focus","Super Saiyan Focus","Epic",
-        "DMG +35%, bullet speed +10%, spread -15%, max HP -20%.",
-        {damageMult:1.35,bulletSpeedMult:1.1,spreadMult:0.85,maxHpMult:0.8}
-      );
-      addNormalAbility(
-        "spiritual_pressure","Spiritual Pressure","Epic",
-        "Nearby enemies move slower. DMG +15%, you take +10% damage, wave heal -10.",
-        {damageMult:1.15,incomingDamageMult:1.1,healAfterWaveAdd:-10}
-      );
-      addNormalAbility(
-        "hollow_mask","Hollow Mask","Epic",
-        "DMG +25%, fire rate +15%. You take +20% damage, wave heal -10.",
-        {damageMult:1.25,fireRateMult:1.15,incomingDamageMult:1.2,healAfterWaveAdd:-10}
-      );
-      addNormalAbility(
-        "devil_trigger_build","Devil Trigger Build","Rare",
-        "Style gain +40%, DMG +10%. You take +10% damage, wave heal -10.",
-        {styleGainMult:1.4,damageMult:1.1,incomingDamageMult:1.1,healAfterWaveAdd:-10}
-      );
-      addNormalAbility(
-        "trickster_step","Trickster Step","Epic",
-        "Dash distance +25%, dash CD -10%. You take +10% damage, max HP -10%.",
-        {dashDurationMult:1.15,dashCooldownMult:0.9,incomingDamageMult:1.1,maxHpMult:0.9}
-      );
-      addNormalAbility(
-        "rebellion_combo","Rebellion Combo","Epic",
-        "Melee DMG +45%, melee range +10%, melee CD +15%, bullet DMG -15%.",
-        {meleeDamageMult:1.45,meleeRangeMult:1.1,meleeCooldownMult:1.15,damageMult:0.85}
-      );
+      addNormalAbility("shadow_army_commander","Shadow Army Commander","Epic","Pierce +1, each kill triggers a small shadow explosion. Max HP -10%.",{pierceAdd:1,maxHpMult:0.9});
+      addNormalAbility("dagger_assassin","Dagger Assassin","Rare","Melee DMG +30%, melee CD -20%, melee range -15%, max HP -10%.",{meleeDamageMult:1.3,meleeCooldownMult:0.8,meleeRangeMult:0.85,maxHpMult:0.9});
+      addNormalAbility("kaioken_strain","Kaioken Strain","Epic","DMG +30%, fire rate +20%. While firing, your HP slowly drains. Max HP -15%, wave heal -10.",{damageMult:1.3,fireRateMult:1.2,maxHpMult:0.85,healAfterWaveAdd:-10});
+      addNormalAbility("ki_blast_overload","Ki Blast Overload","Rare","+2 bullets per shot, DMG -20%, spread +25%, bullet speed -10%.",{bulletsPerShotAdd:2,damageMult:0.8,spreadMult:1.25,bulletSpeedMult:0.9});
+      addNormalAbility("super_saiyan_focus","Super Saiyan Focus","Epic","DMG +35%, bullet speed +10%, spread -15%, max HP -20%.",{damageMult:1.35,bulletSpeedMult:1.1,spreadMult:0.85,maxHpMult:0.8});
+      addNormalAbility("spiritual_pressure","Spiritual Pressure","Epic","Nearby enemies move slower. DMG +15%, you take +10% damage, wave heal -10.",{damageMult:1.15,incomingDamageMult:1.1,healAfterWaveAdd:-10});
+      addNormalAbility("hollow_mask","Hollow Mask","Epic","DMG +25%, fire rate +15%. You take +20% damage, wave heal -10.",{damageMult:1.25,fireRateMult:1.15,incomingDamageMult:1.2,healAfterWaveAdd:-10});
+      addNormalAbility("devil_trigger_build","Devil Trigger Build","Rare","Style gain +40%, DMG +10%. You take +10% damage, wave heal -10.",{styleGainMult:1.4,damageMult:1.1,incomingDamageMult:1.1,healAfterWaveAdd:-10});
+      addNormalAbility("trickster_step","Trickster Step","Epic","Dash distance +25%, dash CD -10%. You take +10% damage, max HP -10%.",{dashDurationMult:1.15,dashCooldownMult:0.9,incomingDamageMult:1.1,maxHpMult:0.9});
+      addNormalAbility("rebellion_combo","Rebellion Combo","Epic","Melee DMG +45%, melee range +10%, melee CD +15%, bullet DMG -15%.",{meleeDamageMult:1.45,meleeRangeMult:1.1,meleeCooldownMult:1.15,damageMult:0.85});
 
       // Fire Force line
-      addNormalAbility(
-        "fire_force_spark","Fire Force Spark","Common",
-        "Dash distance +10%, dash CD -5%, you take +10% more damage.",
-        {dashDurationMult:1.1,dashCooldownMult:0.95,incomingDamageMult:1.1}
-      );
-      addNormalAbility(
-        "infernal_engine","Infernal Engine","Rare",
-        "DMG +20%, dash CD -10%, max HP -10%, wave heal -10.",
-        {damageMult:1.2,dashCooldownMult:0.9,maxHpMult:0.9,healAfterWaveAdd:-10},
-        null,
-        ["fire_force_spark"]
-      );
+      addNormalAbility("fire_force_spark","Fire Force Spark","Common","Dash distance +10%, dash CD -5%, you take +10% more damage.",{dashDurationMult:1.1,dashCooldownMult:0.95,incomingDamageMult:1.1});
+      addNormalAbility("infernal_engine","Infernal Engine","Rare","DMG +20%, dash CD -10%, max HP -10%, wave heal -10.",{damageMult:1.2,dashCooldownMult:0.9,maxHpMult:0.9,healAfterWaveAdd:-10},null,["fire_force_spark"]);
 
       // Tokyo Ghoul line
-      addNormalAbility(
-        "kagune_awakening","Kagune Awakening","Common",
-        "Melee lifesteal +0.5, max HP -5%, wave heal -5.",
-        {meleeOnHitHealAdd:0.5,maxHpMult:0.95,healAfterWaveAdd:-5}
-      );
-      addNormalAbility(
-        "ghoul_feast","Ghoul Feast","Rare",
-        "On-hit heal +1.0, melee lifesteal +1.0, wave heal -15.",
-        {onHitHealAdd:1.0,meleeOnHitHealAdd:1.0,healAfterWaveAdd:-15},
-        null,
-        ["kagune_awakening"]
-      );
+      addNormalAbility("kagune_awakening","Kagune Awakening","Common","Melee lifesteal +0.5, max HP -5%, wave heal -5.",{meleeOnHitHealAdd:0.5,maxHpMult:0.95,healAfterWaveAdd:-5});
+      addNormalAbility("ghoul_feast","Ghoul Feast","Rare","On-hit heal +1.0, melee lifesteal +1.0, wave heal -15.",{onHitHealAdd:1.0,meleeOnHitHealAdd:1.0,healAfterWaveAdd:-15},null,["kagune_awakening"]);
 
-      // Shadow / Eminence line addition
-      addNormalAbility(
-        "shadow_legion","Shadow Legion","Rare",
-        "Style gain +25%, max HP -10%, wave heal -5.",
-        {styleGainMult:1.25,maxHpMult:0.9,healAfterWaveAdd:-5},
-        null,
-        ["shadow_garden"]
-      );
+      addNormalAbility("shadow_legion","Shadow Legion","Rare","Style gain +25%, max HP -10%, wave heal -5.",{styleGainMult:1.25,maxHpMult:0.9,healAfterWaveAdd:-5},null,["shadow_garden"]);
+
+      // Summoner path – four summons
+      addNormalAbility("shadow_wolf_pack","Shadow Wolf Pack","Epic","Summons 2 shadow wolves that orbit and shred nearby enemies, scaling with Style. Max HP -10%, wave heal -5.",{maxHpMult:0.9,healAfterWaveAdd:-5});
+      addNormalAbility("cursed_hound_black_dog","Cursed Hound – Black Dog","Rare","Summons a cursed hound that hunts a priority target and slows it. You take +10% damage.",{incomingDamageMult:1.1});
+      addNormalAbility("ignition_sprite","Ignition Sprite","Rare","Summons a flame sprite that drops burning zones, damaging and slowing enemies. Max HP -10%, wave heal -5.",{maxHpMult:0.9,healAfterWaveAdd:-5});
+      addNormalAbility("scout_titan_fragment","Scout Titan Fragment","Epic","Summons a slow Titan fragment that draws aggro and stomps nearby foes. Speed -10%.",{speedMult:0.9});
 
       // Boss powers (Legendary)
-      addBossAbility(
-        "domain_collapse","Domain Collapse","Legendary",
-        "DMG x2.0, +2 bullets, fire rate +15%, max HP -40%, spread +50%, wave heal -30.",
-        {damageMult:2,bulletsPerShotAdd:2,fireRateMult:1.15,maxHpMult:.6,spreadMult:1.5,healAfterWaveAdd:-30}
-      );
-      addBossAbility(
-        "titan_ascend","Titan Ascendance","Legendary",
-        "Max HP +40%, DMG +60%, pierce +2, speed -30%, wave heal -25.",
-        {maxHpMult:1.4,damageMult:1.6,pierceAdd:2,speedMult:.7,healAfterWaveAdd:-25}
-      );
-      addBossAbility(
-        "overclocked_quirk","Overclocked Quirk","Legendary",
-        "Fire rate x2.0, speed +30%, max HP -50%, wave heal -35.",
-        {fireRateMult:2,speedMult:1.3,maxHpMult:.5,healAfterWaveAdd:-35}
-      );
-      addBossAbility(
-        "cursed_family","Cursed Family – Inverted Spear","Legendary",
-        "Melee DMG x2.5, range +60%, melee CD -35%, lifesteal +2, bullets weaker.",
-        {meleeDamageMult:2.5,meleeRangeMult:1.6,meleeCooldownMult:.65,meleeOnHitHealAdd:2,damageMult:.65,bulletsPerShotAdd:-1}
-      );
-      addBossAbility(
-        "susanoo_avatar","Susanoo Avatar","Legendary",
-        "Max HP +70%, incoming damage -25%, DMG +20%, speed -25%, fire rate -15%.",
-        {maxHpMult:1.7,incomingDamageMult:0.75,damageMult:1.2,speedMult:0.75,fireRateMult:0.85}
-      );
-      addBossAbility(
-        "shadow_monarch","Shadow Monarch","Legendary",
-        "Pierce +1, on-hit heal +1.5, enemies spawn +25% and have +20% HP.",
-        {pierceAdd:1,onHitHealAdd:1.5},
-        null,
-        null,
-        {enemyCountMult:1.25,enemyHpMult:1.2}
-      );
-      addBossAbility(
-        "infinity_barrier","Infinity Barrier","Legendary",
-        "Max HP +30%, incoming damage -40%, fire rate -10%, speed -10%.",
-        {maxHpMult:1.3,incomingDamageMult:0.6,fireRateMult:0.9,speedMult:0.9}
-      );
-      addBossAbility(
-        "sun_breath_legend","Sun Breathing – Legend","Legendary",
-        "DMG +80%, melee DMG +80%, max HP -35%, wave heal -30.",
-        {damageMult:1.8,meleeDamageMult:1.8,maxHpMult:0.65,healAfterWaveAdd:-30}
-      );
-      addBossAbility(
-        "gear_fifth_maniac","Gear Fifth Maniac","Legendary",
-        "Speed +40%, fire rate +35%, max HP -30%, incoming damage +20%.",
-        {speedMult:1.4,fireRateMult:1.35,maxHpMult:0.7,incomingDamageMult:1.2}
-      );
-      addBossAbility(
-        "hollow_king","Hollow King Ascendant","Legendary",
-        "DMG +40%, pierce +2, on-hit heal +1, wave heal -25.",
-        {damageMult:1.4,pierceAdd:2,onHitHealAdd:1,healAfterWaveAdd:-25}
-      );
+      addBossAbility("divine_mahoraga","Divine General Mahoraga","Legendary","Fusion of all four summons. DMG +35%, +1 pierce, on-hit heal +1, you take 20% less damage, enemies gain HP & damage, wave heal -15.",{damageMult:1.35,pierceAdd:1,onHitHealAdd:1,healAfterWaveAdd:-15,incomingDamageMult:0.8},null,null,{enemyHpMult:1.2,enemyDamageMult:1.1});
+
+      addBossAbility("domain_collapse","Domain Collapse","Legendary","DMG x2.0, +2 bullets, fire rate +15%, max HP -40%, spread +50%, wave heal -30.",{damageMult:2,bulletsPerShotAdd:2,fireRateMult:1.15,maxHpMult:.6,spreadMult:1.5,healAfterWaveAdd:-30});
+      addBossAbility("titan_ascend","Titan Ascendance","Legendary","Max HP +40%, DMG +60%, pierce +2, speed -30%, wave heal -25.",{maxHpMult:1.4,damageMult:1.6,pierceAdd:2,speedMult:.7,healAfterWaveAdd:-25});
+      addBossAbility("overclocked_quirk","Overclocked Quirk","Legendary","Fire rate x2.0, speed +30%, max HP -50%, wave heal -35.",{fireRateMult:2,speedMult:1.3,maxHpMult:.5,healAfterWaveAdd:-35});
+      addBossAbility("cursed_family","Cursed Family – Inverted Spear","Legendary","Melee DMG x2.5, range +60%, melee CD -35%, lifesteal +2, bullets weaker.",{meleeDamageMult:2.5,meleeRangeMult:1.6,meleeCooldownMult:.65,meleeOnHitHealAdd:2,damageMult:.65,bulletsPerShotAdd:-1});
+      addBossAbility("susanoo_avatar","Susanoo Avatar","Legendary","Max HP +70%, incoming damage -25%, DMG +20%, speed -25%, fire rate -15%.",{maxHpMult:1.7,incomingDamageMult:0.75,damageMult:1.2,speedMult:0.75,fireRateMult:0.85});
+      addBossAbility("shadow_monarch","Shadow Monarch","Legendary","Pierce +1, on-hit heal +1.5, enemies spawn +25% and have +20% HP.",{pierceAdd:1,onHitHealAdd:1.5},null,null,{enemyCountMult:1.25,enemyHpMult:1.2});
+      addBossAbility("infinity_barrier","Infinity Barrier","Legendary","Max HP +30%, incoming damage -40%, fire rate -10%, speed -10%.",{maxHpMult:1.3,incomingDamageMult:0.6,fireRateMult:0.9,speedMult:0.9});
+      addBossAbility("sun_breath_legend","Sun Breathing – Legend","Legendary","DMG +80%, melee DMG +80%, max HP -35%, wave heal -30.",{damageMult:1.8,meleeDamageMult:1.8,maxHpMult:0.65,healAfterWaveAdd:-30});
+      addBossAbility("gear_fifth_maniac","Gear Fifth Maniac","Legendary","Speed +40%, fire rate +35%, max HP -30%, incoming damage +20%.",{speedMult:1.4,fireRateMult:1.35,maxHpMult:0.7,incomingDamageMult:1.2});
+      addBossAbility("hollow_king","Hollow King Ascendant","Legendary","DMG +40%, pierce +2, on-hit heal +1, wave heal -25.",{damageMult:1.4,pierceAdd:2,onHitHealAdd:1,healAfterWaveAdd:-25});
 
       // Curses
-      addCurse(
-        "blood_moon","Blood Moon","Legendary",
-        "DMG +25%, enemies faster and spawn +15%.",
-        {damageMult:1.25},
-        {enemySpeedMult:1.2,enemyCountMult:1.15}
-      );
-      addCurse(
-        "fragile_rage","Fragile Rage","Legendary",
-        "Fire rate +40%, max HP -40%.",
-        {fireRateMult:1.4,maxHpMult:.6},
-        {}
-      );
-      addCurse(
-        "predator","Predator's Hunger","Legendary",
-        "On-hit heal +2, enemies +25%.",
-        {onHitHealAdd:2},
-        {enemyCountMult:1.25}
-      );
-      addCurse(
-        "all_or_nothing","All or Nothing","Legendary",
-        "DMG x2.4, max HP -70%.",
-        {damageMult:2.4,maxHpMult:.3},
-        {}
-      );
-      addCurse(
-        "cursed_eyes","Cursed Eyes – Blind Fury","Legendary",
-        "DMG +35%, fire rate +20%, spread +40%, bullet speed -15%.",
-        {damageMult:1.35,fireRateMult:1.2,spreadMult:1.4,bulletSpeedMult:0.85},
-        {}
-      );
-      addCurse(
-        "last_stand_oath","Last Stand Oath","Legendary",
-        "If low HP, go berserk. Max HP -30%, wave heal -20.",
-        {maxHpMult:0.7,healAfterWaveAdd:-20},
-        {}
-      );
-      addCurse(
-        "glass_cannon_pact","Glass Cannon Pact","Legendary",
-        "DMG +45%, fire rate +20%, max HP -60%.",
-        {damageMult:1.45,fireRateMult:1.2,maxHpMult:0.4},
-        {}
-      );
-      addCurse(
-        "devils_bargain","Devil's Bargain","Legendary",
-        "DMG +40%, fire rate +20%. Heal after waves becomes 0 and you take +25% damage.",
-        {damageMult:1.4,fireRateMult:1.2,healAfterWaveAdd:-999,incomingDamageMult:1.25},
-        {}
-      );
-      addCurse(
-        "eternal_tsukuyomi","Eternal Tsukuyomi","Legendary",
-        "DMG +30%, fire rate +10%, max HP -30%, wave heal -25.",
-        {damageMult:1.3,fireRateMult:1.1,maxHpMult:0.7,healAfterWaveAdd:-25},
-        {}
-      );
-      addCurse(
-        "limitless_void","Limitless Void","Legendary",
-        "DMG +20%, bullet speed +40%. Enemy bullets deal +40% damage.",
-        {damageMult:1.2,bulletSpeedMult:1.4},
-        {enemyBulletDamageMult:1.4}
-      );
+      addCurse("blood_moon","Blood Moon","Legendary","DMG +25%, enemies faster and spawn +15%.",{damageMult:1.25},{enemySpeedMult:1.2,enemyCountMult:1.15});
+      addCurse("fragile_rage","Fragile Rage","Legendary","Fire rate +40%, max HP -40%.",{fireRateMult:1.4,maxHpMult:.6},{});
+      addCurse("predator","Predator's Hunger","Legendary","On-hit heal +2, enemies +25%.",{onHitHealAdd:2},{enemyCountMult:1.25});
+      addCurse("all_or_nothing","All or Nothing","Legendary","DMG x2.4, max HP -70%.",{damageMult:2.4,maxHpMult:.3},{});
+      addCurse("cursed_eyes","Cursed Eyes – Blind Fury","Legendary","DMG +35%, fire rate +20%, spread +40%, bullet speed -15%.",{damageMult:1.35,fireRateMult:1.2,spreadMult:1.4,bulletSpeedMult:0.85},{});
+      addCurse("last_stand_oath","Last Stand Oath","Legendary","If low HP, go berserk. Max HP -30%, wave heal -20.",{maxHpMult:0.7,healAfterWaveAdd:-20},{});
+      addCurse("glass_cannon_pact","Glass Cannon Pact","Legendary","DMG +45%, fire rate +20%, max HP -60%.",{damageMult:1.45,fireRateMult:1.2,maxHpMult:0.4},{});
+      addCurse("devils_bargain","Devil's Bargain","Legendary","DMG +40%, fire rate +20%. Heal after waves becomes 0 and you take +25% damage.",{damageMult:1.4,fireRateMult:1.2,healAfterWaveAdd:-999,incomingDamageMult:1.25},{});
+      addCurse("eternal_tsukuyomi","Eternal Tsukuyomi","Legendary","DMG +30%, fire rate +10%, max HP -30%, wave heal -25.",{damageMult:1.3,fireRateMult:1.1,maxHpMult:0.7,healAfterWaveAdd:-25},{});
+      addCurse("limitless_void","Limitless Void","Legendary","DMG +20%, bullet speed +40%. Enemy bullets deal +40% damage.",{damageMult:1.2,bulletSpeedMult:1.4},{enemyBulletDamageMult:1.4});
+    }
+
+    /* ============== SUMMONS (REBUILD/UPDATE/DRAW) + MAHORAGA FUSION ============== */
+    function rebuildSummons(){
+      summons.length=0;
+      titanSummon=null;
+      if(!player)return;
+      const allIds=new Set([...player.normalAbilities,...player.bossAbilities]);
+
+      if(allIds.has("shadow_wolf_pack")){
+        const count=2;
+        for(let i=0;i<count;i++){
+          summons.push({
+            type:"shadow_wolf",
+            angle:(Math.PI*2/count)*i,
+            orbitRadius:60,
+            dpsBase:26,
+            x:player.x,
+            y:player.y
+          });
+        }
+      }
+      if(allIds.has("cursed_hound_black_dog")){
+        summons.push({
+          type:"cursed_hound",
+          x:player.x,
+          y:player.y,
+          speed:260,
+          dpsBase:45
+        });
+      }
+      if(allIds.has("ignition_sprite")){
+        summons.push({
+          type:"flame_sprite",
+          angle:Math.PI/3,
+          orbitRadius:80,
+          cooldown:1.2,
+          x:player.x,
+          y:player.y
+        });
+      }
+      if(allIds.has("scout_titan_fragment")){
+        const t={
+          type:"scout_titan",
+          x:player.x+80,
+          y:player.y+40,
+          moveSpeed:120,
+          stompCooldown:2.8
+        };
+        summons.push(t);
+        titanSummon=t;
+      }
+      if(allIds.has("divine_mahoraga")){
+        summons.push({
+          type:"mahoraga",
+          angle:0,
+          orbitRadius:70,
+          slashCooldown:2.1,
+          x:player.x,
+          y:player.y
+        });
+      }
+    }
+
+    function maybeTriggerMahoragaFusion(){
+      if(!player)return false;
+      const needed=["shadow_wolf_pack","cursed_hound_black_dog","ignition_sprite","scout_titan_fragment"];
+      const all=[...player.normalAbilities,...player.bossAbilities];
+      if(!needed.every(id=>all.includes(id)))return false;
+
+      player.normalAbilities=player.normalAbilities.filter(id=>!needed.includes(id));
+      player.bossAbilities=player.bossAbilities.filter(id=>!needed.includes(id));
+
+      if(!player.bossAbilities.includes("divine_mahoraga")){
+        player.bossAbilities.push("divine_mahoraga");
+      }
+
+      recomputePlayerStats(true);
+      renderAbilitiesBar();
+      addScreenShake(10,0.5);
+      addWhiteFlash(0.6);
+      spawnParticles(player.x,player.y,{count:40,speedMin:160,speedMax:340,sizeMin:3,sizeMax:6,color:"rgba(214,194,255,1)"});
+      showMessage("Divine General Mahoraga has adapted to your summons.",4);
+      return true;
+    }
+
+    function updateSummons(dt){
+      if(!player)return;
+      titanSummon=null;
+      for(const s of summons){
+        if(s.type==="shadow_wolf"){
+          s.angle+=1.8*dt;
+          s.x=player.x+Math.cos(s.angle)*s.orbitRadius;
+          s.y=player.y+Math.sin(s.angle)*s.orbitRadius;
+          const styleFactor=1+((player.styleMeter/player.styleMax)||0)*1.6;
+          const dps=s.dpsBase*styleFactor;
+          damageEnemiesInRadius(s.x,s.y,40,dps*dt);
+        }else if(s.type==="cursed_hound"){
+          let target=null;
+          let bestScore=-Infinity;
+          for(const e of enemies){
+            let score=0;
+            if(e.isBoss)score+=1000;
+            if(e.isMiniBoss||e.isElite)score+=500;
+            score+=(1-e.hp/e.maxHp)*100;
+            if(score>bestScore){
+              bestScore=score;
+              target=e;
+            }
+          }
+          let tx=player.x,ty=player.y;
+          if(target){tx=target.x;ty=target.y;}
+          const dx=tx-s.x,dy=ty-s.y;
+          const dist=Math.hypot(dx,dy)||1;
+          const step=Math.min(dist,(s.speed||260)*dt);
+          s.x+=dx/dist*step;
+          s.y+=dy/dist*step;
+          const dps=s.dpsBase||45;
+          damageEnemiesInRadius(s.x,s.y,30,dps*dt);
+          if(target){
+            slowFields.push({x:s.x,y:s.y,radius:70,life:0.15,maxLife:0.15,slowMult:0.7});
+          }
+        }else if(s.type==="flame_sprite"){
+          s.angle+=1.3*dt;
+          s.x=player.x+Math.cos(s.angle)*s.orbitRadius;
+          s.y=player.y+Math.sin(s.angle)*s.orbitRadius;
+          s.cooldown-=dt;
+          if(s.cooldown<=0){
+            s.cooldown=1.6;
+            const dmg=player.damage*0.5+15;
+            damageEnemiesInRadius(s.x,s.y,80,dmg);
+            fireBursts.push({x:s.x,y:s.y,radius:80,life:0.35,maxLife:0.35,color:"#ff9966"});
+          }
+        }else if(s.type==="scout_titan"){
+          titanSummon=s;
+          const offsetAngle=1.0;
+          const tx=player.x+Math.cos(offsetAngle)*120;
+          const ty=player.y+Math.sin(offsetAngle)*60;
+          const dx=tx-s.x,dy=ty-s.y;
+          const dist=Math.hypot(dx,dy)||1;
+          const step=Math.min(dist,(s.moveSpeed||120)*dt);
+          s.x+=dx/dist*step;
+          s.y+=dy/dist*step;
+          s.stompCooldown-=dt;
+          if(s.stompCooldown<=0){
+            s.stompCooldown=3;
+            const dmg=player.damage*1.2+30;
+            damageEnemiesInRadius(s.x,s.y,110,dmg);
+            fireBursts.push({x:s.x,y:s.y,radius:110,life:0.3,maxLife:0.3,color:"#ffc878"});
+            addScreenShake(5,0.25);
+          }
+        }else if(s.type==="mahoraga"){
+          s.angle+=1.5*dt;
+          s.x=player.x+Math.cos(s.angle)*s.orbitRadius;
+          s.y=player.y+Math.sin(s.angle)*s.orbitRadius;
+          const contactDps=player.damage*2.0+30;
+          damageEnemiesInRadius(s.x,s.y,50,contactDps*dt);
+          s.slashCooldown-=dt;
+          if(s.slashCooldown<=0){
+            s.slashCooldown=2.2;
+            const dmg=player.damage*3+40;
+            damageEnemiesInRadius(player.x,player.y,170,dmg);
+            fireBursts.push({x:player.x,y:player.y,radius:170,life:0.35,maxLife:0.35,color:"#d6c2ff"});
+            addScreenShake(8,0.4);
+            addWhiteFlash(0.25);
+          }
+        }
+      }
+    }
+
+    function drawSummons(){
+      if(!player)return;
+      for(const s of summons){
+        if(s.type==="shadow_wolf"){
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(s.x,s.y,10,0,Math.PI*2);
+          ctx.fillStyle="#3b2f5f";
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(s.x-3,s.y-2,2,0,Math.PI*2);
+          ctx.arc(s.x+3,s.y-2,2,0,Math.PI*2);
+          ctx.fillStyle="#e3d0ff";
+          ctx.fill();
+          ctx.restore();
+        }else if(s.type==="cursed_hound"){
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(s.x,s.y,9,0,Math.PI*2);
+          ctx.fillStyle="#22141f";
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(s.x-3,s.y-1,2,0,Math.PI*2);
+          ctx.arc(s.x+3,s.y-1,2,0,Math.PI*2);
+          ctx.fillStyle="#ff6666";
+          ctx.fill();
+          ctx.restore();
+        }else if(s.type==="flame_sprite"){
+          ctx.save();
+          const grd=ctx.createRadialGradient(s.x,s.y,0,s.x,s.y,16);
+          grd.addColorStop(0,"rgba(255,230,180,1)");
+          grd.addColorStop(1,"rgba(255,140,60,0)");
+          ctx.fillStyle=grd;
+          ctx.beginPath();
+          ctx.arc(s.x,s.y,16,0,Math.PI*2);
+          ctx.fill();
+          ctx.restore();
+        }else if(s.type==="scout_titan"){
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(s.x,s.y,18,0,Math.PI*2);
+          ctx.fillStyle="#9b7b4a";
+          ctx.fill();
+          ctx.strokeStyle="#5a3f25";
+          ctx.lineWidth=3;
+          ctx.stroke();
+          ctx.restore();
+        }else if(s.type==="mahoraga"){
+          ctx.save();
+          const r=32;
+          ctx.beginPath();
+          ctx.arc(s.x,s.y,r,0,Math.PI*2);
+          ctx.strokeStyle="#d6c2ff";
+          ctx.lineWidth=3;
+          ctx.stroke();
+          const spokes=8;
+          for(let i=0;i<spokes;i++){
+            const ang=(Math.PI*2/spokes)*i+s.angle*1.5;
+            ctx.beginPath();
+            ctx.moveTo(s.x,s.y);
+            ctx.lineTo(s.x+Math.cos(ang)*r,s.y+Math.sin(ang)*r);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+      }
     }
 
     /* ============== ABILITY UI & LOGIC ============== */
@@ -1466,7 +1518,7 @@
       normalAbilitiesListEl.innerHTML="";
       bossAbilitiesListEl.innerHTML="";
       function addSlot(id,category,parent){
-        const ab=getAbilityById(id); if(!ab)return;
+        const ab=getAbilityById(id);if(!ab)return;
         const rKey=(ab.rarity||"Common").toLowerCase();
         const slot=document.createElement("button");
         slot.className=`abilitySlot card-rarity-${rKey}`;
@@ -1492,7 +1544,8 @@
       if(unlimited||list.length<maxSlots){
         list.push(ability.id);
         recomputePlayerStats(true);
-        renderAbilitiesBar();
+        const fused=maybeTriggerMahoragaFusion();
+        if(!fused)renderAbilitiesBar();
 
         const r=ability.rarity||"Common";
         if(r==="Legendary"){
@@ -1502,7 +1555,6 @@
         else if(r==="Rare")addScreenShake(4,.2);
         return true;
       }
-      // Need to replace: pause gameplay and let player choose a slot
       pendingAbility=ability;
       pendingCategory=ability.category;
       return null;
@@ -1515,15 +1567,16 @@
         return;
       }
       const list=category==="boss"?player.bossAbilities:player.normalAbilities;
-      const idx=list.indexOf(id); if(idx===-1)return;
+      const idx=list.indexOf(id);if(idx===-1)return;
       list.splice(idx,1);
       list.push(pendingAbility.id);
       recomputePlayerStats(true);
-      renderAbilitiesBar();
+      const fused=maybeTriggerMahoragaFusion();
+      if(!fused)renderAbilitiesBar();
       showMessage(pendingAbility.name+" equipped",2);
       pendingAbility=null;pendingCategory=null;
       gameState="playing";
-      startNextWave(); // start new wave after replacement is chosen
+      startNextWave();
     }
 
     function getAbilityOptions(count,isBossWave){
@@ -1572,6 +1625,9 @@
       activeCurses.push(curse.id);
       recomputeEnemyScale();
       recomputePlayerStats(true);
+      cosmeticStats.cursesTaken++;
+      saveCosmeticStats();
+      checkCosmeticUnlocks();
       addScreenShake(7,.35);addWhiteFlash(.45);
       spawnParticles(player.x,player.y,{count:24,speedMin:120,speedMax:260,sizeMin:3,sizeMax:5,color:"rgba(200,120,255,1)"});
       return true;
@@ -1608,7 +1664,6 @@
               gameState="playing";
               startNextWave();
             }else if(res===null){
-              // Need to replace something: PAUSE game and wait for click on bottom bar
               hideUpgradePanel();
               gameState="chooseReplace";
               showMessage("Click a "+(opt.category==="boss"?"boss":"normal")+" power at the bottom to replace",999);
@@ -1619,7 +1674,7 @@
       }
     }
 
-    /* ============== ENEMIES & WAVES (w/ mini-boss, elites, events) ============== */
+    /* ============== ENEMIES & WAVES ============== */
     function spawnEnemy(isBoss=false){
       const margin=40;
       let x,y;
@@ -1636,6 +1691,7 @@
         let contactDamage=(35+wave*2.4)*enemyScale.damageMult;
         if(currentWaveEvent==="blood_moon")contactDamage*=1.2;
         const e={
+          id:enemyIdCounter++,
           x,y,radius:42,speed,
           hp:hpBase,maxHp:hpBase,
           contactDamage,isBoss:true,
@@ -1655,15 +1711,9 @@
           slamWindupMax:1.5,
           barrierRadius:0
         };
-        if(e.bossId==="itachi"){
-          e.genjutsuCooldown=7;
-        }else if(e.bossId==="gojo"){
-          e.barrierRadius=140;
-        }else if(e.bossId==="luffy"){
-          e.slamCooldown=6;
-          e.slamWindup=0;
-          e.slamWindupMax=1.5;
-        }
+        if(e.bossId==="itachi")e.genjutsuCooldown=7;
+        else if(e.bossId==="gojo")e.barrierRadius=140;
+        else if(e.bossId==="luffy"){e.slamCooldown=6;e.slamWindup=0;e.slamWindupMax=1.5;}
         enemies.push(e);
       }else{
         let hpBase=(28+wave*4.5)*enemyScale.hpMult;
@@ -1671,7 +1721,6 @@
         let contactDamage=(9+wave*1.1)*enemyScale.damageMult;
         if(currentWaveEvent==="blood_moon")contactDamage*=1.2;
 
-        // Elite chance
         let eliteChance=0.08+wave*0.004;
         if(currentWaveEvent==="hunt_night")eliteChance*=2;
         eliteChance=clamp(eliteChance,0,0.5);
@@ -1692,7 +1741,11 @@
           radius+=2;
         }
 
-        const e={x,y,radius,speed,hp:hpBase,maxHp:hpBase,contactDamage,type,isBoss:false,isMiniBoss:false,isElite};
+        const e={
+          id:enemyIdCounter++,
+          x,y,radius,speed,hp:hpBase,maxHp:hpBase,
+          contactDamage,type,isBoss:false,isMiniBoss:false,isElite
+        };
         if(type==="sniper"){e.shotCooldown=2.2;e.strafeDir=Math.random()<.5?-1:1;}
         enemies.push(e);
       }
@@ -1711,6 +1764,7 @@
       let contactDamage=(24+wave*1.8)*enemyScale.damageMult;
       if(currentWaveEvent==="blood_moon")contactDamage*=1.2;
       enemies.push({
+        id:enemyIdCounter++,
         x,y,
         radius:28,
         speed,
@@ -1747,13 +1801,7 @@
       if(currentWaveEvent==="blood_moon")dmg*=1.2;
       for(let i=0;i<count;i++){
         const ang=Math.PI*2*i/count;
-        enemyBullets.push({
-          x:e.x,y:e.y,
-          vx:Math.cos(ang)*v,
-          vy:Math.sin(ang)*v,
-          radius:4,
-          damage:dmg
-        });
+        enemyBullets.push({x:e.x,y:e.y,vx:Math.cos(ang)*v,vy:Math.sin(ang)*v,radius:4,damage:dmg});
       }
     }
 
@@ -1761,21 +1809,9 @@
       const v=speed*enemyScale.bulletSpeedMult;
       let dmg=(14+wave*1.3)*enemyScale.bulletDamageMult;
       if(currentWaveEvent==="blood_moon")dmg*=1.2;
-      const dirs=[
-        [1,0],[-1,0],[0,1],[0,-1],
-        [Math.SQRT1_2,Math.SQRT1_2],
-        [-Math.SQRT1_2,Math.SQRT1_2],
-        [Math.SQRT1_2,-Math.SQRT1_2],
-        [-Math.SQRT1_2,-Math.SQRT1_2]
-      ];
+      const dirs=[[1,0],[-1,0],[0,1],[0,-1],[Math.SQRT1_2,Math.SQRT1_2],[-Math.SQRT1_2,Math.SQRT1_2],[Math.SQRT1_2,-Math.SQRT1_2],[-Math.SQRT1_2,-Math.SQRT1_2]];
       for(const[dX,dY]of dirs){
-        enemyBullets.push({
-          x:e.x,y:e.y,
-          vx:dX*v,
-          vy:dY*v,
-          radius:4,
-          damage:dmg
-        });
+        enemyBullets.push({x:e.x,y:e.y,vx:dX*v,vy:dY*v,radius:4,damage:dmg});
       }
     }
 
@@ -1793,13 +1829,7 @@
       for(let i=0;i<count;i++){
         const t=count===1?0:i/(count-1);
         const ang=base-half+spread*t;
-        enemyBullets.push({
-          x:e.x,y:e.y,
-          vx:Math.cos(ang)*v,
-          vy:Math.sin(ang)*v,
-          radius:4,
-          damage:dmg
-        });
+        enemyBullets.push({x:e.x,y:e.y,vx:Math.cos(ang)*v,vy:Math.sin(ang)*v,radius:4,damage:dmg});
       }
     }
 
@@ -1818,7 +1848,14 @@
     }
 
     function updateMiniBoss(e,dt,slowRadius,slowMult){
-      const dx=player.x-e.x,dy=player.y-e.y;
+      const dxP=player.x-e.x,dyP=player.y-e.y;
+      const distP=Math.hypot(dxP,dyP)||1;
+      let targetX=player.x,targetY=player.y;
+      if(titanSummon){
+        const dT=distance(e.x,e.y,titanSummon.x,titanSummon.y);
+        if(dT<distP+80){targetX=titanSummon.x;targetY=titanSummon.y;}
+      }
+      const dx=targetX-e.x,dy=targetY-e.y;
       const dist=Math.hypot(dx,dy)||1;
       const dirX=dx/dist,dirY=dy/dist;
 
@@ -1845,8 +1882,7 @@
       if(e.pattern==="cone"){
         e.coneCooldown-=dt;
         if(e.coneCooldown<=0){
-          const count=7;
-          spawnBossConeAtPlayer(e,count,Math.PI/3,210+wave*2.5);
+          spawnBossConeAtPlayer(e,7,Math.PI/3,210+wave*2.5);
           e.coneCooldown=2.7;
         }
       }else if(e.pattern==="rush"){
@@ -1890,26 +1926,27 @@
       const hasPressure=player && (player.normalAbilities.includes("spiritual_pressure")||player.bossAbilities.includes("spiritual_pressure"));
       let slowRadius=0;
       let slowMult=1;
-      if(hasHaki){
-        slowRadius=Math.max(slowRadius,260);
-        slowMult*=0.8;
-      }
-      if(hasPressure){
-        slowRadius=Math.max(slowRadius,230);
-        slowMult*=0.85;
-      }
+      if(hasHaki){slowRadius=Math.max(slowRadius,260);slowMult*=0.8;}
+      if(hasPressure){slowRadius=Math.max(slowRadius,230);slowMult*=0.85;}
 
       for(let i=enemies.length-1;i>=0;i--){
         const e=enemies[i];
         if(e.isBoss){updateBoss(e,dt,slowRadius,slowMult);continue;}
         if(e.isMiniBoss){updateMiniBoss(e,dt,slowRadius,slowMult);continue;}
 
-        const dx=player.x-e.x,dy=player.y-e.y;
+        let targetX=player.x,targetY=player.y;
+        if(titanSummon){
+          const dT=distance(e.x,e.y,titanSummon.x,titanSummon.y);
+          const dP=distance(e.x,e.y,player.x,player.y);
+          if(dT<dP+80){targetX=titanSummon.x;targetY=titanSummon.y;}
+        }
+
+        const dx=targetX-e.x,dy=targetY-e.y;
         const dist=Math.hypot(dx,dy)||1;
         const dirX=dx/dist,dirY=dy/dist;
 
         let speedMul=1;
-        if(slowRadius>0 && dist<slowRadius) speedMul*=slowMult;
+        if(slowRadius>0 && distance(e.x,e.y,player.x,player.y)<slowRadius) speedMul*=slowMult;
         if(domainField.active && domainField.type==="haki_burst"){
           if(distance(e.x,e.y,domainField.x,domainField.y)<domainField.radius+e.radius) speedMul*=0.6;
         }
@@ -2007,14 +2044,10 @@
             if(distToPlayer<=slamRadius+player.radius && !player.isDashing){
               let slamDmg=(30+wave*3)*enemyScale.damageMult;
               if(currentWaveEvent==="blood_moon")slamDmg*=1.2;
-              slamDmg*= (player.incomingDamageMult||1)*(player.ultIncomingDamageMult||1);
+              slamDmg*=(player.incomingDamageMult||1)*(player.ultIncomingDamageMult||1);
               player.hp-=slamDmg;
               onPlayerDamaged();
-              if(player.hp<=0){
-                player.hp=0;
-                gameOver();
-                return;
-              }
+              if(player.hp<=0){player.hp=0;gameOver();return;}
             }
             fireBursts.push({x:e.x,y:e.y,radius:slamRadius,life:0.3,maxLife:0.3,color:"#ffd27f"});
             addScreenShake(9,0.45);
@@ -2031,20 +2064,25 @@
       const ratio=e.hp/e.maxHp;
       if(e.phase===1&&ratio<=.66){
         e.phase=2;
-        if(e.bossId==="mahito"){
-          showMessage("Mahito's Domain Expansion!",2.8);
-        }else{
-          showMessage("Boss Phase 2!",2);
-        }
+        if(e.bossId==="mahito")showMessage("Mahito's Domain Expansion!",2.8);
+        else showMessage("Boss Phase 2!",2);
         addScreenShake(8,.35);addWhiteFlash(.3);
         spawnParticles(e.x,e.y,{count:28,speedMin:150,speedMax:320,sizeMin:3,sizeMax:5,color:"rgba(255,220,140,1)"});
       }else if(e.phase===2&&ratio<=.33){
-        e.phase=3;showMessage("Boss Final Phase!",2.5);
+        e.phase=3;
+        showMessage("Boss Final Phase!",2.5);
         addScreenShake(10,.4);addWhiteFlash(.4);
         spawnParticles(e.x,e.y,{count:32,speedMin:170,speedMax:340,sizeMin:3,sizeMax:6,color:"rgba(255,150,150,1)"});
       }
 
-      const dx=player.x-e.x,dy=player.y-e.y;
+      let targetX=player.x,targetY=player.y;
+      if(titanSummon){
+        const dT=distance(e.x,e.y,titanSummon.x,titanSummon.y);
+        const dP=distance(e.x,e.y,player.x,player.y);
+        if(dT<dP+80){targetX=titanSummon.x;targetY=titanSummon.y;}
+      }
+
+      const dx=targetX-e.x,dy=targetY-e.y;
       const dist=Math.hypot(dx,dy)||1;
       const dirX=dx/dist,dirY=dy/dist;
       let moveSpeed=e.speed*(e.phase===1?.7:e.phase===2?.9:1.05);
@@ -2099,23 +2137,19 @@
         if(distDom<=domR+player.radius && !player.isDashing){
           let domDps=player.maxHp*0.035*dt;
           if(currentWaveEvent==="blood_moon")domDps*=1.15;
-          domDps*= (player.incomingDamageMult||1)*(player.ultIncomingDamageMult||1);
+          domDps*=(player.incomingDamageMult||1)*(player.ultIncomingDamageMult||1);
           player.hp-=domDps;
           onPlayerDamaged();
-          if(player.hp<=0){
-            player.hp=0;
-            gameOver();
-            return;
-          }
+          if(player.hp<=0){player.hp=0;gameOver();return;}
         }
       }
 
-      const distToPlayer2=distance(e.x,e.y,player.x,player.y);
+      const distToPlayer=distance(e.x,e.y,player.x,player.y);
       const minDist=e.radius+player.radius;
-      if(distToPlayer2<minDist){
-        const overlap=minDist-distToPlayer2;
-        const px=(player.x-e.x)/(distToPlayer2||1);
-        const py=(player.y-e.y)/(distToPlayer2||1);
+      if(distToPlayer<minDist){
+        const overlap=minDist-distToPlayer;
+        const px=(player.x-e.x)/(distToPlayer||1);
+        const py=(player.y-e.y)/(distToPlayer||1);
         player.x+=px*overlap*.5;
         player.y+=py*overlap*.5;
         e.x-=px*overlap*.5;
@@ -2138,7 +2172,7 @@
             }
           }else{
             let dmg=e.contactDamage*dt*1.2;
-            dmg*= (player.incomingDamageMult||1)*(player.ultIncomingDamageMult||1);
+            dmg*=(player.incomingDamageMult||1)*(player.ultIncomingDamageMult||1);
             player.hp-=dmg;
             onPlayerDamaged();
             if(player.hp<=0){player.hp=0;gameOver();return;}
@@ -2148,8 +2182,24 @@
     }
 
     function updateEnemyBullets(dt){
+      let gojoBoss=null;
+      for(const e of enemies){
+        if(e.isBoss && e.bossId==="gojo"){gojoBoss=e;break;}
+      }
+
       for(let i=enemyBullets.length-1;i>=0;i--){
         const b=enemyBullets[i];
+
+        if(gojoBoss){
+          const distToGojo=distance(b.x,b.y,gojoBoss.x,gojoBoss.y);
+          const rad=(gojoBoss.barrierRadius||140)+10;
+          if(distToGojo<rad){
+            b.vx*=0.85;
+            b.vy*=0.85;
+            b.damage*=0.97;
+          }
+        }
+
         b.x+=b.vx*dt;
         b.y+=b.vy*dt;
         if(b.x<-50||b.x>canvas.width+50||b.y<-50||b.y>canvas.height+50){
@@ -2176,8 +2226,14 @@
           gainStyle(4);
           if(e.hp<=0){
             gainStyle(6);
-            if(triggerEffects) triggerOnKillEffects(e.x,e.y);
+            if(triggerEffects)triggerOnKillEffects(e.x,e.y);
             if(e.isBoss){
+              cosmeticStats.bossesKilled++;
+              if(player && (player.normalAbilities.includes("shadow_army_commander")||player.bossAbilities.includes("shadow_army_commander"))){
+                cosmeticStats.defeatedBossWithShadowCommanderOnce=true;
+              }
+              saveCosmeticStats();
+              checkCosmeticUnlocks();
               spawnParticles(e.x,e.y,{count:40,speedMin:150,speedMax:350,sizeMin:3,sizeMax:6,color:"rgba(255,210,140,1)"});
               addScreenShake(11,.5);
             }
@@ -2203,6 +2259,10 @@
       if(!player||gameState!=="playing")return;
       if(player.dashActiveTimer>0||player.dashCooldownTimer>0)return;
 
+      cosmeticStats.totalDashes++;
+      saveCosmeticStats();
+      checkCosmeticUnlocks();
+
       let dirX=0,dirY=0;
       if(keys["w"]||keys["arrowup"])dirY-=1;
       if(keys["s"]||keys["arrowdown"])dirY+=1;
@@ -2216,18 +2276,16 @@
       }
       dirX/=len;dirY/=len;
 
-      const startX=player.x;
-      const startY=player.y;
+      const startX=player.x,startY=player.y;
 
-      spawnParticles(player.x,player.y,{count:18,speedMin:90,speedMax:220,sizeMin:2,sizeMax:4,color:"rgba(160,220,255,1)"});
+      spawnParticles(player.x,player.y,{count:18,speedMin:90,speedMax:220,sizeMin:2,sizeMax:4,color:getDashParticleColor()});
 
       const hasThunderFlash=player.normalAbilities.includes("thunder_flash_step")||player.bossAbilities.includes("thunder_flash_step");
       const hasBlueLock=player.normalAbilities.includes("blue_lock_slide")||player.bossAbilities.includes("blue_lock_slide");
       const hasBlinkClone=player.normalAbilities.includes("blink_clone")||player.bossAbilities.includes("blink_clone");
 
       if(hasThunderFlash && enemies.length>0){
-        let best=null;
-        let bestDist=999999;
+        let best=null,bestDist=999999;
         for(const e of enemies){
           if(e.isBoss||e.isMiniBoss)continue;
           const ex=e.x-startX,ey=e.y-startY;
@@ -2235,10 +2293,7 @@
           if(dist>260+e.radius)continue;
           const dot=(ex*dirX+ey*dirY)/(dist||1);
           if(dot<0.9)continue;
-          if(dist<bestDist){
-            bestDist=dist;
-            best=e;
-          }
+          if(dist<bestDist){bestDist=dist;best=e;}
         }
         if(best){
           const slashDamage=player.meleeDamage*2.5+player.damage*1.2;
@@ -2251,6 +2306,14 @@
             if(idx>=0){
               if(best.type==="bomber")triggerBomberExplosion(best);
               triggerOnKillEffects(best.x,best.y);
+              if(best.isBoss){
+                cosmeticStats.bossesKilled++;
+                if(player && (player.normalAbilities.includes("shadow_army_commander")||player.bossAbilities.includes("shadow_army_commander"))){
+                  cosmeticStats.defeatedBossWithShadowCommanderOnce=true;
+                }
+                saveCosmeticStats();
+                checkCosmeticUnlocks();
+              }
               enemies.splice(idx,1);
             }
           }
@@ -2258,25 +2321,15 @@
       }
 
       let dashSpeed=player.speed*4*player.ultSpeedMult;
-      if(player.normalAbilities.includes("trickster_step")||player.bossAbilities.includes("trickster_step")){
-        dashSpeed*=1.25;
-      }
+      if(player.normalAbilities.includes("trickster_step")||player.bossAbilities.includes("trickster_step"))dashSpeed*=1.25;
 
       if(player.dashMode==="blink"){
         if(hasBlueLock){
-          const blinkDist=180;
-          const pathLen=blinkDist;
-          const segments=3;
+          const blinkDist=180,pathLen=blinkDist,segments=3;
           for(let i=1;i<=segments;i++){
             const fx=startX+dirX*pathLen*(i/(segments+1));
             const fy=startY+dirY*pathLen*(i/(segments+1));
-            slowFields.push({
-              x:fx,y:fy,
-              radius:80,
-              life:1.6,
-              maxLife:1.6,
-              slowMult:0.55
-            });
+            slowFields.push({x:fx,y:fy,radius:80,life:1.6,maxLife:1.6,slowMult:0.55});
           }
         }
         if(hasBlinkClone){
@@ -2305,13 +2358,7 @@
         for(let i=1;i<=segments;i++){
           const fx=startX+dirX*dashDist*(i/(segments+1));
           const fy=startY+dirY*dashDist*(i/(segments+1));
-          slowFields.push({
-            x:fx,y:fy,
-            radius:70,
-            life:1.6,
-            maxLife:1.6,
-            slowMult:0.55
-          });
+          slowFields.push({x:fx,y:fy,radius:70,life:1.6,maxLife:1.6,slowMult:0.55});
         }
       }
 
@@ -2329,16 +2376,12 @@
       }
 
       if(player.normalAbilities.includes("explosion_dash")||player.bossAbilities.includes("explosion_dash")){
-        const rSmall=80;
-        const dmgSmall=player.damage*2+20+wave*3;
-        const fuseSmall=.35;
+        const rSmall=80,dmgSmall=player.damage*2+20+wave*3,fuseSmall=.35;
         playerBombs.push({x:player.x,y:player.y,radius:rSmall,damage:dmgSmall,fuse:fuseSmall,maxFuse:fuseSmall});
       }
 
-      const dashVx=dirX*dashSpeed;
-      const dashVy=dirY*dashSpeed;
-      player.dashVelX=dashVx;
-      player.dashVelY=dashVy;
+      const dashVx=dirX*dashSpeed,dashVy=dirY*dashSpeed;
+      player.dashVelX=dashVx;player.dashVelY=dashVy;
       player.dashActiveTimer=player.dashDuration;
       player.dashCooldownTimer=player.dashCooldown;
       player.isDashing=true;
@@ -2357,11 +2400,7 @@
       const range=player.meleeRange*player.ultMeleeRangeMult;
       const dmgBase=player.meleeDamage*player.ultMeleeDamageMult;
 
-      spawnParticles(
-        player.x+Math.cos(baseAngle)*range*.7,
-        player.y+Math.sin(baseAngle)*range*.7,
-        {count:14,speedMin:120,speedMax:260,sizeMin:2,sizeMax:4,color:"rgba(255,200,160,1)"}
-      );
+      spawnParticles(player.x+Math.cos(baseAngle)*range*.7,player.y+Math.sin(baseAngle)*range*.7,{count:14,speedMin:120,speedMax:260,sizeMin:2,sizeMax:4,color:"rgba(255,200,160,1)"});
 
       for(let i=enemies.length-1;i>=0;i--){
         const e=enemies[i];
@@ -2374,11 +2413,20 @@
           e.hp-=dmgBase;
           gainStyle(4);
           const healBase=player.meleeOnHitHeal+player.ultMeleeHealBonus;
-          if(healBase>0)
-            player.hp=Math.min(player.maxHp,player.hp+healBase);
+          if(healBase>0)player.hp=Math.min(player.maxHp,player.hp+healBase);
           if(e.hp<=0){
             gainStyle(6);
             triggerOnKillEffects(e.x,e.y);
+            spawnParticles(e.x,e.y,{count:18,speedMin:120,speedMax:260,sizeMin:2,sizeMax:4,color:"rgba(255,140,140,1)"});
+            if(e.isBoss){
+              cosmeticStats.bossesKilled++;
+              if(player && (player.normalAbilities.includes("shadow_army_commander")||player.bossAbilities.includes("shadow_army_commander"))){
+                cosmeticStats.defeatedBossWithShadowCommanderOnce=true;
+              }
+              saveCosmeticStats();
+              checkCosmeticUnlocks();
+              addScreenShake(11,.5);
+            }
             if(e.type==="bomber")triggerBomberExplosion(e);
             enemies.splice(i,1);
           }
@@ -2418,9 +2466,7 @@
       if(player.meleeSwingTimer>0)player.meleeSwingTimer=Math.max(0,player.meleeSwingTimer-dt);
 
       if(activeCurses.includes("last_stand_oath")){
-        const threshold=0.3;
-        const dmgMult=1.5;
-        const fireMult=1.3;
+        const threshold=0.3,dmgMult=1.5,fireMult=1.3;
         const isLow=player.hp>0?(player.hp/player.maxHp)<=threshold:false;
         if(isLow && !player.lastStandActive){
           player.damage*=dmgMult;
@@ -2465,9 +2511,7 @@
       if(gameState==="playing" && mouseDown &&
          (player.normalAbilities.includes("kaioken_strain")||player.bossAbilities.includes("kaioken_strain"))){
         const drain=player.maxHp*0.015*dt;
-        if(player.hp>1){
-          player.hp=Math.max(1,player.hp-drain);
-        }
+        if(player.hp>1)player.hp=Math.max(1,player.hp-drain);
       }
 
       if(player.hp<=0){player.hp=0;gameOver();}
@@ -2494,6 +2538,11 @@
 
         b.x+=b.vx*dt;
         b.y+=b.vy*dt;
+
+        if(cosmeticSelection.bulletTrail!=="trail_default"){
+          addBulletTrailFX(b);
+        }
+
         if(b.x<-50||b.x>canvas.width+50||b.y<-50||b.y>canvas.height+50){
           bullets.splice(i,1);continue;
         }
@@ -2502,19 +2551,26 @@
           if(distance(b.x,b.y,e.x,e.y)<b.radius+e.radius){
             e.hp-=b.damage;
             gainStyle(2);
-            if(player.onHitHeal>0)
-              player.hp=Math.min(player.maxHp,player.hp+player.onHitHeal);
+            if(player.onHitHeal>0)player.hp=Math.min(player.maxHp,player.hp+player.onHitHeal);
 
             spawnParticles(e.x,e.y,{count:8,speedMin:80,speedMax:180,sizeMin:2,sizeMax:3,color:"rgba(255,200,150,1)"});
             if(e.hp<=0){
               gainStyle(6);
               triggerOnKillEffects(e.x,e.y);
               spawnParticles(e.x,e.y,{count:18,speedMin:120,speedMax:260,sizeMin:2,sizeMax:4,color:"rgba(255,140,140,1)"});
-              if(e.isBoss)addScreenShake(11,.5);
+              if(e.isBoss){
+                cosmeticStats.bossesKilled++;
+                if(player && (player.normalAbilities.includes("shadow_army_commander")||player.bossAbilities.includes("shadow_army_commander"))){
+                  cosmeticStats.defeatedBossWithShadowCommanderOnce=true;
+                }
+                saveCosmeticStats();
+                checkCosmeticUnlocks();
+                addScreenShake(11,.5);
+              }
               if(e.type==="bomber")triggerBomberExplosion(e);
               enemies.splice(j,1);
             }
-            if(b.pierceLeft<=0){bullets.splice(i,1);}
+            if(b.pierceLeft<=0)bullets.splice(i,1);
             else b.pierceLeft--;
             break;
           }
@@ -2554,7 +2610,15 @@
             gainStyle(6);
             triggerOnKillEffects(e.x,e.y);
             spawnParticles(e.x,e.y,{count:16,speedMin:120,speedMax:260,sizeMin:2,sizeMax:4,color:"rgba(210,180,255,1)"});
-            if(e.isBoss)addScreenShake(11,.4);
+            if(e.isBoss){
+              cosmeticStats.bossesKilled++;
+              if(player && (player.normalAbilities.includes("shadow_army_commander")||player.bossAbilities.includes("shadow_army_commander"))){
+                cosmeticStats.defeatedBossWithShadowCommanderOnce=true;
+              }
+              saveCosmeticStats();
+              checkCosmeticUnlocks();
+              addScreenShake(11,.4);
+            }
             if(e.type==="bomber")triggerBomberExplosion(e);
             enemies.splice(i,1);
           }
@@ -2640,6 +2704,85 @@
       showMessage("Game Over – press R to restart",999);
     }
 
+    /* ============== BOSS FACE DESIGNS ============== */
+    function drawMahitoDesign(e){
+      const r=e.radius;
+      ctx.save();
+      ctx.strokeStyle="#f5f5f5";
+      ctx.lineWidth=1.5;
+      // main stitched line
+      ctx.beginPath();
+      ctx.moveTo(e.x-r*0.8,e.y-r*0.08);
+      ctx.lineTo(e.x+r*0.8,e.y-r*0.08);
+      ctx.stroke();
+      // small cross stitches
+      const stitches=7;
+      for(let i=0;i<stitches;i++){
+        const t=-0.75+(1.5/(stitches-1))*i;
+        const sx=e.x+t*r;
+        ctx.beginPath();
+        ctx.moveTo(sx,e.y-r*0.17);
+        ctx.lineTo(sx,e.y+r*0.01);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    function drawGojoDesign(e){
+      const r=e.radius;
+      ctx.save();
+      // blindfold band
+      ctx.fillStyle="rgba(10,10,20,0.96)";
+      ctx.fillRect(e.x-r*0.95,e.y-r*0.25,r*1.9,r*0.5);
+      ctx.strokeStyle="#9ff6ff";
+      ctx.lineWidth=2;
+      ctx.strokeRect(e.x-r*0.95,e.y-r*0.25,r*1.9,r*0.5);
+      ctx.restore();
+    }
+    function drawItachiDesign(e){
+      const r=e.radius;
+      ctx.save();
+      // cloak
+      ctx.beginPath();
+      ctx.arc(e.x,e.y+r*0.5,r*1.2,Math.PI,0,true);
+      ctx.fillStyle="#161019";
+      ctx.fill();
+      // collar
+      ctx.beginPath();
+      ctx.moveTo(e.x-r*0.6,e.y+r*0.1);
+      ctx.lineTo(e.x,e.y-r*0.1);
+      ctx.lineTo(e.x+r*0.6,e.y+r*0.1);
+      ctx.closePath();
+      ctx.fillStyle="#2b1220";
+      ctx.fill();
+      // eyes
+      ctx.fillStyle="#ff4b4b";
+      ctx.beginPath();
+      ctx.arc(e.x-r*0.35,e.y-r*0.1,3.5,0,Math.PI*2);
+      ctx.arc(e.x+r*0.35,e.y-r*0.1,3.5,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle="#000";
+      ctx.beginPath();
+      ctx.arc(e.x-r*0.35,e.y-r*0.1,1.5,0,Math.PI*2);
+      ctx.arc(e.x+r*0.35,e.y-r*0.1,1.5,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    function drawLuffyDesign(e){
+      const r=e.radius;
+      ctx.save();
+      // hat brim
+      ctx.fillStyle="#f6d17a";
+      ctx.fillRect(e.x-r,e.y-r*1.0,r*2,r*0.18);
+      // hat top
+      ctx.beginPath();
+      ctx.arc(e.x,e.y-r*1.05,r*0.7,Math.PI,0,true);
+      ctx.fill();
+      // small band
+      ctx.fillStyle="#d06050";
+      ctx.fillRect(e.x-r*0.7,e.y-r*0.98,r*1.4,r*0.08);
+      ctx.restore();
+    }
+
     /* ============== MAIN UPDATE & DRAW ============== */
     function update(dt){
       if(gameState==="menu")return;
@@ -2674,6 +2817,7 @@
 
       updatePlayer(dt);
       updateBullets(dt);
+      updateSummons(dt);
       updateEnemies(dt);
       updateEnemyBullets(dt);
       updateBombs(dt);
@@ -2838,6 +2982,13 @@
         ctx.fillStyle="#00ff4b";
         ctx.fillRect(e.x-e.radius,e.y-e.radius-8,barW*hpRatio,barH);
 
+        if(e.isBoss){
+          if(e.bossId==="mahito")drawMahitoDesign(e);
+          else if(e.bossId==="gojo")drawGojoDesign(e);
+          else if(e.bossId==="itachi")drawItachiDesign(e);
+          else if(e.bossId==="luffy")drawLuffyDesign(e);
+        }
+
         ctx.save();
         ctx.font="12px system-ui, sans-serif";
         ctx.fillStyle="#f5f5f5";
@@ -2848,12 +2999,15 @@
         ctx.restore();
       }
 
+      const bulletColor=getBulletColor();
       for(const b of bullets){
         ctx.beginPath();
         ctx.arc(b.x,b.y,b.radius,0,Math.PI*2);
-        ctx.fillStyle="#f5f5f5";
+        ctx.fillStyle=bulletColor;
         ctx.fill();
       }
+
+      drawSummons();
 
       if(player){
         if(player.meleeSwingTimer>0){
@@ -2871,10 +3025,26 @@
           ctx.restore();
         }
 
+        const skinTheme=getPlayerSkinTheme();
+        if(skinTheme.auraColor){
+          ctx.save();
+          ctx.globalAlpha=0.35;
+          ctx.beginPath();
+          ctx.arc(player.x,player.y,player.radius+10,0,Math.PI*2);
+          ctx.fillStyle=skinTheme.auraColor;
+          ctx.fill();
+          ctx.restore();
+        }
+
         ctx.beginPath();
         ctx.arc(player.x,player.y,player.radius,0,Math.PI*2);
-        ctx.fillStyle=player.isDashing?"#9ff6ff":"#39c5ff";
+        ctx.fillStyle=player.isDashing && skinTheme.dashGlowColor?skinTheme.dashGlowColor:skinTheme.bodyColor;
         ctx.fill();
+        if(skinTheme.outlineColor){
+          ctx.lineWidth=2;
+          ctx.strokeStyle=skinTheme.outlineColor;
+          ctx.stroke();
+        }
 
         const dx=mousePos.x-player.x,dy=mousePos.y-player.y;
         const ang=Math.atan2(dy,dx);
@@ -2882,7 +3052,7 @@
         ctx.beginPath();
         ctx.moveTo(player.x,player.y);
         ctx.lineTo(player.x+Math.cos(ang)*gunLen,player.y+Math.sin(ang)*gunLen);
-        ctx.strokeStyle="#ffffff";
+        ctx.strokeStyle=skinTheme.weaponColor||"#ffffff";
         ctx.lineWidth=3;
         ctx.stroke();
       }
@@ -2919,6 +3089,10 @@
     /* ============== INIT & WAVES ============== */
     function startNextWave(){
       wave++;
+      cosmeticStats.maxWaveEver=Math.max(cosmeticStats.maxWaveEver,wave);
+      saveCosmeticStats();
+      checkCosmeticUnlocks();
+
       enemies=[];bullets=[];enemyBullets.length=0;playerBombs.length=0;fireBursts.length=0;slowFields.length=0;
       const isBossWave=wave%5===0;
       const isMiniBossWave=!isBossWave && wave>1 && wave%5===3;
@@ -2971,6 +3145,7 @@
     function resetGame(){
       bullets=[];enemies=[];enemyBullets=[];playerBombs.length=0;fireBursts.length=0;particles.length=0;slowFields.length=0;
       activeCurses=[];recomputeEnemyScale();
+      summons.length=0;titanSummon=null;
       wave=0;pendingAbility=null;pendingCategory=null;
       gameState="playing";lastTime=0;
       hideUpgradePanel();
@@ -3009,7 +3184,10 @@
       startNextWave();
     }
 
-    // Menu event listeners
+    // Init cosmetics
+    initCosmeticsSystem();
+
+    // Menu listeners
     document.querySelectorAll(".menuButton[data-style]").forEach(btn=>{
       btn.addEventListener("click",()=>{
         const style=btn.getAttribute("data-style");
