@@ -323,7 +323,7 @@
 <body>
   <h1>Anime Roguelike – Melee / Ranged</h1>
   <p>WASD / Arrows move • Mouse aim • Left click shoot • Right click or E melee • Space dash • Q ultimate • R restart</p>
-  <p>Anime-only abilities (JJK, MHA, AOT, Kaiju, Tokyo Ghoul, Cyberpunk, Naruto, Fire Force, Eminence). Dash can be turned into bombs, fire steps, or blinks. Curses & anime bosses every 5 waves.</p>
+  <p>Anime-only abilities (JJK, MHA, AOT, Kaiju, Tokyo Ghoul, Cyberpunk, Naruto, Fire Force, Eminence, Demon Slayer, One Piece). Dash can be turned into bombs, fire steps, or blinks. Curses & anime bosses every 5 waves.</p>
 
   <!-- MAIN MENU: choose melee or ranged + optional trials + ult -->
   <div id="mainMenu">
@@ -1040,6 +1040,31 @@
       /* ====== EXTRA NEW NORMAL POWERS ====== */
 
       addNormalAbility(
+        "anime_training_arc",
+        "Training Arc",
+        "Common",
+        "Damage +10%, fire rate +10% and move speed +10%, but max HP -10.",
+        {
+          damageMult: 1.10,
+          fireRateMult: 1.10,
+          speedMult: 1.10,
+          maxHpAdd: -10
+        }
+      );
+
+      addNormalAbility(
+        "anime_basic_reinforcement",
+        "Basic Reinforcement",
+        "Common",
+        "Max HP +15 and heal after wave +5, but fire rate -5%.",
+        {
+          maxHpAdd: 15,
+          healAfterWaveAdd: 5,
+          fireRateMult: 0.95
+        }
+      );
+
+      addNormalAbility(
         "anime_impact_sense",
         "Impact Sense",
         "Rare",
@@ -1049,6 +1074,18 @@
           spreadMult: 0.85,
           damageMult: 0.90,
           healAfterWaveAdd: -5
+        }
+      );
+
+      addNormalAbility(
+        "anime_sharp_focus",
+        "Sharp Focus",
+        "Rare",
+        "Spread -30% and bullet speed +20%, but move speed -10%.",
+        {
+          spreadMult: 0.70,
+          bulletSpeedMult: 1.20,
+          speedMult: 0.90
         }
       );
 
@@ -1114,6 +1151,18 @@
           damageMult: 1.15,
           bulletsPerShotAdd: -1,
           fireRateMult: 0.90
+        }
+      );
+
+      addNormalAbility(
+        "anime_smash_kick_style",
+        "Smash Kick Style",
+        "Rare",
+        "Melee damage +20% and dash duration +15%, but ranged damage -10%.",
+        {
+          meleeDamageMult: 1.20,
+          dashDurationMult: 1.15,
+          damageMult: 0.90
         }
       );
 
@@ -1256,6 +1305,87 @@
         "Rare",
         "Removes all limits on how many powers you can hold, but halves the effect of every ability you take. Curses stay full strength.",
         {}
+      );
+
+      /* ====== DEMON SLAYER & ONE PIECE NORMAL ABILITIES ====== */
+
+      addNormalAbility(
+        "ds_water_breathing",
+        "Water Breathing – Flowing Form",
+        "Rare",
+        "Melee range +25%, melee cooldown -15% and move speed +10%, but bullet damage -10% and heal after wave -5.",
+        {
+          meleeRangeMult: 1.25,
+          meleeCooldownMult: 0.85,
+          speedMult: 1.10,
+          damageMult: 0.90,
+          healAfterWaveAdd: -5
+        }
+      );
+
+      addNormalAbility(
+        "ds_breath_beast",
+        "Breath of the Beast",
+        "Rare",
+        "Melee damage +35% and move speed +10%, but bullet damage -15% and heal after wave -5.",
+        {
+          meleeDamageMult: 1.35,
+          speedMult: 1.10,
+          damageMult: 0.85,
+          healAfterWaveAdd: -5
+        }
+      );
+
+      addNormalAbility(
+        "ds_demon_regeneration",
+        "Demon Regeneration",
+        "Epic",
+        "Max HP +20%, on-hit heal +1.0 and heal after wave +10, but damage -15% and fire rate -10%.",
+        {
+          maxHpMult: 1.20,
+          onHitHealAdd: 1.0,
+          healAfterWaveAdd: 10,
+          damageMult: 0.85,
+          fireRateMult: 0.90
+        }
+      );
+
+      addNormalAbility(
+        "op_gear_second",
+        "Gear Second",
+        "Epic",
+        "Fire rate +35%, move speed +20% and dash cooldown -20%, but max HP -25% and heal after wave -15. While firing you slowly drain HP.",
+        {
+          fireRateMult: 1.35,
+          speedMult: 1.20,
+          dashCooldownMult: 0.80,
+          maxHpMult: 0.75,
+          healAfterWaveAdd: -15
+        }
+      );
+
+      addNormalAbility(
+        "op_flame_fruit",
+        "Flame-Flame Fruit",
+        "Epic",
+        "Bullets create small explosions on hit that damage nearby enemies. Damage +15%, but bullet speed -10% and spread +15%.",
+        {
+          damageMult: 1.15,
+          bulletSpeedMult: 0.90,
+          spreadMult: 1.15
+        }
+      );
+
+      addNormalAbility(
+        "op_santoryu",
+        "Santoryu – Three-Sword Style",
+        "Epic",
+        "Melee attacks also fire two weaker slashes forward. Melee cooldown -10%, but bullet damage -10% and max HP -10%.",
+        {
+          meleeCooldownMult: 0.90,
+          damageMult: 0.90,
+          maxHpMult: 0.90
+        }
       );
 
       /* ====== BOSS LEGENDARIES ====== */
@@ -1460,8 +1590,6 @@
         }
       );
 
-      /* ===== NEW EXTRA BOSS LEGENDARIES ===== */
-
       addBossAbility(
         "anime_overdrive_sync",
         "Overdrive Sync",
@@ -1500,6 +1628,32 @@
           bulletSpeedMult: 1.40,
           maxHpMult: 0.70,
           healAfterWaveAdd: -45
+        }
+      );
+
+      addBossAbility(
+        "anime_true_hero_form",
+        "True Hero Form",
+        "Legendary",
+        "Max HP +50%, damage +25% and move speed +20%, but you take 25% more damage from all sources.",
+        {
+          maxHpMult: 1.50,
+          damageMult: 1.25,
+          speedMult: 1.20,
+          incomingDamageMult: 1.25
+        }
+      );
+
+      addBossAbility(
+        "op_conqueror_haki",
+        "Conqueror's Haki",
+        "Legendary",
+        "Your overwhelming presence boosts damage +25% and max HP +10%, but heal after wave -25 and you take 15% more damage.",
+        {
+          damageMult: 1.25,
+          maxHpMult: 1.10,
+          healAfterWaveAdd: -25,
+          incomingDamageMult: 1.15
         }
       );
 
@@ -1649,6 +1803,24 @@
         {}
       );
 
+      addCurse(
+        "glass_comet",
+        "Glass Comet",
+        "Legendary",
+        "CURSE: Move speed +40% and fire rate +20%, but max HP -60%.",
+        { speedMult: 1.40, fireRateMult: 1.20, maxHpMult: 0.40 },
+        {}
+      );
+
+      addCurse(
+        "endless_waves",
+        "Endless Waves",
+        "Legendary",
+        "CURSE: Waves spawn 20% more enemies, but you gain +10% damage and +5% move speed.",
+        { damageMult: 1.10, speedMult: 1.05 },
+        { enemyCountMult: 1.20 }
+      );
+
       // Trials (pre-run curses) – not offered as boss choices
       addCurse(
         "trial_shibuya",
@@ -1728,7 +1900,9 @@
         selectedUltType: ULT_TYPE.NONE,
         // abilities
         normalAbilities: [],
-        bossAbilities: []
+        bossAbilities: [],
+        // damage taken multiplier
+        incomingDamageMult: 1
       };
     }
 
@@ -1746,6 +1920,11 @@
 
     function hasCurse(id) {
       return activeCurses.includes(id);
+    }
+
+    function playerHasAbility(id) {
+      if (!player) return false;
+      return player.normalAbilities.includes(id) || player.bossAbilities.includes(id);
     }
 
     function hasForbiddenOverflow() {
@@ -1809,6 +1988,8 @@
         meleeOnHitHeal: BASE_STATS.meleeOnHitHeal
       };
 
+      let incomingDamageMult = 1;
+
       const allIds = [...player.normalAbilities, ...player.bossAbilities];
 
       function applyMods(m, factor) {
@@ -1844,6 +2025,10 @@
         if (m.meleeCooldownMult) stats.meleeCooldown *= 1 + (m.meleeCooldownMult - 1) * factor;
         if (m.meleeCooldownAdd) stats.meleeCooldown += m.meleeCooldownAdd * factor;
         if (m.meleeOnHitHealAdd) stats.meleeOnHitHeal += m.meleeOnHitHealAdd * factor;
+
+        if (m.incomingDamageMult) {
+          incomingDamageMult *= 1 + (m.incomingDamageMult - 1) * factor;
+        }
       }
 
       const abilityFactor = noLimitMode ? 0.5 : 1.0;
@@ -1902,12 +2087,14 @@
       player.meleeArc = stats.meleeArc;
       player.meleeCooldown = stats.meleeCooldown;
       player.meleeOnHitHeal = stats.meleeOnHitHeal;
+      player.incomingDamageMult = incomingDamageMult;
 
       // Dash mode from special abilities
       let dashMode = "normal";
-      if (allIds.includes("anime_cursed_dash_bomb")) dashMode = "bomb";
-      if (allIds.includes("anime_flame_step")) dashMode = "flame";
-      if (allIds.includes("anime_blink_step")) dashMode = "blink";
+      const allAbilityIds = [...player.normalAbilities, ...player.bossAbilities];
+      if (allAbilityIds.includes("anime_cursed_dash_bomb")) dashMode = "bomb";
+      if (allAbilityIds.includes("anime_flame_step")) dashMode = "flame";
+      if (allAbilityIds.includes("anime_blink_step")) dashMode = "blink";
       player.dashMode = dashMode;
     }
 
@@ -2384,6 +2571,11 @@
 
       player.meleeCooldownTimer = player.meleeCooldown * cooldownFactor;
 
+      // Santoryu: fire extra slashes on melee swing
+      if (playerHasAbility("op_santoryu")) {
+        spawnMeleeSlashes(baseAngle);
+      }
+
       const range = player.meleeRange * rangeMult;
       const dmgBase = player.meleeDamage * dmgMult;
 
@@ -2461,7 +2653,8 @@
       const baseDamage = (30 + wave * 2.5) * enemyScale.damageMult;
       const distToPlayer = distance(e.x, e.y, player.x, player.y);
       if (distToPlayer <= radius + player.radius && !player.isDashing) {
-        player.hp -= baseDamage;
+        const dmg = baseDamage * (player.incomingDamageMult || 1);
+        player.hp -= dmg;
         if (player.hp <= 0) {
           player.hp = 0;
           gameOver();
@@ -2678,7 +2871,8 @@
         const auraDps = auraDpsBase * enemyScale.damageMult;
         const distToPlayer = distance(e.x, e.y, player.x, player.y);
         if (distToPlayer <= auraRadius + player.radius && !player.isDashing) {
-          player.hp -= auraDps * dt;
+          const dmg = auraDps * dt * (player.incomingDamageMult || 1);
+          player.hp -= dmg;
           if (player.hp <= 0) {
             player.hp = 0;
             gameOver();
@@ -2739,7 +2933,8 @@
         e.y -= pushY * overlap * 0.5;
 
         if (!player.isDashing) {
-          player.hp -= e.contactDamage * dt * 1.2;
+          const dmg = e.contactDamage * dt * 1.2 * (player.incomingDamageMult || 1);
+          player.hp -= dmg;
           if (player.hp <= 0) {
             player.hp = 0;
             gameOver();
@@ -2860,7 +3055,8 @@
             }
 
             if (!player.isDashing) {
-              player.hp -= e.contactDamage * enemyDt;
+              const dmg = e.contactDamage * enemyDt * (player.incomingDamageMult || 1);
+              player.hp -= dmg;
               if (player.hp <= 0) {
                 player.hp = 0;
                 gameOver();
@@ -2897,7 +3093,8 @@
         const distToPlayer = distance(b.x, b.y, player.x, player.y);
         if (distToPlayer < b.radius + player.radius) {
           if (!player.isDashing) {
-            player.hp -= b.damage;
+            const dmg = b.damage * (player.incomingDamageMult || 1);
+            player.hp -= dmg;
             if (player.hp <= 0) {
               player.hp = 0;
               gameOver();
@@ -3149,7 +3346,14 @@
 
       const abyss = getCurseById("abyss_pact");
       if (abyss && hasCurse("abyss_pact") && abyss.special && abyss.special.hpDrainPerSecond && gameState === "playing") {
-        player.hp -= abyss.special.hpDrainPerSecond * dt;
+        const drain = abyss.special.hpDrainPerSecond * dt * (player.incomingDamageMult || 1);
+        player.hp -= drain;
+      }
+
+      // Gear Second HP drain while firing
+      if (playerHasAbility("op_gear_second") && mouseDown && gameState === "playing") {
+        const drain = 2 * dt * (player.incomingDamageMult || 1);
+        player.hp -= drain;
       }
 
       if (player.hp <= 0) {
@@ -3183,7 +3387,32 @@
       }
     }
 
+    function spawnMeleeSlashes(angle) {
+      if (!player) return;
+      const count = 2;
+      const spread = 0.25;
+      const speed = player.bulletSpeed * 0.9;
+      const damage = player.damage * 0.6;
+      for (let i = 0; i < count; i++) {
+        const t = count === 1 ? 0.5 : i / (count - 1);
+        const ang = angle - spread / 2 + spread * t;
+        const vx = Math.cos(ang) * speed;
+        const vy = Math.sin(ang) * speed;
+        bullets.push({
+          x: player.x,
+          y: player.y,
+          vx,
+          vy,
+          radius: 4,
+          damage,
+          pierceLeft: 0
+        });
+      }
+    }
+
     function updateBullets(dt) {
+      const hasFlameFruit = playerHasAbility("op_flame_fruit");
+
       for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
         b.x += b.vx * dt;
@@ -3209,6 +3438,23 @@
             if (player.onHitHeal > 0) {
               player.hp = Math.min(player.maxHp, player.hp + player.onHitHeal);
             }
+
+            // Flame-Flame Fruit explosion on hit
+            if (hasFlameFruit && !b.flameExploded) {
+              b.flameExploded = true;
+              const radius = 80;
+              const aoeDamage = b.damage * 0.7;
+              damageEnemiesInRadius(b.x, b.y, radius, aoeDamage);
+              fireBursts.push({
+                x: b.x,
+                y: b.y,
+                radius,
+                life: 0.22,
+                maxLife: 0.22,
+                color: "#ff8844"
+              });
+            }
+
             let died = false;
             if (e.hp <= 0) {
               died = true;
