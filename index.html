@@ -251,7 +251,7 @@
       border-color: rgba(255, 210, 100, 1);
     }
 
-    /* MAIN MENU – anime only, melee or ranged + trials + ult choice */
+    /* MAIN MENU */
     #mainMenu {
       position: fixed;
       inset: 0;
@@ -318,14 +318,19 @@
       border-color: #7bd0ff;
       box-shadow: 0 0 12px rgba(123, 208, 255, 0.7);
     }
+    .menuButton.arcActive {
+      background: #203225;
+      border-color: #7bff9a;
+      box-shadow: 0 0 12px rgba(123, 255, 154, 0.7);
+    }
   </style>
 </head>
 <body>
   <h1>Anime Roguelike – Melee / Ranged</h1>
   <p>WASD / Arrows move • Mouse aim • Left click shoot • Right click or E melee • Space dash • Q ultimate • R restart</p>
-  <p>Anime-only abilities (JJK, MHA, AOT, Kaiju, Tokyo Ghoul, Cyberpunk, Naruto, Fire Force, Eminence, Demon Slayer, One Piece). Dash can be turned into bombs, fire steps, or blinks. Curses & anime bosses every 5 waves.</p>
+  <p>Anime-only: JJK, MHA, AOT, Kaiju No.8, Tokyo Ghoul, Cyberpunk, Naruto, Fire Force, Eminence, Demon Slayer, One Piece. Bosses every 5 waves, curses, dash mods, fusions, and now themed arcs & arena hazards.</p>
 
-  <!-- MAIN MENU: choose melee or ranged + optional trials + ult -->
+  <!-- MAIN MENU -->
   <div id="mainMenu">
     <div id="mainMenuInner">
       <h2>Choose Combat Style</h2>
@@ -347,6 +352,16 @@
         </div>
       </div>
 
+      <div class="arcSection">
+        <p class="menuHint" style="margin-top:4px;margin-bottom:4px;">Choose Arc (boss & hazard theme):</p>
+        <div class="menuButtons">
+          <button class="menuButton arcButton arcActive" data-arc="mixed">Mixed Arc</button>
+          <button class="menuButton arcButton" data-arc="jjk">JJK Arc</button>
+          <button class="menuButton arcButton" data-arc="mha">MHA Arc</button>
+          <button class="menuButton arcButton" data-arc="ds">Demon Slayer Arc</button>
+        </div>
+      </div>
+
       <div class="trialSection">
         <p class="menuHint" style="margin-top:4px;margin-bottom:4px;">Optional Anime Trials (pre-run curses):</p>
         <div class="menuButtons">
@@ -356,7 +371,7 @@
         </div>
       </div>
 
-      <p class="menuHint">Press R after Game Over to restart with the same style, ult & trials.</p>
+      <p class="menuHint">Press R after Game Over to restart with the same style, ult, arc & trials.</p>
     </div>
   </div>
 
@@ -415,6 +430,7 @@
 
     let combatStyle = null;     // "melee" or "ranged"
     let loopStarted = false;
+    let currentArc = "mixed";   // "mixed", "jjk", "mha", "ds"
 
     // Ultimate types
     const ULT_TYPE = {
@@ -428,7 +444,6 @@
       CYBER_SLOW: "cyber_slow"
     };
 
-    // Manual ult choice from menu (string key)
     let selectedUltimateKey = null;
 
     // Game state
@@ -438,6 +453,7 @@
     let enemyBullets = [];
     let playerBombs = [];
     let fireBursts = [];
+    let hazards = [];
     let wave = 0;
     let gameState = "menu"; // "menu", "playing", "choosingUpgrade", "choosingReplace", "gameOver"
     let lastTime = 0;
@@ -466,7 +482,7 @@
     let pendingAbility = null;
     let pendingCategory = null;
 
-    // Base stats (including dash + melee)
+    // Base stats
     const BASE_STATS = {
       maxHp: 100,
       damage: 16,
@@ -565,6 +581,15 @@
       while (d > Math.PI) d -= Math.PI * 2;
       while (d < -Math.PI) d += Math.PI * 2;
       return d;
+    }
+
+    function arcLabel() {
+      switch (currentArc) {
+        case "jjk": return "JJK";
+        case "mha": return "MHA";
+        case "ds": return "Demon Slayer";
+        default: return "Mixed";
+      }
     }
 
     /* Ultimate helpers */
@@ -686,7 +711,7 @@
       normalAbilities.length = 0;
       bossAbilities.length = 0;
 
-      // Base normal anime powers (JJK / MHA / AOT / Kaiju / etc.)
+      // ---- Core anime stat powers ----
       addNormalAbility(
         "anime_cursed_overflow",
         "Cursed Overflow",
@@ -805,7 +830,6 @@
         }
       );
 
-      // Dash-focused / movement powers
       addNormalAbility(
         "anime_flash_step",
         "Flash Step",
@@ -855,7 +879,7 @@
         }
       );
 
-      // Eminence in Shadow style
+      // Eminence / Ghoul / Cyberpunk / Naruto / Fire Force style
       addNormalAbility(
         "anime_shadow_garden",
         "Shadow Garden Arts",
@@ -868,8 +892,6 @@
           speedMult: 0.90
         }
       );
-
-      // Tokyo Ghoul
       addNormalAbility(
         "anime_kagune_rampage",
         "Kagune Rampage",
@@ -882,8 +904,6 @@
           healAfterWaveAdd: -15
         }
       );
-
-      // Cyberpunk
       addNormalAbility(
         "anime_edgerunner_overclock",
         "Edgerunner Overclock",
@@ -897,8 +917,6 @@
           healAfterWaveAdd: -20
         }
       );
-
-      // Naruto / Fire Force style speed
       addNormalAbility(
         "anime_shinobi_footwork",
         "Shinobi Footwork",
@@ -911,7 +929,6 @@
           bulletSpeedMult: 0.90
         }
       );
-
       addNormalAbility(
         "anime_ignition_style",
         "Ignition Style",
@@ -950,7 +967,7 @@
         }
       );
 
-      // Extra anime normals
+      // Precision & stockpiles
       addNormalAbility(
         "anime_six_eyes_focus",
         "Six Eyes Focus",
@@ -976,69 +993,8 @@
           speedMult: 0.90
         }
       );
-      addNormalAbility(
-        "anime_smokescreen",
-        "Smokescreen Maneuver",
-        "Rare",
-        "Move speed +25% and dash duration +20%, but damage -10% and bullet speed -10%.",
-        {
-          speedMult: 1.25,
-          dashDurationMult: 1.20,
-          damageMult: 0.90,
-          bulletSpeedMult: 0.90
-        }
-      );
-      addNormalAbility(
-        "anime_exosuit_sync",
-        "Exosuit Sync",
-        "Epic",
-        "Damage +30% and fire rate +15%, but max HP -15% and heal after wave -20.",
-        {
-          damageMult: 1.30,
-          fireRateMult: 1.15,
-          maxHpMult: 0.85,
-          healAfterWaveAdd: -20
-        }
-      );
-      addNormalAbility(
-        "anime_chakra_cloak",
-        "Chakra Cloak",
-        "Rare",
-        "Max HP +20% and on-hit heal +0.7, but damage -10% and bullet speed -10%.",
-        {
-          maxHpMult: 1.20,
-          onHitHealAdd: 0.7,
-          damageMult: 0.90,
-          bulletSpeedMult: 0.90
-        }
-      );
-      addNormalAbility(
-        "anime_adolla_flare",
-        "Adolla Flare",
-        "Epic",
-        "Damage +35% and bullet speed +25%, but max HP -15% and heal after wave -20.",
-        {
-          damageMult: 1.35,
-          bulletSpeedMult: 1.25,
-          maxHpMult: 0.85,
-          healAfterWaveAdd: -20
-        }
-      );
-      addNormalAbility(
-        "anime_cyber_arm_blades",
-        "Cyber Arm Blades",
-        "Epic",
-        "Melee damage +70% and melee cooldown -20%, but max HP -20% and heal after wave -15.",
-        {
-          meleeDamageMult: 1.70,
-          meleeCooldownMult: 0.80,
-          maxHpMult: 0.80,
-          healAfterWaveAdd: -15
-        }
-      );
 
-      /* ====== EXTRA NEW NORMAL POWERS ====== */
-
+      // Basic general buffs
       addNormalAbility(
         "anime_training_arc",
         "Training Arc",
@@ -1051,7 +1007,6 @@
           maxHpAdd: -10
         }
       );
-
       addNormalAbility(
         "anime_basic_reinforcement",
         "Basic Reinforcement",
@@ -1064,57 +1019,7 @@
         }
       );
 
-      addNormalAbility(
-        "anime_impact_sense",
-        "Impact Sense",
-        "Rare",
-        "Move speed +15% and spread -15%, but damage -10% and heal after wave -5.",
-        {
-          speedMult: 1.15,
-          spreadMult: 0.85,
-          damageMult: 0.90,
-          healAfterWaveAdd: -5
-        }
-      );
-
-      addNormalAbility(
-        "anime_sharp_focus",
-        "Sharp Focus",
-        "Rare",
-        "Spread -30% and bullet speed +20%, but move speed -10%.",
-        {
-          spreadMult: 0.70,
-          bulletSpeedMult: 1.20,
-          speedMult: 0.90
-        }
-      );
-
-      addNormalAbility(
-        "anime_rising_embers",
-        "Rising Embers",
-        "Rare",
-        "Damage +20% and bullet speed +20%, but max HP -10% and heal after wave -10.",
-        {
-          damageMult: 1.20,
-          bulletSpeedMult: 1.20,
-          maxHpMult: 0.90,
-          healAfterWaveAdd: -10
-        }
-      );
-
-      addNormalAbility(
-        "anime_neural_link",
-        "Neural Link",
-        "Rare",
-        "Fire rate +20% and dash cooldown -15%, but spread +15% and on-hit heal -0.3.",
-        {
-          fireRateMult: 1.20,
-          dashCooldownMult: 0.85,
-          spreadMult: 1.15,
-          onHitHealAdd: -0.3
-        }
-      );
-
+      // More melee / movement
       addNormalAbility(
         "anime_resonant_blades",
         "Resonant Blades",
@@ -1127,7 +1032,6 @@
           healAfterWaveAdd: -10
         }
       );
-
       addNormalAbility(
         "anime_heroic_instinct",
         "Heroic Instinct",
@@ -1141,33 +1045,7 @@
         }
       );
 
-      addNormalAbility(
-        "anime_cursed_precision",
-        "Cursed Precision",
-        "Epic",
-        "Spread -30% and damage +15%, but -1 bullet per shot and fire rate -10%.",
-        {
-          spreadMult: 0.70,
-          damageMult: 1.15,
-          bulletsPerShotAdd: -1,
-          fireRateMult: 0.90
-        }
-      );
-
-      addNormalAbility(
-        "anime_smash_kick_style",
-        "Smash Kick Style",
-        "Rare",
-        "Melee damage +20% and dash duration +15%, but ranged damage -10%.",
-        {
-          meleeDamageMult: 1.20,
-          dashDurationMult: 1.15,
-          damageMult: 0.90
-        }
-      );
-
-      /* ====== NEW DASH-REPLACEMENT POWERS ====== */
-
+      // Dash replacement powers (bomb / flame / blink)
       addNormalAbility(
         "anime_cursed_dash_bomb",
         "Cursed Dash Bomb",
@@ -1178,7 +1056,6 @@
           maxHpMult: 0.90
         }
       );
-
       addNormalAbility(
         "anime_flame_step",
         "Flame Step",
@@ -1189,7 +1066,6 @@
           healAfterWaveAdd: -5
         }
       );
-
       addNormalAbility(
         "anime_blink_step",
         "Blink Step",
@@ -1201,8 +1077,7 @@
         }
       );
 
-      /* ====== FUSION NORMAL ABILITIES ====== */
-
+      // Fusions
       addNormalAbility(
         "anime_limit_break",
         "Limit Break State",
@@ -1218,7 +1093,6 @@
         null,
         ["anime_cursed_overflow", "anime_quirk_booster"]
       );
-
       addNormalAbility(
         "anime_sky_ripper",
         "Sky Ripper Maneuvers",
@@ -1234,7 +1108,6 @@
         null,
         ["anime_survey_maneuvers", "anime_grapple_gear"]
       );
-
       addNormalAbility(
         "anime_infinity_step",
         "Infinity Step",
@@ -1250,7 +1123,6 @@
         null,
         ["anime_flash_step", "anime_sky_ripper"]
       );
-
       addNormalAbility(
         "anime_calamity_drive",
         "Calamity Drive",
@@ -1265,7 +1137,6 @@
         null,
         ["anime_kaiju_instinct", "anime_gear_shift"]
       );
-
       addNormalAbility(
         "anime_shadow_protocol",
         "Shadow Protocol",
@@ -1281,7 +1152,6 @@
         null,
         ["anime_shadow_garden", "anime_cursed_chains"]
       );
-
       addNormalAbility(
         "anime_neon_ghoul",
         "Neon Ghoul",
@@ -1298,7 +1168,7 @@
         ["anime_kagune_rampage", "anime_edgerunner_overclock"]
       );
 
-      // Forbidden Overflow – no limit on slots
+      // Forbidden Overflow – no limit slots
       addNormalAbility(
         "forbidden_overflow",
         "Forbidden Overflow",
@@ -1307,7 +1177,7 @@
         {}
       );
 
-      /* ====== DEMON SLAYER & ONE PIECE NORMAL ABILITIES ====== */
+      /* ====== Demon Slayer & One Piece normals ====== */
 
       addNormalAbility(
         "ds_water_breathing",
@@ -1322,7 +1192,6 @@
           healAfterWaveAdd: -5
         }
       );
-
       addNormalAbility(
         "ds_breath_beast",
         "Breath of the Beast",
@@ -1335,7 +1204,6 @@
           healAfterWaveAdd: -5
         }
       );
-
       addNormalAbility(
         "ds_demon_regeneration",
         "Demon Regeneration",
@@ -1347,6 +1215,46 @@
           healAfterWaveAdd: 10,
           damageMult: 0.85,
           fireRateMult: 0.90
+        }
+      );
+
+      addNormalAbility(
+        "ds_thunder_breathing",
+        "Thunder Breathing: First Form",
+        "Epic",
+        "Dash cooldown -25%, dash duration +10% and melee damage +30%, but max HP -15% and heal after wave -10.",
+        {
+          dashCooldownMult: 0.75,
+          dashDurationMult: 1.10,
+          meleeDamageMult: 1.30,
+          maxHpMult: 0.85,
+          healAfterWaveAdd: -10
+        }
+      );
+      addNormalAbility(
+        "ds_flame_ninth",
+        "Flame Breathing – Ninth Form",
+        "Epic",
+        "Melee damage +50%, melee range +20% and damage +15%, but melee cooldown +25% and max HP -10%.",
+        {
+          meleeDamageMult: 1.50,
+          meleeRangeMult: 1.20,
+          damageMult: 1.15,
+          meleeCooldownMult: 1.25,
+          maxHpMult: 0.90
+        }
+      );
+      addNormalAbility(
+        "ds_mist_obscuring",
+        "Mist Breathing – Obscuring Clouds",
+        "Rare",
+        "Move speed +20% and dash cooldown -15%, and you take 15% less damage, but damage -10% and heal after wave -5.",
+        {
+          speedMult: 1.20,
+          dashCooldownMult: 0.85,
+          incomingDamageMult: 0.85,
+          damageMult: 0.90,
+          healAfterWaveAdd: -5
         }
       );
 
@@ -1363,7 +1271,6 @@
           healAfterWaveAdd: -15
         }
       );
-
       addNormalAbility(
         "op_flame_fruit",
         "Flame-Flame Fruit",
@@ -1375,7 +1282,6 @@
           spreadMult: 1.15
         }
       );
-
       addNormalAbility(
         "op_santoryu",
         "Santoryu – Three-Sword Style",
@@ -1385,6 +1291,55 @@
           meleeCooldownMult: 0.90,
           damageMult: 0.90,
           maxHpMult: 0.90
+        }
+      );
+
+      /* ====== NEW JJK & MHA NORMAL ABILITIES ====== */
+
+      addNormalAbility(
+        "jjk_hollow_purple",
+        "Hollow Purple Core",
+        "Epic",
+        "Damage +30% and pierce +1, but fire rate -15% and bullet speed -10%.",
+        {
+          damageMult: 1.30,
+          pierceAdd: 1,
+          fireRateMult: 0.85,
+          bulletSpeedMult: 0.90
+        }
+      );
+      addNormalAbility(
+        "jjk_simple_domain",
+        "Simple Domain Guard",
+        "Rare",
+        "You take 20% less damage, but damage -10% and fire rate -5%.",
+        {
+          incomingDamageMult: 0.80,
+          damageMult: 0.90,
+          fireRateMult: 0.95
+        }
+      );
+      addNormalAbility(
+        "mha_explosion_gauntlets",
+        "Explosion Gauntlets",
+        "Epic",
+        "+2 bullets per shot and damage +10%, but spread +35% and fire rate -10%.",
+        {
+          bulletsPerShotAdd: 2,
+          damageMult: 1.10,
+          spreadMult: 1.35,
+          fireRateMult: 0.90
+        }
+      );
+      addNormalAbility(
+        "mha_hardening_armor",
+        "Hardening Armor",
+        "Rare",
+        "You take 25% less damage, but move speed -10% and fire rate -10%.",
+        {
+          incomingDamageMult: 0.75,
+          speedMult: 0.90,
+          fireRateMult: 0.90
         }
       );
 
@@ -1483,6 +1438,7 @@
           healAfterWaveAdd: -20
         }
       );
+
       addBossAbility(
         "anime_black_flash_barrage",
         "Black Flash Barrage",
@@ -1507,8 +1463,6 @@
           damageMult: 0.90
         }
       );
-
-      // Eminence / Tokyo Ghoul / Cyberpunk / Naruto / Fire Force boss forms
       addBossAbility(
         "anime_eminence_shadow",
         "Eminence of Shadow",
@@ -1573,7 +1527,7 @@
         }
       );
 
-      // Inverted Spear of Heaven (melee legendary)
+      // Inverted Spear of Heaven
       addBossAbility(
         "anime_cursed_family",
         "Cursed Family – Inverted Spear",
@@ -1589,7 +1543,6 @@
           fireRateMult: 0.85
         }
       );
-
       addBossAbility(
         "anime_overdrive_sync",
         "Overdrive Sync",
@@ -1603,7 +1556,6 @@
           spreadMult: 1.40
         }
       );
-
       addBossAbility(
         "anime_shadow_moment",
         "Shadow Moment",
@@ -1617,7 +1569,6 @@
           maxHpMult: 0.75
         }
       );
-
       addBossAbility(
         "anime_infernal_sun",
         "Infernal Sun",
@@ -1630,7 +1581,6 @@
           healAfterWaveAdd: -45
         }
       );
-
       addBossAbility(
         "anime_true_hero_form",
         "True Hero Form",
@@ -1643,7 +1593,6 @@
           incomingDamageMult: 1.25
         }
       );
-
       addBossAbility(
         "op_conqueror_haki",
         "Conqueror's Haki",
@@ -1657,8 +1606,49 @@
         }
       );
 
-      /* ====== FUSION BOSS ABILITIES ====== */
+      // New JJK / MHA / Demon Slayer boss legendaries
+      addBossAbility(
+        "jjk_malevolent_shrine",
+        "Malevolent Shrine",
+        "Legendary",
+        "Damage +60%, pierce +2 and +1 bullet per shot, but max HP -30%, heal after wave -30 and you take 25% more damage.",
+        {
+          damageMult: 1.60,
+          pierceAdd: 2,
+          bulletsPerShotAdd: 1,
+          maxHpMult: 0.70,
+          healAfterWaveAdd: -30,
+          incomingDamageMult: 1.25
+        }
+      );
+      addBossAbility(
+        "mha_united_smash",
+        "United States of Smash",
+        "Legendary",
+        "Damage x2.0 and fire rate +20%, but max HP -35% and heal after wave -30.",
+        {
+          damageMult: 2.0,
+          fireRateMult: 1.20,
+          maxHpMult: 0.65,
+          healAfterWaveAdd: -30
+        }
+      );
+      addBossAbility(
+        "ds_sun_scarlet",
+        "Sun Breathing – Scarlet Dawn",
+        "Legendary",
+        "Melee damage x2.2, melee range +30% and damage +15%, but max HP -25%, heal after wave -35 and you take 20% more damage.",
+        {
+          meleeDamageMult: 2.2,
+          meleeRangeMult: 1.30,
+          damageMult: 1.15,
+          maxHpMult: 0.75,
+          healAfterWaveAdd: -35,
+          incomingDamageMult: 1.20
+        }
+      );
 
+      // Fusion boss abilities
       addBossAbility(
         "anime_colossal_core",
         "Colossal Core Awakening",
@@ -1675,7 +1665,6 @@
         null,
         ["anime_titan_ascendance", "anime_kaiju_core_reactor"]
       );
-
       addBossAbility(
         "anime_domain_breaker",
         "Domain Breaker",
@@ -1690,7 +1679,6 @@
         null,
         ["anime_domain_collapse", "anime_overclocked_quirk"]
       );
-
       addBossAbility(
         "anime_apex_rumbling",
         "Apex Rumbling",
@@ -1706,7 +1694,6 @@
         null,
         ["anime_titan_ascendance", "anime_rumbling_echo"]
       );
-
       addBossAbility(
         "anime_sun_moon_cataclysm",
         "Sun & Moon Cataclysm",
@@ -1738,7 +1725,6 @@
         { damageMult: 1.25 },
         { enemySpeedMult: 1.2, enemyCountMult: 1.15 }
       );
-
       addCurse(
         "fragile_rage",
         "Fragile Rage",
@@ -1747,7 +1733,6 @@
         { fireRateMult: 1.4, maxHpMult: 0.6 },
         {}
       );
-
       addCurse(
         "predator_hunger",
         "Predator's Hunger",
@@ -1756,7 +1741,6 @@
         { onHitHealAdd: 2 },
         { enemyCountMult: 1.25 }
       );
-
       addCurse(
         "abyss_pact",
         "Abyss Pact",
@@ -1766,7 +1750,6 @@
         {},
         { hpDrainPerSecond: 3 }
       );
-
       addCurse(
         "gear_sacrifice",
         "Gear Sacrifice",
@@ -1775,7 +1758,6 @@
         { bulletSpeedMult: 1.4, damageMult: 1.15 },
         { enemyDamageMult: 1.3, enemyBulletDamageMult: 1.3 }
       );
-
       addCurse(
         "kaiju_eclipse",
         "Kaiju Eclipse",
@@ -1784,7 +1766,6 @@
         { maxHpMult: 1.4, onHitHealAdd: 1.5 },
         { enemySpeedMult: 1.2, enemyCountMult: 1.2 }
       );
-
       addCurse(
         "timeline_fracture",
         "Timeline Fracture",
@@ -1793,7 +1774,6 @@
         { fireRateMult: 1.25, bulletSpeedMult: 1.25 },
         { enemyDamageMult: 1.25, enemyBulletDamageMult: 1.25 }
       );
-
       addCurse(
         "all_or_nothing",
         "All or Nothing",
@@ -1802,7 +1782,6 @@
         { damageMult: 2.4, maxHpMult: 0.30 },
         {}
       );
-
       addCurse(
         "glass_comet",
         "Glass Comet",
@@ -1811,7 +1790,6 @@
         { speedMult: 1.40, fireRateMult: 1.20, maxHpMult: 0.40 },
         {}
       );
-
       addCurse(
         "endless_waves",
         "Endless Waves",
@@ -1821,7 +1799,7 @@
         { enemyCountMult: 1.20 }
       );
 
-      // Trials (pre-run curses) – not offered as boss choices
+      // Trials (arc-related pre-run curses)
       addCurse(
         "trial_shibuya",
         "Trial: Shibuya Incident",
@@ -1831,7 +1809,6 @@
         { enemySpeedMult: 1.10, enemyCountMult: 1.30 },
         { isTrialOnly: true }
       );
-
       addCurse(
         "trial_rumbling",
         "Trial: Rumbling Approaches",
@@ -1841,7 +1818,6 @@
         { enemyHpMult: 1.30, enemyDamageMult: 1.20 },
         { isTrialOnly: true }
       );
-
       addCurse(
         "trial_night_raid",
         "Trial: Night Raid",
@@ -1989,8 +1965,8 @@
       };
 
       let incomingDamageMult = 1;
-
       const allIds = [...player.normalAbilities, ...player.bossAbilities];
+      const abilityFactor = noLimitMode ? 0.5 : 1.0;
 
       function applyMods(m, factor) {
         if (!m) return;
@@ -2015,7 +1991,6 @@
         if (m.dashDurationMult) stats.dashDuration *= 1 + (m.dashDurationMult - 1) * factor;
         if (m.dashDurationAdd) stats.dashDuration += m.dashDurationAdd * factor;
 
-        // melee
         if (m.meleeDamageMult) stats.meleeDamage *= 1 + (m.meleeDamageMult - 1) * factor;
         if (m.meleeDamageAdd) stats.meleeDamage += m.meleeDamageAdd * factor;
         if (m.meleeRangeMult) stats.meleeRange *= 1 + (m.meleeRangeMult - 1) * factor;
@@ -2030,8 +2005,6 @@
           incomingDamageMult *= 1 + (m.incomingDamageMult - 1) * factor;
         }
       }
-
-      const abilityFactor = noLimitMode ? 0.5 : 1.0;
 
       for (const id of allIds) {
         const ab = getAbilityById(id);
@@ -2089,7 +2062,7 @@
       player.meleeOnHitHeal = stats.meleeOnHitHeal;
       player.incomingDamageMult = incomingDamageMult;
 
-      // Dash mode from special abilities
+      // Dash mode
       let dashMode = "normal";
       const allAbilityIds = [...player.normalAbilities, ...player.bossAbilities];
       if (allAbilityIds.includes("anime_cursed_dash_bomb")) dashMode = "bomb";
@@ -2223,7 +2196,7 @@
 
     function applyJjkDomainDamage(dt) {
       const radius = 260;
-      const dps = 30 + wave * 4; // damage per second
+      const dps = 30 + wave * 4;
       const damagePer = dps * dt;
 
       for (let i = enemies.length - 1; i >= 0; i--) {
@@ -2244,9 +2217,7 @@
     }
 
     function equipAbility(ability) {
-      if (ability.isCurse) {
-        return false;
-      }
+      if (ability.isCurse) return false;
       const isBoss = ability.category === "boss";
       const list = isBoss ? player.bossAbilities : player.normalAbilities;
       const maxSlots = isBoss ? 2 : 5;
@@ -2421,6 +2392,34 @@
       return arr.slice(0, count);
     }
 
+    /* ========= HAZARDS ========= */
+
+    function spawnHazard(x, y, radius, dps, life, type) {
+      hazards.push({ x, y, radius, dps, life, maxLife: life, type });
+    }
+
+    function updateHazards(dt) {
+      if (!player) return;
+      for (let i = hazards.length - 1; i >= 0; i--) {
+        const h = hazards[i];
+        h.life -= dt;
+        if (h.life <= 0) {
+          hazards.splice(i, 1);
+          continue;
+        }
+        const distToPlayer = distance(player.x, player.y, h.x, h.y);
+        if (distToPlayer < h.radius + player.radius && !player.isDashing) {
+          const dmg = h.dps * dt * (player.incomingDamageMult || 1);
+          player.hp -= dmg;
+          if (player.hp <= 0) {
+            player.hp = 0;
+            gameOver();
+            return;
+          }
+        }
+      }
+    }
+
     /* ========= DASH / AOE HELPERS ========= */
 
     function damageEnemiesInRadius(x, y, radius, damage) {
@@ -2472,7 +2471,7 @@
         }
       }
 
-      // Blink dash: teleport with short invulnerability
+      // Blink dash
       if (player.dashMode === "blink") {
         const blinkDistance = 180;
         const targetX = player.x + dirX * blinkDistance;
@@ -2498,7 +2497,7 @@
         return;
       }
 
-      // Cursed bomb dash: drop bomb at start
+      // Bomb dash
       if (player.dashMode === "bomb") {
         const radius = 120;
         const bombDamage = player.damage * 3 + 40 + wave * 4;
@@ -2513,7 +2512,7 @@
         });
       }
 
-      // Flame step dash: burst of fire around you at start
+      // Flame step
       if (player.dashMode === "flame") {
         const flameRadius = 130;
         const flameDamage = player.damage * 2.1 + 30 + wave * 3;
@@ -2571,7 +2570,7 @@
 
       player.meleeCooldownTimer = player.meleeCooldown * cooldownFactor;
 
-      // Santoryu: fire extra slashes on melee swing
+      // Santoryu slashes
       if (playerHasAbility("op_santoryu")) {
         spawnMeleeSlashes(baseAngle);
       }
@@ -2607,7 +2606,7 @@
       }
     }
 
-    /* ========= WAVES, ENEMIES, BOSS PATTERNS & PHASES ========= */
+    /* ========= WAVES, ENEMIES, BOSSES & PHASES ========= */
 
     function spawnBossBulletsRing(boss, count, speed) {
       const finalSpeed = speed * enemyScale.bulletSpeedMult;
@@ -2676,9 +2675,32 @@
         const baseSpeed = (90 + wave * 5) * enemyScale.speedMult;
         const contactDamage = (45 + wave * 3) * enemyScale.damageMult;
 
-        const patterns = ["charger", "bullet_hell", "summoner", "domain", "cyber"];
-        const bossIndex = Math.floor(wave / 5) % patterns.length;
-        const patternType = patterns[bossIndex];
+        let patternType;
+        let displayName = "Anime Boss";
+        const bossIndex = Math.floor((wave - 1) / 5);
+
+        if (currentArc === "jjk") {
+          patternType = "domain";
+          displayName = bossIndex % 2 === 0 ? "King of Curses" : "Cursed Disaster";
+        } else if (currentArc === "mha") {
+          patternType = bossIndex % 2 === 0 ? "charger" : "bullet_hell";
+          displayName = bossIndex % 2 === 0 ? "Symbol of Fear" : "Quirk Anomaly";
+        } else if (currentArc === "ds") {
+          patternType = bossIndex % 2 === 0 ? "summoner" : "bullet_hell";
+          displayName = bossIndex % 2 === 0 ? "Upper Moon Demon" : "Blood Demon Art";
+        } else {
+          const patterns = ["charger", "bullet_hell", "summoner", "domain", "cyber"];
+          const names = [
+            "Brutal Titan",
+            "Bullet Curse",
+            "Demon Captain",
+            "Domain Tyrant",
+            "Chrome Reaper"
+          ];
+          const idx = bossIndex % patterns.length;
+          patternType = patterns[idx];
+          displayName = names[idx];
+        }
 
         const boss = {
           x,
@@ -2692,6 +2714,7 @@
           isBoss: true,
           type: "boss",
           patternType,
+          displayName,
           phase: 1,
           dashCooldown: 2.5,
           dashTime: 0,
@@ -2814,6 +2837,19 @@
           const count = e.phase === 1 ? baseCount : e.phase === 2 ? baseCount + 4 : baseCount + 8;
           spawnBossBulletsRing(e, count, 220 + wave * 4 + 20 * e.phase);
           e.ringCooldown = e.phase === 1 ? 3.0 : e.phase === 2 ? 2.4 : 1.8;
+
+          if (e.phase >= 2) {
+            const hx = e.x + (Math.random() - 0.5) * 260;
+            const hy = e.y + (Math.random() - 0.5) * 260;
+            spawnHazard(
+              clamp(hx, 40, canvas.width - 40),
+              clamp(hy, 40, canvas.height - 40),
+              70 + 10 * e.phase,
+              30 + wave * 2,
+              6,
+              currentArc === "ds" ? "flame" : "lava"
+            );
+          }
         }
 
         e.shotCooldown -= dt;
@@ -2836,6 +2872,12 @@
           }
           e.summonCooldown = e.phase === 1 ? 5.0 : e.phase === 2 ? 4.0 : 3.2;
           showMessage("Boss summons reinforcements!", 1.5);
+
+          if (e.phase >= 2) {
+            const hx = Math.random() * (canvas.width - 160) + 80;
+            const hy = Math.random() * (canvas.height - 160) + 80;
+            spawnHazard(hx, hy, 80, 26 + wave * 1.8, 7, "curse");
+          }
         }
 
         e.shotCooldown -= dt;
@@ -2855,7 +2897,6 @@
           }
         }
       } else if (e.patternType === "domain") {
-        // JJK-style domain boss: slow, aura damage + rings
         moveSpeed = e.baseSpeed * (e.phase === 1 ? 0.7 : e.phase === 2 ? 0.8 : 0.9);
 
         e.ringCooldown -= dt;
@@ -2864,6 +2905,17 @@
           const count = e.phase === 1 ? baseCount : e.phase === 2 ? baseCount + 4 : baseCount + 8;
           spawnBossBulletsRing(e, count, 220 + wave * 4 + 15 * e.phase);
           e.ringCooldown = e.phase === 1 ? 3.2 : e.phase === 2 ? 2.5 : 2.0;
+
+          if (e.phase >= 2) {
+            spawnHazard(
+              e.x,
+              e.y,
+              90 + 10 * e.phase,
+              32 + wave * 2,
+              6,
+              "curse"
+            );
+          }
         }
 
         const auraRadius = e.phase === 1 ? 170 : e.phase === 2 ? 200 : 230;
@@ -2880,7 +2932,6 @@
           }
         }
       } else if (e.patternType === "cyber") {
-        // Cyberpunk-style blink boss
         moveSpeed = e.baseSpeed * (e.phase === 1 ? 1.0 : e.phase === 2 ? 1.1 : 1.3);
 
         if (typeof e.blinkCooldown !== "number") {
@@ -3130,6 +3181,7 @@
       enemyBullets = [];
       playerBombs = [];
       fireBursts = [];
+      hazards = [];
       spawnWaveEnemies();
       gameState = "playing";
 
@@ -3232,6 +3284,7 @@
       updateEnemyBullets(dt);
       updatePlayerBombs(dt);
       updateFireBursts(dt);
+      updateHazards(dt);
       checkWaveCleared();
       updateHUD();
     }
@@ -3439,7 +3492,7 @@
               player.hp = Math.min(player.maxHp, player.hp + player.onHitHeal);
             }
 
-            // Flame-Flame Fruit explosion on hit
+            // Flame-Flame explosion
             if (hasFlameFruit && !b.flameExploded) {
               b.flameExploded = true;
               const radius = 80;
@@ -3490,7 +3543,7 @@
         player.dashMode === "blink" ? "Blink dash" :
         "Dash";
 
-      hudWave.textContent = `Wave: ${wave}`;
+      hudWave.textContent = `Wave: ${wave} | Arc: ${arcLabel()}`;
       hudHP.textContent = `HP: ${Math.round(player.hp)} / ${player.maxHp}`;
       hudStats.textContent =
         `DMG: ${Math.round(player.damage)} | ` +
@@ -3523,7 +3576,30 @@
       ctx.stroke();
       ctx.globalAlpha = 1;
 
-      // Player / JJK Domain visual
+      // Hazards
+      for (const h of hazards) {
+        const t = h.life / h.maxLife;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(h.x, h.y, h.radius, 0, Math.PI * 2);
+        if (h.type === "lava") {
+          ctx.globalAlpha = 0.35 * t;
+          ctx.fillStyle = "#ff7b31";
+        } else if (h.type === "curse") {
+          ctx.globalAlpha = 0.32 * t;
+          ctx.fillStyle = "#b26bff";
+        } else if (h.type === "flame") {
+          ctx.globalAlpha = 0.35 * t;
+          ctx.fillStyle = "#ff5533";
+        } else {
+          ctx.globalAlpha = 0.3 * t;
+          ctx.fillStyle = "#ffdd55";
+        }
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // JJK Domain visual
       if (player && player.ultimateActiveTimer > 0 && player.ultimateType === ULT_TYPE.JJK_DOMAIN) {
         const radius = 260;
         ctx.save();
@@ -3583,7 +3659,6 @@
       }
 
       for (const e of enemies) {
-        // Domain boss aura visual
         if (e.isBoss && e.patternType === "domain") {
           const auraRadius = e.phase === 1 ? 170 : e.phase === 2 ? 200 : 230;
           ctx.save();
@@ -3608,6 +3683,14 @@
         ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
         ctx.fillStyle = baseColor;
         ctx.fill();
+
+        // Boss name + phase
+        if (e.isBoss && e.displayName) {
+          ctx.font = "14px system-ui";
+          ctx.textAlign = "center";
+          ctx.fillStyle = "rgba(255,255,255,0.9)";
+          ctx.fillText(e.displayName + " (Phase " + e.phase + ")", e.x, e.y - e.radius - 16);
+        }
 
         const barWidth = e.radius * 2;
         const barHeight = 4;
@@ -3704,6 +3787,7 @@
       enemyBullets = [];
       playerBombs = [];
       fireBursts = [];
+      hazards = [];
       wave = 0;
       pendingAbility = null;
       pendingCategory = null;
@@ -3717,11 +3801,10 @@
       player = createPlayer();
       applySelectedTrialsToActiveCurses();
 
-      // set chosen ult
       const mapped = mapSelectedKeyToUltType(selectedUltimateKey);
       player.selectedUltType = mapped || (combatStyle === "ranged" ? ULT_TYPE.RANGED_STORM : ULT_TYPE.MELEE_FRENZY);
 
-      // starting anime ability based on style
+      // starting ability based on style
       if (combatStyle === "melee") {
         player.normalAbilities.push("anime_blade_training");
       } else {
@@ -3763,6 +3846,16 @@
         selectedUltimateKey = key;
         document.querySelectorAll(".ultButton").forEach(b => b.classList.remove("ultActive"));
         btn.classList.add("ultActive");
+      });
+    });
+
+    document.querySelectorAll(".arcButton").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const arc = btn.getAttribute("data-arc");
+        if (!arc) return;
+        currentArc = arc;
+        document.querySelectorAll(".arcButton").forEach(b => b.classList.remove("arcActive"));
+        btn.classList.add("arcActive");
       });
     });
 
