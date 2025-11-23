@@ -911,7 +911,7 @@
         p.y+=p.vy*dt;
         p.vx*=0.97;
         p.vy+=20*dt;
-        const m=p.color.match(/rgba\\((\\d+),(\\d+),(\\d+),([\\d.]+)\\)/);
+        const m=p.color.match(/rgba\((\d+),(\d+),(\d+),([\d.]+)\)/);
         if(m){
           const[r,g,b]=[m[1],m[2],m[3]];
           p.renderColor=`rgba(${r},${g},${b},${t})`;
@@ -1337,6 +1337,54 @@
 
       /* Normal abilities – Demon Slayer / JJK / One Piece / MHA / Cyberpunk / Solo Leveling, melee focus */
 
+      // --- Common baseline upgrades ---
+      addNormalAbility({
+        id:"basic_training",
+        name:"Basic Training",
+        rarity:"common",
+        description:"Small boost to HP and damage, but you're a bit slower.",
+        drawback:"Slightly slower movement.",
+        mods:{maxHpMult:1.12,damageMult:1.08,speedMult:0.95}
+      });
+
+      addNormalAbility({
+        id:"steady_hands",
+        name:"Steady Hands",
+        rarity:"common",
+        description:"Tighter bullet spread and slightly faster bullets, but lower fire rate.",
+        drawback:"Shots come out a bit slower.",
+        mods:{spreadMult:0.8,bulletSpeedMult:1.1,fireRateMult:0.92}
+      });
+
+      addNormalAbility({
+        id:"sprinter",
+        name:"Sprinter",
+        rarity:"common",
+        description:"Move faster and dash more often, but with less max HP.",
+        drawback:"Reduced max HP.",
+        mods:{speedMult:1.18,dashCooldownMult:0.9,maxHpMult:0.9}
+      });
+
+      addNormalAbility({
+        id:"iron_body",
+        name:"Iron Body",
+        rarity:"common",
+        description:"More HP and slightly reduced damage taken, but slower and lower fire rate.",
+        drawback:"Slower speed and fire rate.",
+        mods:{maxHpMult:1.2,incomingDamageMult:0.92,speedMult:0.9,fireRateMult:0.9}
+      });
+
+      addNormalAbility({
+        id:"quick_reload",
+        name:"Quick Reload",
+        rarity:"common",
+        description:"Higher fire rate but bullets do a bit less damage.",
+        drawback:"Lower bullet damage.",
+        mods:{fireRateMult:1.2,damageMult:0.9}
+      });
+
+      // --- Existing rare/epic melee / anime themed abilities ---
+
       addNormalAbility({
         id:"water_breathing",
         name:"Water Breathing",
@@ -1446,6 +1494,35 @@
         drawback:"Slower rate of fire.",
         requires:["spirit_chain"],
         mods:{bulletSpeedMult:1.6,damageMult:1.3,fireRateMult:0.7}
+      });
+
+      // Additional normals from your ideas (rare/epic)
+
+      addNormalAbility({
+        id:"dragon_fist_rush",
+        name:"Dragon Fist Rush",
+        rarity:"rare",
+        description:"+ melee damage & move speed, but less max HP.",
+        drawback:"More fragile overall.",
+        mods:{meleeDamageMult:1.35,speedMult:1.15,maxHpMult:0.9}
+      });
+
+      addNormalAbility({
+        id:"reaper_edge",
+        name:"Reaper's Edge",
+        rarity:"rare",
+        description:"Melee damage up, but bullet damage down.",
+        drawback:"Bullets hit softer.",
+        mods:{meleeDamageMult:1.25,damageMult:0.9}
+      });
+
+      addNormalAbility({
+        id:"hellfire_rounds",
+        name:"Hellfire Rounds",
+        rarity:"rare",
+        description:"+ damage and burn potential, but slower bullets and you take a bit more damage.",
+        drawback:"Slower bullets & more incoming damage.",
+        mods:{damageMult:1.15,bulletSpeedMult:0.9,incomingDamageMult:1.1}
       });
 
       /* Dash mutations */
@@ -3146,7 +3223,7 @@
       if(ratio>=0.9){rank="S";color="#ffe08a";}
       else if(ratio>=0.65){rank="A";color="#e3b3ff";}
       else if(ratio>=0.4){rank="B";color="#87c7ff";}
-      else if(ratio>=0.2){rank="C";color="#b8f7b8";}
+      else if(ratio>=0.2){rank="C";color:"#b8f7b8";}
       return{rank,color,ratio};
     }
 
