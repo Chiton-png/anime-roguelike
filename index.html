@@ -156,7 +156,8 @@
       border-color:rgba(255,210,100,1);
     }
 
-    #skipButton{
+    #skipButton,
+    #rerollButton{
       margin-top:2px;
       padding:5px 10px;
       border-radius:999px;
@@ -165,9 +166,14 @@
       color:#f5f5f5;
       cursor:pointer;
       font-size:11px;
-      float:right;
     }
-    #skipButton:hover{background:#333}
+    #skipButton:hover,
+    #rerollButton:hover{background:#333}
+    #rerollButton[disabled]{
+      opacity:0.4;
+      cursor:not-allowed;
+      box-shadow:none;
+    }
 
     #abilitiesBar{
       margin-top:8px;
@@ -247,6 +253,17 @@
     #mainMenuInner h2{margin-bottom:4px;font-size:20px}
     #mainMenuInner p{opacity:.85;margin-bottom:6px;font-size:11px}
 
+    .mainMenuTabsRow{
+      display:flex;
+      gap:8px;
+      margin:8px 0 6px 0;
+      flex-wrap:wrap;
+    }
+    .mainMenuSection{
+      margin-top:6px;
+      padding-top:4px;
+      border-top:1px solid #222;
+    }
     .menuButtons{
       display:flex;
       gap:8px;
@@ -283,17 +300,6 @@
       box-shadow:0 0 12px rgba(255,255,255,0.5);
     }
 
-    .mainMenuTabsRow{
-      display:flex;
-      gap:8px;
-      margin:8px 0 6px 0;
-      flex-wrap:wrap;
-    }
-    .mainMenuSection{
-      margin-top:6px;
-      padding-top:4px;
-      border-top:1px solid #222;
-    }
     .menuSectionTitle{
       margin-top:4px;
       margin-bottom:2px;
@@ -464,7 +470,7 @@
   <div id="mainMenu">
     <div id="mainMenuInner">
       <h2>Anime Rogue Run</h2>
-      <p>Build insane anime runs: Demon Slayer, One Piece, JJK, MHA, Cyberpunk, Solo Leveling, Apex-style movement and more.</p>
+      <p>Build insane anime runs: Demon Slayer, One Piece, JJK, MHA, Cyberpunk, Solo Leveling, etc.</p>
 
       <div class="mainMenuTabsRow">
         <button class="menuButton mainTabButton styleActive" data-tab="playTab">Play</button>
@@ -517,10 +523,9 @@
 
         <p class="menuSectionTitle">Power Info</p>
         <p class="menuHint">
-          Normal powers: up to 5 active at once, each giving buffs with drawbacks.<br>
-          Boss powers: up to 2 at once, very strong but risky.<br>
-          Curses: <b>Legendary</b> – huge bonuses but make you fragile. Only show on <b>boss rounds</b>.<br>
-          <b>Legendaries & curses only appear on boss waves.</b> Hover cards in-run to see exact stat changes.
+          Normal powers: max <b>5</b>. Boss & curse powers: max <b>2</b>.<br>
+          Curses are Legendary and only appear on <b>boss waves</b>. Every boss wave shows at least one Legendary and one Curse.<br>
+          Wave challenges can give you <b>rerolls</b> for power choices.
         </p>
 
         <div class="menuButtons" style="margin-top:10px;justify-content:flex-start;">
@@ -566,32 +571,32 @@
       <div id="cosmeticsTab" class="mainMenuSection" style="display:none;">
         <p class="menuSectionTitle">Cosmetics – Player Skin</p>
         <div class="menuButtons" id="skinMenu">
-          <button class="menuButton skinButton" data-skin="skin_default" title="Always unlocked.">Default Hunter</button>
-          <button class="menuButton skinButton" data-skin="skin_hashira" title="Reach Wave 10 to unlock.">Hashira Cloak</button>
-          <button class="menuButton skinButton" data-skin="skin_domain_freak" title="Use a Domain-style ult 3 times total to unlock.">Domain Freak</button>
-          <button class="menuButton skinButton" data-skin="skin_shadow_monarch" title="Defeat a boss while using Shadow Army Commander to unlock.">Shadow Monarch</button>
-          <button class="menuButton skinButton" data-skin="skin_flame_hashira" title="Defeat 5 bosses to unlock.">Flame Hashira</button>
-          <button class="menuButton skinButton" data-skin="skin_sukuna_king" title="Take 3 curses across runs to unlock.">King of Curses</button>
-          <button class="menuButton skinButton" data-skin="skin_apex_legend" title="Reach Wave 20 to unlock.">Apex Operator</button>
+          <button class="menuButton skinButton" data-skin="skin_default">Default Hunter</button>
+          <button class="menuButton skinButton" data-skin="skin_hashira">Hashira Cloak</button>
+          <button class="menuButton skinButton" data-skin="skin_domain_freak">Domain Freak</button>
+          <button class="menuButton skinButton" data-skin="skin_shadow_monarch">Shadow Monarch</button>
+          <button class="menuButton skinButton" data-skin="skin_flame_hashira">Flame Hashira</button>
+          <button class="menuButton skinButton" data-skin="skin_sukuna_king">King of Curses</button>
+          <button class="menuButton skinButton" data-skin="skin_apex_legend">Apex Operator</button>
         </div>
 
         <p class="menuSectionTitle">Cosmetics – Bullet Trail</p>
         <div class="menuButtons" id="trailMenu">
-          <button class="menuButton trailButton" data-trail="trail_default" title="Always unlocked.">Default Trail</button>
-          <button class="menuButton trailButton" data-trail="trail_flame" title="Beat any boss to unlock.">Flame Rounds</button>
-          <button class="menuButton trailButton" data-trail="trail_cursed" title="Take any Curse to unlock.">Cursed Sparks</button>
-          <button class="menuButton trailButton" data-trail="trail_lightning" title="Reach Style rank S to unlock.">Lightning Shots</button>
-          <button class="menuButton trailButton" data-trail="trail_blood" title="Take 2 curses across runs to unlock.">Blood Rounds</button>
-          <button class="menuButton trailButton" data-trail="trail_void" title="Defeat 5 bosses to unlock.">Void Rounds</button>
+          <button class="menuButton trailButton" data-trail="trail_default">Default Trail</button>
+          <button class="menuButton trailButton" data-trail="trail_flame">Flame Rounds</button>
+          <button class="menuButton trailButton" data-trail="trail_cursed">Cursed Sparks</button>
+          <button class="menuButton trailButton" data-trail="trail_lightning">Lightning Shots</button>
+          <button class="menuButton trailButton" data-trail="trail_blood">Blood Rounds</button>
+          <button class="menuButton trailButton" data-trail="trail_void">Void Rounds</button>
         </div>
 
         <p class="menuSectionTitle">Cosmetics – Dash Trail</p>
         <div class="menuButtons" id="dashMenu">
-          <button class="menuButton dashButton" data-dash="dash_default" title="Always unlocked.">Default Dash</button>
-          <button class="menuButton dashButton" data-dash="dash_afterimage" title="Dash 50 times total to unlock.">Afterimage Step</button>
-          <button class="menuButton dashButton" data-dash="dash_void" title="Reach Wave 15 to unlock.">Void Step</button>
-          <button class="menuButton dashButton" data-dash="dash_flame" title="Defeat 2 bosses to unlock.">Flame Dash</button>
-          <button class="menuButton dashButton" data-dash="dash_cursed" title="Take 2 curses across runs to unlock.">Cursed Dash</button>
+          <button class="menuButton dashButton" data-dash="dash_default">Default Dash</button>
+          <button class="menuButton dashButton" data-dash="dash_afterimage">Afterimage Step</button>
+          <button class="menuButton dashButton" data-dash="dash_void">Void Step</button>
+          <button class="menuButton dashButton" data-dash="dash_flame">Flame Dash</button>
+          <button class="menuButton dashButton" data-dash="dash_cursed">Cursed Dash</button>
         </div>
 
         <p class="menuHint">
@@ -611,12 +616,15 @@
           <div id="upgradePanelInner">
             <h2>Choose a Power-Up</h2>
             <p>
-              Every wave you get a power with a drawback. Max <b>5 normal</b> powers and <b>2 boss</b> powers – once you’re capped you’ll replace old ones.
-              Boss waves offer <b>Legendary</b> options and <b>Curses</b> with extreme tradeoffs.
-              Hover cards to see the exact stat changes.
+              Every wave you get a power with a drawback. Max <b>5 normal</b> powers and <b>2 boss/curses</b> – once you’re capped you’ll replace old ones.<br>
+              Boss waves offer <b>Legendary</b> options and <b>Curses</b> with extreme tradeoffs.<br>
+              Wave challenges can reward you with <b>rerolls</b>.
             </p>
             <div id="upgrades"></div>
-            <button id="skipButton">Skip – no power this wave</button>
+            <div style="display:flex;justify-content:space-between;gap:6px;margin-top:4px;">
+              <button id="rerollButton">Reroll (0)</button>
+              <button id="skipButton">Skip – no power this wave</button>
+            </div>
           </div>
         </div>
       </div>
@@ -628,6 +636,7 @@
         <div id="hudUlt"></div>
         <div id="hudStyle"></div>
         <div id="hudKills"></div>
+        <div id="hudChallenge"></div>
       </div>
 
       <div id="abilitiesBar">
@@ -680,12 +689,14 @@
     const upgradePanel=document.getElementById("upgradePanel");
     const upgradesContainer=document.getElementById("upgrades");
     const skipButton=document.getElementById("skipButton");
+    const rerollButton=document.getElementById("rerollButton");
     const hudWave=document.getElementById("hudWave");
     const hudHP=document.getElementById("hudHP");
     const hudStats=document.getElementById("hudStats");
     const hudUlt=document.getElementById("hudUlt");
     const hudStyle=document.getElementById("hudStyle");
     const hudKills=document.getElementById("hudKills");
+    const hudChallenge=document.getElementById("hudChallenge");
     const mainMenu=document.getElementById("mainMenu");
     const normalAbilitiesListEl=document.getElementById("normalAbilitiesList");
     const bossAbilitiesListEl=document.getElementById("bossAbilitiesList");
@@ -711,6 +722,10 @@
     const playerBombs=[];
     const slowFields=[];
     let summons=[];
+    let bullets=[];
+    let enemies=[];
+    let enemyBullets=[];
+    let enemyIdCounter=1;
 
     let screenShakeTimer=0;
     let screenShakeDuration=0;
@@ -730,11 +745,6 @@
     };
 
     let player=null;
-    let bullets=[];
-    let enemies=[];
-    let enemyBullets=[];
-    let enemyIdCounter=1;
-
     let wave=0;
     let runKills=0;
 
@@ -758,10 +768,14 @@
     let nextWavePending=false;
     let nextWaveDelay=0;
 
+    // Wave challenges
+    let playerRerolls=0;
+    let currentChallenge=null; // {type, active, failed, description, kills, targetKills, timer}
+
     const DIFFICULTY_SETTINGS={
-      chill:{enemyHpMult:0.85,enemyDamageMult:0.8,enemyCountMult:0.9},
-      normal:{enemyHpMult:1,enemyDamageMult:1,enemyCountMult:1},
-      cursed:{enemyHpMult:1.2,enemyDamageMult:1.25,enemyCountMult:1.15}
+      chill:{enemyHpMult:0.85,enemyDamageMult:0.7,enemyCountMult:0.9},
+      normal:{enemyHpMult:1,enemyDamageMult:0.9,enemyCountMult:1},
+      cursed:{enemyHpMult:1.2,enemyDamageMult:1.1,enemyCountMult:1.15}
     };
 
     const BOSS_TEMPLATES=[
@@ -853,6 +867,34 @@
         desc:"Reach Style rank S at least once.",
         check:(s)=>s.reachedStyleSOnce,
         progress:(s)=>s.reachedStyleSOnce?"Done":"Not yet"
+      },
+      {
+        id:"shadow_general",
+        name:"Shadow General",
+        desc:"Defeat a boss while using Shadow Army Commander.",
+        check:(s)=>s.defeatedBossWithShadowCommanderOnce,
+        progress:(s)=>s.defeatedBossWithShadowCommanderOnce?"Done":"Not yet"
+      },
+      {
+        id:"cursed_builder",
+        name:"Cursed Builder",
+        desc:"Take at least 2 curses across your runs.",
+        check:(s)=>s.cursesTaken>=2,
+        progress:(s)=>`${Math.min(s.cursesTaken,2)}/2 curses`
+      },
+      {
+        id:"challenge_runner",
+        name:"Challenge Runner",
+        desc:"Complete 3 wave challenges.",
+        check:(s)=>s.challengesCompleted>=3,
+        progress:(s)=>`${Math.min(s.challengesCompleted,3)}/3 challenges`
+      },
+      {
+        id:"melee_fiend",
+        name:"Melee Fiend",
+        desc:"Land 60 melee hits.",
+        check:(s)=>s.meleeHits>=60,
+        progress:(s)=>`${Math.min(s.meleeHits,60)}/60 hits`
       }
     ];
 
@@ -869,7 +911,11 @@
       bossesKilled:0,
       cursesTaken:0,
       reachedStyleSOnce:false,
-      defeatedBossWithShadowCommanderOnce:false
+      defeatedBossWithShadowCommanderOnce:false,
+      challengesCompleted:0,
+      rerollsEarned:0,
+      meleeHits:0,
+      bulletShots:0
     };
 
     let gameSettings={
@@ -1380,6 +1426,7 @@
         dashMode:"normal",
         meleeDamage:BASE_STATS.meleeDamage,
         meleeRange:BASE_STATS.meleeRange,
+        meleeArc:BASE_STATS.meleeArc,
         meleeCooldown:BASE_STATS.meleeCooldown,
         meleeCooldownTimer:0,
         meleeSwingTimer:0,
@@ -1407,10 +1454,14 @@
         ultIncomingDamageMult:1,
         ultCharge:0,
         ultChargeGainMult:1,
+        ultDurationMult:1,
         ultReady:false,
         lastStandActive:false,
         mahitoTouchStacks:0,
         summonDpsMult:1,
+        bossDamageMult:1,
+        damageVsHighHpMult:1,
+        damageVsLowHpMult:1,
         normalAbilities:[],
         bossAbilities:[]
       };
@@ -1489,9 +1540,9 @@
         name:"Clean Footwork",
         rarity:"common",
         type:"normal",
-        description:"+15% dash cooldown, +10% dash distance, -10% melee damage.",
+        description:"+15% dash distance, +10% dash cooldown, -10% melee damage.",
         requires:null,
-        statMods:{dashCooldownMult:0.85,dashDistanceMult:1.1,meleeDamageMult:0.9}
+        statMods:{dashDistanceMult:1.15,dashCooldownMult:1.1,meleeDamageMult:0.9}
       },
       {
         id:"fragile_power",
@@ -1527,7 +1578,7 @@
         name:"Water Breathing: Dead Calm",
         rarity:"epic",
         type:"normal",
-        description:"Greatly boosts melee, but halves fire rate.",
+        description:"Big melee boost, but halves fire rate.",
         requires:"water_breathing",
         statMods:{meleeRangeMult:1.35,meleeDamageMult:1.35,fireRateMult:0.5}
       },
@@ -1536,7 +1587,7 @@
         name:"Flame Style: Rengoku",
         rarity:"epic",
         type:"normal",
-        description:"+35% melee damage and leaves small fire trails, -20% max HP.",
+        description:"+35% melee damage and leaves small fire waves, -20% max HP.",
         requires:null,
         statMods:{meleeDamageMult:1.35,maxHpMult:0.8}
       },
@@ -1545,9 +1596,20 @@
         name:"Demon Slayer Mark",
         rarity:"legendary",
         type:"normal",
-        description:"+40% melee damage, +20% speed, but +25% damage taken.",
+        description:"+40% melee damage, +20% speed, +25% damage taken.",
         requires:null,
         statMods:{meleeDamageMult:1.4,speedMult:1.2,incomingDamageMult:1.25}
+      },
+
+      /* ===== SWORDSMAN EDGE ===== */
+      {
+        id:"blood_edge",
+        name:"Blood Edge",
+        rarity:"rare",
+        type:"normal",
+        description:"Melee hits heal +2 HP, but bullet damage -12%.",
+        requires:null,
+        statMods:{meleeHealAdd:2,damageMult:0.88}
       },
 
       /* ===== THUNDER & SPEED ===== */
@@ -1594,12 +1656,12 @@
         name:"Gear Fourth: Snake",
         rarity:"legendary",
         type:"normal",
-        description:"+30% damage and bullets slightly home, but -20% fire rate.",
+        description:"+30% damage and bullets slightly home, -20% fire rate.",
         requires:"gear_third",
         statMods:{damageMult:1.3,fireRateMult:0.8}
       },
 
-      /* ===== JJK – TOJI / NANAMI / BLACK FLASH ===== */
+      /* ===== JJK – TOJI / NANAMI / SHADOWS ===== */
       {
         id:"cursed_family",
         name:"Cursed Family",
@@ -1614,7 +1676,7 @@
         name:"Ratio Strike",
         rarity:"epic",
         type:"normal",
-        description:"Nanami weak points: +35% damage to high HP enemies, -15% to low HP enemies.",
+        description:"Nanami weak points: +35% damage to high HP enemies, -15% to low HP ones.",
         requires:null,
         statMods:{damageVsHighHpMult:1.35,damageVsLowHpMult:0.85}
       },
@@ -1623,12 +1685,19 @@
         name:"Black Flash Rhythm",
         rarity:"epic",
         type:"normal",
-        description:"Perfect combo timing: +30% damage after dashing, but base fire rate -20%.",
+        description:"+30% damage after dashing, but base fire rate -20%.",
         requires:null,
-        statMods:{damageMult:1.0,fireRateMult:0.8,styleGainMult:1.4}
+        statMods:{styleGainMult:1.4,fireRateMult:0.8}
       },
-
-      /* ===== SOLO LEVELING / SHADOWS ===== */
+      {
+        id:"shadow_garden",
+        name:"Shadow Garden (Passive)",
+        rarity:"rare",
+        type:"normal",
+        description:"Summons deal +25% damage, heal after wave -20%.",
+        requires:null,
+        statMods:{summonPowerMult:1.25,healAfterWaveMult:0.8}
+      },
       {
         id:"shadow_soldier",
         name:"Shadow Soldier",
@@ -1643,7 +1712,7 @@
         name:"Shadow Army Commander",
         rarity:"epic",
         type:"normal",
-        description:"Summon 3 powerful shadows that scale with your damage, -20% fire rate, -10% move speed.",
+        description:"Summon 3 strong shadows, -20% fire rate, -10% move speed.",
         requires:"shadow_soldier",
         statMods:{summonCountAdd:3,summonPowerMult:1.25,fireRateMult:0.8,speedMult:0.9}
       },
@@ -1664,6 +1733,7 @@
         rarity:"epic",
         type:"normal",
         description:"+30% damage & speed, +25% damage taken.",
+        requires:null,
         statMods:{damageMult:1.3,speedMult:1.3,incomingDamageMult:1.25}
       },
       {
@@ -1672,6 +1742,7 @@
         rarity:"legendary",
         type:"normal",
         description:"+25% damage, +25% fire rate, -20% heal after wave.",
+        requires:null,
         statMods:{damageMult:1.25,fireRateMult:1.25,healAfterWaveMult:0.8}
       },
 
@@ -1682,6 +1753,7 @@
         rarity:"rare",
         type:"normal",
         description:"+25% melee damage, -15% bullet damage.",
+        requires:null,
         statMods:{meleeDamageMult:1.25,damageMult:0.85}
       },
       {
@@ -1701,6 +1773,7 @@
         rarity:"rare",
         type:"normal",
         description:"+20% move speed, +15% dash distance, -10% damage.",
+        requires:null,
         statMods:{speedMult:1.2,dashDistanceMult:1.15,damageMult:0.9}
       },
       {
@@ -1708,15 +1781,17 @@
         name:"Smokescreen Feint",
         rarity:"rare",
         type:"normal",
-        description:"Dashing leaves a small slow field, but dash cooldown +15%.",
-        statMods:{dashCooldownMult:1.15},
+        description:"Dashing leaves a small slow field, dash cooldown +15%.",
+        requires:null,
+        statMods:{dashCooldownMult:1.15}
       },
       {
         id:"fire_force_spark",
         name:"Fire Force Spark",
         rarity:"rare",
         type:"normal",
-        description:"+15% fire rate & bullets ignite slightly, -10% max HP.",
+        description:"+15% fire rate & ignite, -10% max HP.",
+        requires:null,
         statMods:{fireRateMult:1.15,maxHpMult:0.9}
       },
       {
@@ -1724,7 +1799,7 @@
         name:"Ignition Boost",
         rarity:"epic",
         type:"normal",
-        description:"Big fire boost: +25% damage, +15% move speed, +15% damage taken.",
+        description:"+25% damage, +15% move speed, +15% damage taken.",
         requires:"fire_force_spark",
         statMods:{damageMult:1.25,speedMult:1.15,incomingDamageMult:1.15}
       },
@@ -1736,6 +1811,7 @@
         rarity:"rare",
         type:"normal",
         description:"+20% move speed & dash distance, -10% heal after wave.",
+        requires:null,
         statMods:{speedMult:1.2,dashDistanceMult:1.2,healAfterWaveMult:0.9}
       },
       {
@@ -1744,6 +1820,7 @@
         rarity:"epic",
         type:"normal",
         description:"+35% damage vs bosses, -10% damage vs others.",
+        requires:null,
         statMods:{bossDamageMult:1.35,damageMult:0.9}
       },
 
@@ -1754,6 +1831,7 @@
         rarity:"rare",
         type:"normal",
         description:"Dash distance +20%, dash cooldown -15%, -10% max HP.",
+        requires:null,
         statMods:{dashDistanceMult:1.2,dashCooldownMult:0.85,maxHpMult:0.9}
       },
       {
@@ -1762,6 +1840,7 @@
         rarity:"epic",
         type:"normal",
         description:"While dashing you take 50% less damage, but dash cooldown +20%.",
+        requires:null,
         statMods:{dashCooldownMult:1.2,incomingDamageMult:0.95}
       },
       {
@@ -1770,6 +1849,7 @@
         rarity:"rare",
         type:"normal",
         description:"+15% move speed and dash distance, -15% melee damage.",
+        requires:null,
         statMods:{speedMult:1.15,dashDistanceMult:1.15,meleeDamageMult:0.85}
       },
       {
@@ -1777,7 +1857,8 @@
         name:"Tactical Grenade",
         rarity:"epic",
         type:"normal",
-        description:"Bullets have a small explosion on hit, but fire rate -15%.",
+        description:"Bullets have a small explosion on hit, fire rate -15%.",
+        requires:null,
         statMods:{fireRateMult:0.85}
       },
 
@@ -1788,6 +1869,7 @@
         rarity:"epic",
         type:"normal",
         description:"Hits heal +3 HP, but +20% damage taken.",
+        requires:null,
         statMods:{onHitHealAdd:3,incomingDamageMult:1.2}
       },
       {
@@ -1795,7 +1877,8 @@
         name:"Sandevistan Reflex",
         rarity:"epic",
         type:"normal",
-        description:"+40% move & dash speed during ult, but ult charges 20% slower.",
+        description:"+40% move & dash speed during ult, ult charges 20% slower.",
+        requires:null,
         statMods:{ultChargeGainMult:0.8,ultSpeedBoostMult:1.4}
       },
 
@@ -1806,6 +1889,7 @@
         rarity:"rare",
         type:"normal",
         description:"Dash leaves a line of fire, dash cooldown +20%.",
+        requires:null,
         dashMode:"flame",
         statMods:{dashCooldownMult:1.2}
       },
@@ -1815,6 +1899,7 @@
         rarity:"epic",
         type:"normal",
         description:"Dash drops a timed bomb. Dash shorter and cooldown longer.",
+        requires:null,
         dashMode:"bomb",
         statMods:{dashCooldownMult:1.3,dashDurationMult:0.85}
       },
@@ -1826,6 +1911,7 @@
         rarity:"rare",
         type:"normal",
         description:"-15% damage taken, -10% damage.",
+        requires:null,
         statMods:{incomingDamageMult:0.85,damageMult:0.9}
       },
       {
@@ -1834,6 +1920,7 @@
         rarity:"epic",
         type:"normal",
         description:"-25% damage taken, -20% fire rate and -10% move speed.",
+        requires:null,
         statMods:{incomingDamageMult:0.75,fireRateMult:0.8,speedMult:0.9}
       }
     ];
@@ -1844,7 +1931,7 @@
         name:"Hyperfocus",
         rarity:"legendary",
         type:"boss",
-        description:"+60% damage, but -35% fire rate.",
+        description:"+60% damage, -35% fire rate.",
         requires:null,
         statMods:{damageMult:1.6,fireRateMult:0.65}
       },
@@ -1941,7 +2028,7 @@
         p[field]+=v*effectScale;
       }
 
-      // Core
+      // core
       mul("maxHp",s.maxHpMult);
       add("maxHp",s.maxHpAdd);
       mul("damage",s.damageMult);
@@ -1974,13 +2061,13 @@
       mul("ultMeleeRangeMult",s.ultMeleeRangeMult||1);
       mul("ultBulletSpeedMult",s.ultBulletSpeedMult||1);
 
-      // Enemy / global
+      // enemy / global
       mulEnemyScale("hpMult",s.enemyHpMult);
       mulEnemyScale("speedMult",s.enemySpeedMult);
       mulEnemyScale("damageMult",s.enemyDamageMult);
       mulEnemyScale("countMult",s.enemyCountMult);
 
-      // Summons
+      // summons
       if(s.summonCountAdd)summonsSummonCount+=s.summonCountAdd;
       if(s.summonPowerMult)p.summonDpsMult*=1+((s.summonPowerMult-1)*effectScale);
 
@@ -1991,6 +2078,7 @@
       if(s.ultDurationMult)p.ultDurationMult=(p.ultDurationMult||1)*(1+((s.ultDurationMult-1)*effectScale));
 
       if(ability.dashMode)p.dashMode=ability.dashMode;
+      if(s.meleeHealAdd)p.meleeOnHitHeal+=s.meleeHealAdd*effectScale;
     }
 
     function recomputeStats(){
@@ -2261,10 +2349,12 @@
       spawnParticles(player.x,player.y,{
         count:40,speedMin:120,speedMax:380,lifeMin:0.3,lifeMax:0.7,sizeMin:3,sizeMax:5,color:"rgba(255,230,180,1)"
       });
+      addWhiteFlash(0.5);
+      addScreenShake(6,0.35);
     }
 
     function orbitalStrikeUlt(){
-      const targets=enemies.filter(e=>!e.isBoss);
+      const targets=enemies.slice();
       if(targets.length===0)return;
       const beams=Math.min(6,targets.length);
       for(let i=0;i<beams;i++){
@@ -2275,6 +2365,8 @@
         });
         e.hp-=player.damage*4;
       }
+      addWhiteFlash(0.5);
+      addScreenShake(6,0.35);
     }
 
     function tryUseUlt(){
@@ -2286,7 +2378,7 @@
       player.ultReady=false;
       player.ultCharge=0;
       player.ultCooldownTimer=def.cooldown||25;
-      player.ultActiveTimer=def.duration||0;
+      player.ultActiveTimer=(def.duration||0)*(player.ultDurationMult||1);
       addWhiteFlash(0.6);
       addScreenShake(5,0.4);
 
@@ -2363,11 +2455,113 @@
           pierce:player.pierce+(player.ultPierceBonus||0),
           from:"player"
         });
+        cosmeticStats.bulletShots++;
       }
       addScreenShake(1.2,0.08);
     }
 
-    /* UPGRADE PANEL & OPTIONS */
+    /* WAVE CHALLENGES & REROLLS */
+
+    function resetChallenge(){
+      currentChallenge=null;
+      if(hudChallenge)hudChallenge.textContent=`Rerolls: ${playerRerolls}`;
+    }
+
+    function startWaveChallengeForWave(w){
+      if(w<=1){
+        resetChallenge();
+        return;
+      }
+      const r=Math.random();
+      if(r<0.45){
+        // No challenge this wave
+        resetChallenge();
+        return;
+      }
+      // Two simple challenge types: no-hit and kill-rush
+      const types=["no_hit","kill_rush"];
+      const type=types[Math.floor(Math.random()*types.length)];
+      if(type==="no_hit"){
+        currentChallenge={
+          type:"no_hit",
+          active:true,
+          failed:false,
+          completed:false,
+          description:"Don't get hit this wave.",
+          kills:0,
+          targetKills:0,
+          timer:0
+        };
+        showMessage("Challenge: Don't get hit this wave!",2.4);
+      }else{
+        const target=10+Math.round(w*0.6);
+        const time=18;
+        currentChallenge={
+          type:"kill_rush",
+          active:true,
+          failed:false,
+          completed:false,
+          description:`Kill ${target} enemies in ${time}s.`,
+          kills:0,
+          targetKills:target,
+          timer:time
+        };
+        showMessage(`Challenge: Kill ${target} enemies in ${time}s!`,2.4);
+      }
+    }
+
+    function completeChallenge(){
+      if(!currentChallenge||!currentChallenge.active)return;
+      currentChallenge.active=false;
+      currentChallenge.completed=true;
+      playerRerolls++;
+      cosmeticStats.challengesCompleted++;
+      cosmeticStats.rerollsEarned++;
+      saveCosmeticStats();
+      checkCosmeticUnlocks();
+      showMessage("Challenge complete! +1 reroll.",2.6);
+    }
+
+    function failChallenge(reason){
+      if(!currentChallenge||!currentChallenge.active)return;
+      currentChallenge.active=false;
+      currentChallenge.failed=true;
+      if(reason)showMessage(reason,2.2);
+    }
+
+    function onPlayerDamagedForChallenge(){
+      if(!currentChallenge||!currentChallenge.active)return;
+      if(currentChallenge.type==="no_hit"){
+        failChallenge("Challenge failed: you were hit.");
+      }
+    }
+
+    function onEnemyKilledForChallenge(){
+      if(!currentChallenge||!currentChallenge.active)return;
+      if(currentChallenge.type==="kill_rush"){
+        currentChallenge.kills++;
+        if(currentChallenge.kills>=currentChallenge.targetKills){
+          completeChallenge();
+        }
+      }
+    }
+
+    function updateChallenge(dt){
+      if(!currentChallenge||!currentChallenge.active)return;
+      if(currentChallenge.type==="kill_rush"){
+        currentChallenge.timer-=dt;
+        if(currentChallenge.timer<=0 && currentChallenge.kills<currentChallenge.targetKills){
+          failChallenge("Challenge failed: too slow.");
+        }
+      }
+    }
+
+    function updateRerollUI(){
+      rerollButton.textContent=`Reroll (${playerRerolls})`;
+      rerollButton.disabled=playerRerolls<=0;
+    }
+
+    /* UPGRADE PANEL & OPTIONS (3 CHOICES) */
 
     function isBossWave(num){return num>0 && num%5===0;}
 
@@ -2399,6 +2593,7 @@
         ...(player.bossAbilities||[]),
         ...activeCurses
       ];
+      const MAX_OPTIONS=3;
 
       if(!bossWave){
         let pool=NORMAL_ABILITY_DEFS.filter(a=>{
@@ -2408,14 +2603,14 @@
           return true;
         });
         pool=shuffled(pool);
-        for(let i=0;i<4;i++){
+        while(options.length<MAX_OPTIONS && pool.length>0){
           const choice=weightedRandomChoice(pool);
           if(!choice)break;
           options.push(choice);
           pool=pool.filter(x=>x.id!==choice.id);
         }
       }else{
-        // Boss wave: guarantee at least 1 legendary and 1 curse
+        // Boss wave: guarantee at least 1 legendary and 1 curse if possible
         let legendaryPool=[
           ...NORMAL_ABILITY_DEFS.filter(a=>a.rarity==="legendary"),
           ...BOSS_ABILITY_DEFS
@@ -2440,27 +2635,33 @@
 
         const leg=weightedRandomChoice(legendaryPool);
         if(leg)options.push(leg);
-        const cur=weightedRandomChoice(cursePool);
-        if(cur)options.push(cur);
 
-        let pool=[...normalPool];
-        pool=shuffled(pool);
-        while(options.length<4 && pool.length>0){
+        const cur=weightedRandomChoice(cursePool);
+        if(cur && !options.find(o=>o.id===cur.id))options.push(cur);
+
+        let pool=shuffled(normalPool);
+        while(options.length<MAX_OPTIONS && pool.length>0){
           const pick=weightedRandomChoice(pool);
           if(!pick)break;
-          options.push(pick);
+          if(!options.find(o=>o.id===pick.id)){
+            options.push(pick);
+          }
           pool=pool.filter(x=>x.id!==pick.id);
         }
       }
       return options;
     }
 
-    function openUpgradePanel(){
-      const opts=generateUpgradeOptionsForWave();
-      upgradePanel.style.display="flex";
+    function renderUpgradeOptions(opts){
       upgradesContainer.innerHTML="";
-      replaceTarget=null;
-
+      if(opts.length===0){
+        const msg=document.createElement("div");
+        msg.style.fontSize="12px";
+        msg.style.opacity="0.8";
+        msg.textContent="No valid upgrades available – everything you can take right now is exhausted.";
+        upgradesContainer.appendChild(msg);
+        return;
+      }
       opts.forEach(opt=>{
         const rarityClass=rarityToClass(opt.rarity);
         const rarityLabel=rarityToLabel(opt.rarity);
@@ -2476,15 +2677,14 @@
         div.addEventListener("click",()=>chooseUpgrade(opt));
         upgradesContainer.appendChild(div);
       });
+    }
 
-      if(opts.length===0){
-        const msg=document.createElement("div");
-        msg.style.fontSize="12px";
-        msg.style.opacity="0.8";
-        msg.textContent="No valid upgrades available – everything you can take right now is exhausted.";
-        upgradesContainer.appendChild(msg);
-      }
-
+    function openUpgradePanel(){
+      const opts=generateUpgradeOptionsForWave();
+      upgradePanel.style.display="flex";
+      replaceTarget=null;
+      renderUpgradeOptions(opts);
+      updateRerollUI();
       gameState="upgrading";
       showMessage("Choose a power or skip.",2.2);
     }
@@ -2494,6 +2694,15 @@
       gameState="intermission";
       intermissionTimer=1.0;
       showMessage("Skipped power. Next wave incoming.",2.0);
+    });
+
+    rerollButton.addEventListener("click",()=>{
+      if(playerRerolls<=0)return;
+      playerRerolls--;
+      const opts=generateUpgradeOptionsForWave();
+      renderUpgradeOptions(opts);
+      updateRerollUI();
+      showMessage("Rerolled power choices.",1.5);
     });
 
     let intermissionTimer=0;
@@ -2609,11 +2818,13 @@
         ["Dash cd",p.dashCooldown.toFixed(2)+"s"],
         ["Dash mode",p.dashMode],
         ["Heal on hit",p.onHitHeal.toFixed(1)],
+        ["Melee heal",p.meleeOnHitHeal.toFixed(1)],
         ["Heal after wave",(p.healAfterWave*p.healAfterWaveMult).toFixed(1)],
         ["Incoming dmg x",p.incomingDamageMult.toFixed(2)],
         ["Ult charge",Math.round(p.ultCharge||0)+"%"],
         ["Ult ready",p.ultReady?"Yes":"No"],
-        ["Summon power x",p.summonDpsMult.toFixed(2)]
+        ["Summon power x",p.summonDpsMult.toFixed(2)],
+        ["Rerolls",playerRerolls]
       ];
       for(const [k,v] of rows){
         const div=document.createElement("div");
@@ -2644,8 +2855,8 @@
         attackTimer:0.5,
         attackCooldown:opts.attackCooldown||1.2,
         stunTimer:0,
-        contactDamage:opts.contactDamage||10,
-        bulletDamage:opts.bulletDamage||8,
+        contactDamage:opts.contactDamage!=null?opts.contactDamage:6,
+        bulletDamage:opts.bulletDamage!=null?opts.bulletDamage:5,
         bulletSpeed:opts.bulletSpeed||260,
         isBoss:false,
         bossId:null,
@@ -2678,9 +2889,9 @@
         hp:baseHp*enemyScale.hpMult,
         speed:90*enemyScale.speedMult,
         color:def.color,
-        contactDamage:26*enemyScale.damageMult,
-        bulletDamage:18*enemyScale.bulletDamageMult,
-        bulletSpeed:320*enemyScale.bulletSpeedMult,
+        contactDamage:18*enemyScale.damageMult,
+        bulletDamage:10*enemyScale.bulletDamageMult,
+        bulletSpeed:300*enemyScale.bulletSpeedMult,
         attackCooldown:1.4
       });
       boss.isBoss=true;
@@ -2695,7 +2906,7 @@
 
     function spawnWaveEnemies(w){
       const bossWave=isBossWave(w);
-      const baseCount=Math.round(4+w*1.4*enemyScale.countMult);
+      const baseCount=Math.round(5+w*1.3*enemyScale.countMult);
 
       for(let i=0;i<baseCount;i++){
         let type="grunt";
@@ -2708,10 +2919,11 @@
         let speed=95;
         if(type==="rusher")speed=130;
         else if(type==="bomber")speed=75;
-        const contactDamage=(type==="bomber"?18:9)*enemyScale.damageMult;
-        const bulletDamage=10*enemyScale.bulletDamageMult;
+        const contactDamage=(type==="bomber"?10:7)*enemyScale.damageMult;
+        const bulletDamage=5*enemyScale.bulletDamageMult;
         spawnEnemyAtEdge(type,{
-          hp,speed: speed*enemyScale.speedMult,
+          hp,
+          speed:speed*enemyScale.speedMult,
           contactDamage,
           bulletDamage
         });
@@ -2723,7 +2935,8 @@
           spawnEnemyAtEdge("grunt",{
             hp:(60+ w*5)*enemyScale.hpMult,
             speed:90*enemyScale.speedMult,
-            contactDamage:10*enemyScale.damageMult
+            contactDamage:8*enemyScale.damageMult,
+            bulletDamage:5*enemyScale.bulletDamageMult
           });
         }
       }else if(w%3===0){
@@ -2735,9 +2948,9 @@
           hp:(220+ w*25)*enemyScale.hpMult,
           speed:90*enemyScale.speedMult,
           color:t.color,
-          contactDamage:16*enemyScale.damageMult,
-          bulletDamage:14*enemyScale.bulletDamageMult,
-          bulletSpeed:290*enemyScale.bulletSpeedMult,
+          contactDamage:12*enemyScale.damageMult,
+          bulletDamage:7*enemyScale.bulletDamageMult,
+          bulletSpeed:280*enemyScale.bulletSpeedMult,
           attackCooldown:1.0,
           pattern:t.pattern
         });
@@ -2763,6 +2976,7 @@
       waveActive=false;
 
       spawnWaveEnemies(wave);
+      startWaveChallengeForWave(wave);
       gameState="playing";
       showMessage(isBossWave(wave)?`Boss Wave ${wave}`:`Wave ${wave}`,2.2);
 
@@ -2786,7 +3000,7 @@
       nextUpgradeDelayTimer=0.5;
     }
 
-    /* SUMMONS */
+    /* SUMMONS & FIELDS */
 
     function updateSummons(dt){
       if(!player)return;
@@ -2839,8 +3053,6 @@
       }
     }
 
-    /* FIRE / BOMB / DOMAIN / SLOW */
-
     function updateFireBursts(dt){
       for(let i=fireBursts.length-1;i>=0;i--){
         const f=fireBursts[i];
@@ -2851,8 +3063,18 @@
           const dy=e.y-f.y;
           const dist=Math.hypot(dx,dy);
           if(dist<f.radius+e.radius){
-            e.hp-=player.damage*0.9*dt;
+            e.hp-=player.damage*1.2*dt;
           }
+        }
+      }
+    }
+
+    function explosionDamage(x,y,radius,mult){
+      if(!player)return;
+      for(const e of enemies){
+        const d=distance(x,y,e.x,e.y);
+        if(d<radius+e.radius){
+          e.hp-=player.damage*mult;
         }
       }
     }
@@ -2868,12 +3090,7 @@
           spawnParticles(b.x,b.y,{
             count:32,speedMin:80,speedMax:260,lifeMin:0.3,lifeMax:0.7,sizeMin:3,sizeMax:5,color:"rgba(255,210,140,1)"
           });
-          for(const e of enemies){
-            const d=distance(b.x,b.y,e.x,e.y);
-            if(d<b.radius+e.radius){
-              e.hp-=player.damage*3.2;
-            }
-          }
+          explosionDamage(b.x,b.y,b.radius,3.2); // bombs now do real damage
         }
         if(b.exploded && b.fuse<-0.4){
           playerBombs.splice(i,1);
@@ -2890,9 +3107,25 @@
     }
 
     function updateDomain(dt){
-      if(!domainField.active)return;
-      domainField.radius-=dt*10;
-      if(domainField.radius<120)domainField.radius=120;
+      if(!domainField.active || !player)return;
+      const d=domainField;
+
+      // Maintain radius softly
+      d.radius=Math.max(160,d.radius-10*dt);
+
+      // Damage based on domain type
+      let mult=2.4;
+      if(d.type==="flame")mult=2.0;
+      else if(d.type==="shadow")mult=2.8;
+      else if(d.type==="gojo")mult=3.0;
+      else if(d.type==="mahito")mult=2.6;
+
+      for(const e of enemies){
+        const dist=distance(d.x,d.y,e.x,e.y);
+        if(dist<d.radius+e.radius){
+          e.hp-=player.damage*mult*dt;
+        }
+      }
     }
 
     function drawDomain(){
@@ -2972,6 +3205,7 @@
             }
           }
           runKills++;
+          onEnemyKilledForChallenge();
           spawnParticles(e.x,e.y,{
             count:18,speedMin:70,speedMax:240,lifeMin:0.3,lifeMax:0.7,sizeMin:3,sizeMax:6,color:wasBoss?"rgba(255,220,160,1)":"rgba(255,150,150,1)"
           });
@@ -3005,7 +3239,7 @@
       if(e.attackTimer<=0){
         e.attackTimer=e.attackCooldown;
         if(e.type==="sniper"){
-          spawnEnemyBullet(e,dx,dy,1.1);
+          spawnEnemyBullet(e,dx,dy,1.0);
         }else if(e.type==="bomber"){
           if(dist<260){
             spawnEnemyBulletCone(e,3,0.25);
@@ -3138,11 +3372,12 @@
 
     function damagePlayer(amount){
       if(!player)return;
-      let dmg=amount*player.incomingDamageMult*player.ultIncomingDamageMult;
+      let dmg=amount*player.incomingDamageMult;
       if(player.lastStandActive && player.hp/player.maxHp<0.3){
         dmg*=0.6;
       }
       player.hp-=dmg;
+      onPlayerDamagedForChallenge();
       addScreenShake(4,0.18);
       spawnParticles(player.x,player.y,{
         count:12,speedMin:60,speedMax:160,lifeMin:0.25,lifeMax:0.5,sizeMin:2,sizeMax:4,color:"rgba(255,120,120,0.95)"
@@ -3177,10 +3412,23 @@
             if(player.damageVsLowHpMult && hpRatio<0.3)dmg*=player.damageVsLowHpMult;
             if(player.bossDamageMult && e.isBoss)dmg*=player.bossDamageMult;
             e.hp-=dmg;
-            const heal=player.onHitHeal*player.onHitHealMult;
+
+            // on-hit heal
+            const heal=(player.onHitHeal)*player.onHitHealMult;
             if(heal>0)player.hp=Math.min(player.maxHp,player.hp+heal);
+
+            // tactical grenade explosions
+            if(playerHasAbility("tactical_grenade")){
+              explosionDamage(b.x,b.y,65,1.4);
+              spawnParticles(b.x,b.y,{
+                count:16,speedMin:80,speedMax:220,lifeMin:0.25,lifeMax:0.6,sizeMin:2,sizeMax:4,color:"rgba(255,210,140,1)"
+              });
+              addScreenShake(3,0.16);
+            }
+
             player.styleMeter+=2*player.styleGainMult;
             if(e.hp<=0)player.styleMeter+=6*player.styleGainMult;
+
             if(b.pierce>0)b.pierce--; else{bullets.splice(i,1);break;}
           }
         }
@@ -3189,8 +3437,12 @@
       // enemy bullets
       for(let i=enemyBullets.length-1;i>=0;i--){
         const b=enemyBullets[i];
-        b.x+=b.vx*dt;
-        b.y+=b.vy*dt;
+        let slowFactor=1;
+        if(player && player.ultId==="cyber_sandevistan" && player.ultActiveTimer>0){
+          slowFactor=0.35;
+        }
+        b.x+=b.vx*dt*slowFactor;
+        b.y+=b.vy*dt*slowFactor;
         b.life-=dt;
         if(b.life<=0 || b.x<-40 || b.x>canvas.width+40 || b.y<-40 || b.y>canvas.height+40){
           enemyBullets.splice(i,1);
@@ -3208,9 +3460,10 @@
       }
     }
 
-    /* PLAYER UPDATE */
+    /* PLAYER UPDATE + MELEE */
 
     function processMeleeHit(){
+      if(!player)return;
       const p=player;
       const ang=p.meleeAngle;
       const arc=p.meleeArc;
@@ -3226,6 +3479,7 @@
           e.hp-=dmg;
           const heal=(p.meleeOnHitHeal+p.onHitHeal)*p.onHitHealMult;
           if(heal>0)p.hp=Math.min(p.maxHp,p.hp+heal);
+          cosmeticStats.meleeHits++;
           spawnParticles(e.x,e.y,{
             count:9,speedMin:80,speedMax:200,lifeMin:0.2,lifeMax:0.4,sizeMin:2,sizeMax:4,color:"rgba(255,255,255,0.9)"
           });
@@ -3245,17 +3499,24 @@
     function updatePlayer(dt){
       if(!player)return;
 
-      // Apply ult stat buffs while active (temporary)
+      // Ult stat buffs
       if(player.ultActiveTimer>0 && !player.ultStatsApplied){
         const def=ULT_DEFS[player.ultId];
         if(def && def.statMods){
           applyUltStats(player,def);
-          player.ultStatsApplied=true;
         }
+        player.ultStatsApplied=true;
       }
-      if(player.ultActiveTimer<=0 && player.ultStatsApplied){
-        player.ultStatsApplied=false;
-        recomputeStats();
+      if(player.ultActiveTimer>0){
+        player.ultActiveTimer-=dt;
+        if(player.ultActiveTimer<=0){
+          player.ultActiveTimer=0;
+          domainField.active=false;
+          if(player.ultStatsApplied){
+            player.ultStatsApplied=false;
+            recomputeStats();
+          }
+        }
       }
 
       const speed=player.speed*(player.ultSpeedMult||1);
@@ -3298,7 +3559,13 @@
       if(player.meleeCooldownTimer>0)player.meleeCooldownTimer-=dt;
       if(player.meleeSwingTimer>0){
         player.meleeSwingTimer-=dt;
-        processMeleeHit();
+        if(!player.meleeHitApplied){
+          processMeleeHit();      // melee now actually damages once per swing
+          player.meleeHitApplied=true;
+        }
+        if(player.meleeSwingTimer<=0){
+          player.meleeHitApplied=false;
+        }
       }
 
       if(player.ultCooldownTimer>0)player.ultCooldownTimer-=dt;
@@ -3313,13 +3580,6 @@
         }
       }
 
-      if(player.ultActiveTimer>0){
-        player.ultActiveTimer-=dt;
-        if(player.ultActiveTimer<=0){
-          domainField.active=false;
-        }
-      }
-
       player.styleMeter-=player.styleDecayRate*dt;
       player.styleMeter=clamp(player.styleMeter,0,player.styleMax);
       const rank=getStyleRank();
@@ -3330,16 +3590,17 @@
       }
     }
 
-    /* HUD & DRAWING */
+    /* DRAWING & HUD */
 
     function updateHUD(){
       if(!player){
-        hudWave.textContent="Wave 0";
-        hudHP.textContent="HP --/--";
+        hudWave.textContent="";
+        hudHP.textContent="";
         hudStats.textContent="";
         hudUlt.textContent="";
         hudStyle.textContent="";
-        hudKills.textContent="Kills: 0";
+        hudKills.textContent="";
+        hudChallenge.textContent=`Rerolls: ${playerRerolls}`;
         return;
       }
       hudWave.textContent=`Wave ${wave||0}`;
@@ -3368,6 +3629,23 @@
       }
 
       hudKills.textContent=`Kills: ${runKills}`;
+
+      // Challenge / rerolls
+      if(currentChallenge && currentChallenge.active){
+        if(currentChallenge.type==="no_hit"){
+          hudChallenge.textContent=`Challenge: Don't get hit (active) • Rerolls: ${playerRerolls}`;
+        }else if(currentChallenge.type==="kill_rush"){
+          const t=Math.max(0,currentChallenge.timer).toFixed(1);
+          hudChallenge.textContent=`Challenge: ${currentChallenge.kills}/${currentChallenge.targetKills} kills in ${t}s • Rerolls: ${playerRerolls}`;
+        }
+      }else if(currentChallenge && currentChallenge.completed){
+        hudChallenge.textContent=`Challenge complete! Rerolls: ${playerRerolls}`;
+      }else if(currentChallenge && currentChallenge.failed){
+        hudChallenge.textContent=`Challenge failed. Rerolls: ${playerRerolls}`;
+      }else{
+        hudChallenge.textContent=`Rerolls: ${playerRerolls}`;
+      }
+
       updateStatsPanel();
     }
 
@@ -3527,11 +3805,12 @@
       ctx.restore();
     }
 
-    /* GAME LOOP & MAIN MENU */
+    /* GAME STATE & LOOP */
 
     function handleGameOver(){
       gameState="gameover";
       domainField.active=false;
+      resetChallenge();
       showMessage("Game Over – press R to retry.",3);
       saveCosmeticStats();
       checkCosmeticUnlocks();
@@ -3561,6 +3840,7 @@
       player.ultCharge=0;
       player.ultReady=false;
       player.ultStatsApplied=false;
+      player.meleeHitApplied=false;
       screenShakeTimer=0;
       whiteFlashAlpha=0;
       bossGenjutsuTimer=0;
@@ -3572,6 +3852,9 @@
       intermissionTimer=0;
       nextWavePending=false;
       nextWaveDelay=0;
+      playerRerolls=0;
+      resetChallenge();
+      updateRerollUI();
 
       const arch=ARCHETYPES[selectedArchetype];
       if(arch && arch.startAbilities){
@@ -3599,7 +3882,7 @@
 
       mainMenu.style.display="none";
       gameState="intermission";
-      intermissionTimer=0.9; // ~1 second grace before first wave
+      intermissionTimer=1.0; // ~1 second grace before first wave
       showMessage("Get ready...",1.5);
     }
 
@@ -3624,6 +3907,7 @@
 
       if(gameState==="playing"){
         timeInWave+=dt;
+        updateChallenge(dt);
         if(waveActive && enemiesSpawned && enemies.length===0 && !upgradePending){
           waveActive=false;
           onWaveCleared();
@@ -3677,6 +3961,8 @@
 
       requestAnimationFrame(gameLoop);
     }
+
+    /* MAIN MENU INIT */
 
     function initMainMenu(){
       const tabs={
